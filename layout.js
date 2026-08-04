@@ -77,11 +77,8 @@ function renderNavItem(item, activeKey){
 }
 
 function renderSidebarHTML(activeKey, profile){
-  const groupsHtml = NAV_GROUPS.map(group => `
-    <div>
-      <div class="nav-label">${group.label}</div>
-      <nav>${group.items.map(item => renderNavItem(item, activeKey)).join('')}</nav>
-    </div>`).join('');
+  const todosLosItems = NAV_GROUPS.flatMap(group => group.items);
+  const itemsHtml = todosLosItems.map(item => renderNavItem(item, activeKey)).join('');
 
   return `
     <div class="brand">
@@ -92,7 +89,7 @@ function renderSidebarHTML(activeKey, profile){
       </div>
     </div>
 
-    <div class="nav-groups">${groupsHtml}</div>
+    <nav class="nav-groups">${itemsHtml}</nav>
 
     <div class="sidebar-footer">
       <div class="role-card">
