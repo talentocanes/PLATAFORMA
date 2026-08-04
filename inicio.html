@@ -281,11 +281,22 @@
     }
 
     async function resolverSolicitud(id, action){
-      const nuevoEstado = action === 'approve' ? 'approved' : 'denied';
-      const { error } = await supabase.from('profiles').update({ status: nuevoEstado }).eq('id', id);
-      if (error) {
-        alert('No se pudo actualizar la solicitud: ' + error.message);
-        return;
+      if (action === 'approve') {
+        const { error } = await supabase.from('profiles').update({ status: 'approved' }).eq('id', id);
+        if (error) {
+          alert('No se pudo aprobar la solicitud: ' + error.message);
+          return;
+        }
+      } else {
+        if (!confirm('¿Denegar esta solicitud? Se eliminará por completo y no quedará registro de ella.')) return;
+
+        // Denegar = eliminar por completo la solicitud pendiente.
+        // Se asume que no se acepta, así que no debe quedar registro.
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) {
+          alert('No se pudo denegar la solicitud: ' + error.message);
+          return;
+        }
       }
       await cargarSolicitudes();
     }
