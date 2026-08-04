@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .page-header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
+  .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
+  .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
+  .btn-add svg{ width:16px; height:16px; }
+
+  .table-wrap{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); padding:14px 18px; border-bottom:1px solid var(--line); }
+  td{ padding:14px 18px; font-size:13.5px; border-bottom:1px solid var(--line); }
+  tr:last-child td{ border-bottom:none; }
+  .badge-status{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; }
+  .badge-status.approved{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
+  .badge-status.pending{ color:var(--blue-glow); background:rgba(41,182,246,0.1); border:1px solid var(--line-strong); }
+  .badge-status.denied{ color:var(--danger); background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.3); }
+  .empty-note{ color:var(--mist-dim); font-size:13px; padding:32px; text-align:center; }
+
+  /* Modal de invitación */
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.75); z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.active{ display:flex; }
+  .modal{ width:100%; max-width:440px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:18px; padding:28px; }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:8px; }
+  .modal p{ color:var(--mist-dim); font-size:13px; line-height:1.5; margin-bottom:18px; }
+  .link-box{ display:flex; gap:8px; }
+  .link-box input{ flex:1; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:12.5px; font-family:'JetBrains Mono',monospace; }
+  .link-box button{ padding:0 16px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:12.5px; cursor:pointer; }
+  .modal-close{ margin-top:18px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
+  .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Clientes</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1>Clientes</h1>
+        <p>Dueños registrados y su estado de acceso al panel.</p>
+      </div>
+      <button class="btn-add" id="btnAdd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Añadir cliente
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Nombre</th><th>Usuario</th><th>Estado</th></tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="3" class="empty-note">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal: enlace de invitación -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>Invitar cliente</h2>
+      <p>Comparte este enlace con la persona. Al registrarse, su cuenta quedará pendiente de tu aprobación.</p>
+      <div class="link-box">
+        <input type="text" id="linkInput" readonly>
+        <button id="copyBtn">Copiar</button>
+      </div>
+      <div class="modal-msg" id="modalMsg"></div>
+      <button class="modal-close" id="modalClose">Cerrar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initLayout } from './layout.js';
+    import { supabase } from './supabaseClient.js';
+
+    const ROL = 'cliente';
+
+    (async () => {
+      const profile = await initLayout({ activeKey: 'clientes' });
+      if (!profile) return;
+      await cargarLista();
+
+      // Solo el administrador puede invitar
+      if (profile.role !== 'admin') {
+        document.getElementById('btnAdd').style.display = 'none';
+      }
+    })();
+
+    async function cargarLista(){
+      const tbody = document.getElementById('tableBody');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, full_name, status')
+        .eq('role', ROL)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-note">No se pudo cargar el listado.</td></tr>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-note">Aún no hay clientes registrados.</td></tr>`;
+        return;
+      }
+
+      const labels = { approved:'Aprobado', pending:'Pendiente', denied:'Denegado' };
+      tbody.innerHTML = data.map(p => `
+        <tr>
+          <td>${p.full_name || '—'}</td>
+          <td>@${p.username}</td>
+          <td><span class="badge-status ${p.status}">${labels[p.status]}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // ---------------- Modal de invitación ----------------
+    const overlay = document.getElementById('modalOverlay');
+    const linkInput = document.getElementById('linkInput');
+    const modalMsg = document.getElementById('modalMsg');
+
+    document.getElementById('btnAdd').addEventListener('click', async () => {
+      modalMsg.style.display = 'none';
+      linkInput.value = 'Generando enlace…';
+      overlay.classList.add('active');
+
+      const { data, error } = await supabase
+        .from('invitations')
+        .insert({ role: ROL })
+        .select('token')
+        .single();
+
+      if (error) {
+        linkInput.value = '';
+        modalMsg.textContent = 'No se pudo generar el enlace: ' + error.message;
+        modalMsg.style.display = 'block';
+        return;
+      }
+
+      const url = `${window.location.origin}${window.location.pathname.replace('clientes.html','registro.html')}?token=${data.token}`;
+      linkInput.value = url;
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      linkInput.select();
+      navigator.clipboard.writeText(linkInput.value);
+    });
+
+    document.getElementById('modalClose').addEventListener('click', () => {
+      overlay.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

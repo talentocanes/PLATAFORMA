@@ -1,0 +1,89 @@
+import { supabase, usernameToEmail } from './supabaseClient.js';
+
+// ---------------------------------------------------------
+// Iniciar sesión con usuario y contraseña
+// ---------------------------------------------------------
+export async function iniciarSesion(identificador, password) {
+  // Si ya es un correo real (como el del administrador), se usa tal cual.
+  // Si es un username (trabajadores/clientes invitados), se traduce al
+  // correo sintético interno.
+  const email = identificador.includes('@')
+    ? identificador.trim().toLowerCase()
+    : usernameToEmail(identificador);
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    throw new Error('Usuario o contraseña incorrectos.');
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, username, full_name, role, status')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profileError || !profile) {
+    console.error('Error al leer profiles:', profileError);
+    await supabase.auth.signOut();
+    const detalle = profileError ? ` (${profileError.message})` : '';
+    throw new Error('No se encontró un perfil asociado a esta cuenta.' + detalle);
+  }
+
+  if (profile.status === 'pending') {
+    await supabase.auth.signOut();
+    throw new Error('Tu cuenta está pendiente de aprobación del administrador.');
+  }
+
+  if (profile.status === 'denied') {
+    await supabase.auth.signOut();
+    throw new Error('Tu solicitud de acceso fue rechazada.');
+  }
+
+  return profile;
+}
+
+// ---------------------------------------------------------
+// Cerrar sesión
+// ---------------------------------------------------------
+export async function cerrarSesion() {
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
+}
+
+// ---------------------------------------------------------
+// Obtener el perfil de la sesión activa (o null si no hay)
+// ---------------------------------------------------------
+export async function obtenerPerfilActual() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, username, full_name, role, status')
+    .eq('id', session.user.id)
+    .single();
+
+  return profile || null;
+}
+
+// ---------------------------------------------------------
+// Guardia de página: redirige a login.html si no hay sesión
+// aprobada, o a inicio.html si el rol no está permitido.
+// Úsala al inicio de cada página protegida:
+//   const perfil = await protegerPagina({ rolesPermitidos: ['admin'] });
+// ---------------------------------------------------------
+export async function protegerPagina({ rolesPermitidos = null } = {}) {
+  const profile = await obtenerPerfilActual();
+
+  if (!profile || profile.status !== 'approved') {
+    window.location.href = 'login.html';
+    return null;
+  }
+
+  if (rolesPermitidos && !rolesPermitidos.includes(profile.role)) {
+    window.location.href = 'inicio.html';
+    return null;
+  }
+
+  return profile;
+}
