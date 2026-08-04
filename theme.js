@@ -8,7 +8,7 @@ import { supabase } from './supabaseClient.js';
 export const PALETAS = [
   {
     key: 'azul-original',
-    label: 'Azul Talento Canes',
+    label: 'Zafiro Nocturno',
     colors: {
       navyDeep:'#050d1a', navyPanel:'#0b1a30', navyPanel2:'#0f2340',
       blueDeep:'#0d47a1', blueMid:'#1976d2', blueBright:'#29b6f6', blueGlow:'#4fc3f7'

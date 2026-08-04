@@ -15,10 +15,11 @@
     overflow:hidden;
     padding:46px 48px;
     background:
-      radial-gradient(650px 380px at 88% 15%, rgba(41,182,246,0.35), transparent 65%),
-      linear-gradient(120deg, #081a33 0%, #0a2748 55%, #0d3a63 100%);
+      radial-gradient(650px 380px at 88% 15%, color-mix(in srgb, var(--blue-bright) 35%, transparent), transparent 65%),
+      linear-gradient(120deg, var(--navy-panel) 0%, var(--navy-panel-2) 55%, var(--blue-deep) 100%);
     border:1px solid var(--line-strong);
     isolation:isolate;
+    transition: background-color .3s ease;
   }
   .hero-gear{ position:absolute; right:-40px; top:-60px; width:340px; height:340px; opacity:0.09; animation:spin 90s linear infinite; z-index:0; }
   .hero-gear.two{ right:120px; top:140px; width:170px; height:170px; opacity:0.11; animation:spin 60s linear infinite reverse; }
@@ -36,7 +37,7 @@
   .grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; }
   .module{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:relative; overflow:hidden; transition:border-color 0.25s ease, transform 0.25s ease; text-decoration:none; color:inherit; display:block; }
   .module:hover{ border-color:var(--line-strong); transform:translateY(-2px); }
-  .module::before{ content:""; position:absolute; inset:0; background:linear-gradient(140deg, rgba(41,182,246,0.06), transparent 55%); pointer-events:none; }
+  .module::before{ content:""; position:absolute; inset:0; background:linear-gradient(140deg, color-mix(in srgb, var(--blue-bright) 6%, transparent), transparent 55%); pointer-events:none; }
   .module .icon-badge{ width:42px; height:42px; border-radius:11px; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
   .module .icon-badge svg{ width:20px; height:20px; color:var(--blue-glow); }
   .module h3{ font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; margin-bottom:6px; }

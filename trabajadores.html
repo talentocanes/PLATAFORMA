@@ -30,7 +30,7 @@
 
   .badge-status{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
   .badge-status.approved{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
-  .badge-status.pending{ color:var(--blue-glow); background:rgba(41,182,246,0.1); border:1px solid var(--line-strong); }
+  .badge-status.pending{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 10%, transparent); border:1px solid var(--line-strong); }
   .badge-status.denied{ color:var(--danger); background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.3); }
   .badge-activo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
   .badge-activo.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
@@ -71,7 +71,7 @@
   .btn-save{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
   .btn-save:disabled{ opacity:.6; }
 
-  .btn-functions{ width:100%; padding:11px; margin-bottom:18px; border:1px dashed var(--line-strong); border-radius:10px; background:rgba(41,182,246,0.06); color:var(--blue-glow); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-functions{ width:100%; padding:11px; margin-bottom:18px; border:1px dashed var(--line-strong); border-radius:10px; background:color-mix(in srgb, var(--blue-bright) 6%, transparent); color:var(--blue-glow); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
   .btn-functions svg{ width:15px; height:15px; transition:transform .2s ease; }
   .btn-functions.open svg{ transform:rotate(180deg); }
 

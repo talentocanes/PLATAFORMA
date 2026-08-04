@@ -11,7 +11,7 @@
     --navy-deep:#050d1a; --navy-panel:#0b1a30; --blue-deep:#0d47a1;
     --blue-bright:#29b6f6; --blue-glow:#4fc3f7; --ink:#05070b;
     --white:#ffffff; --mist:#b7c6dc; --mist-dim:#6f83a0;
-    --line:rgba(255,255,255,0.08); --line-strong:rgba(79,195,247,0.25);
+    --line:rgba(255,255,255,0.08); --line-strong:color-mix(in srgb, var(--blue-glow) 25%, transparent);
     --danger:#ff6b6b;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
@@ -20,10 +20,11 @@
     display:flex; align-items:center; justify-content:center;
     min-height:100vh; color:var(--white);
     background:
-      radial-gradient(1200px 700px at 85% -10%, rgba(41,182,246,0.16), transparent 60%),
-      radial-gradient(900px 600px at -10% 100%, rgba(13,71,161,0.22), transparent 60%),
+      radial-gradient(1200px 700px at 85% -10%, color-mix(in srgb, var(--blue-bright) 16%, transparent), transparent 60%),
+      radial-gradient(900px 600px at -10% 100%, color-mix(in srgb, var(--blue-deep) 22%, transparent), transparent 60%),
       var(--navy-deep);
     padding:20px;
+    transition: background-color .3s ease;
   }
   .card{
     width:100%; max-width:380px;
@@ -76,15 +77,15 @@
     font-size:12.5px; line-height:1.5; display:none;
   }
   .msg.error{ display:block; background:rgba(255,107,107,0.12); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
-  .msg.info{ display:block; background:rgba(41,182,246,0.1); color:var(--blue-glow); border:1px solid var(--line-strong); }
+  .msg.info{ display:block; background:color-mix(in srgb, var(--blue-bright) 10%, transparent); color:var(--blue-glow); border:1px solid var(--line-strong); }
 </style>
 </head>
 <body>
   <div class="card">
     <div class="brand">
-      <img src="logo.png" alt="Talento Canes">
+      <img src="logo.png" alt="Talento Canes" id="brandLogo">
       <div>
-        <div class="name">Talento Canes</div>
+        <div class="name" id="brandName">Talento Canes</div>
         <div class="sub">SGITC · Panel</div>
       </div>
     </div>
@@ -114,6 +115,13 @@
 
   <script type="module">
     import { iniciarSesion } from './auth.js';
+    import { cargarConfiguracionNegocio } from './theme.js';
+
+    cargarConfiguracionNegocio().then(config => {
+      if (!config) return;
+      if (config.nombre_negocio) document.getElementById('brandName').textContent = config.nombre_negocio;
+      if (config.logo_url) document.getElementById('brandLogo').src = config.logo_url;
+    });
 
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
