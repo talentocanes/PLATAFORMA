@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Configuración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .page-header{ margin-bottom:22px; }
+  .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
+  .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
+
+  /* Tabs de subsecciones (por ahora solo Personalización) */
+  .subtabs{ display:flex; gap:8px; margin-bottom:24px; border-bottom:1px solid var(--line); }
+  .subtab{ padding:10px 16px; font-size:13px; font-weight:600; color:var(--mist-dim); border-bottom:2px solid transparent; cursor:pointer; }
+  .subtab.active{ color:var(--white); border-bottom-color:var(--blue-bright); }
+
+  .card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; margin-bottom:20px; }
+  .card h2{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:600; margin-bottom:18px; }
+
+  .logo-row{ display:flex; align-items:center; gap:18px; margin-bottom:22px; flex-wrap:wrap; }
+  .logo-preview{ width:64px; height:64px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--line); object-fit:contain; padding:6px; }
+  .logo-name-input{ flex:1; min-width:180px; }
+  .logo-name-input label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .logo-name-input input{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:15px; font-weight:600; font-family:'Space Grotesk',sans-serif; outline:none; }
+  .logo-name-input input:focus{ border-color:var(--blue-bright); }
+  .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .field textarea, .field input{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; font-family:'Inter',sans-serif; }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .field input:focus, .field textarea:focus{ border-color:var(--blue-bright); }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .grid-3{ display:grid; grid-template-columns:auto 1fr; gap:0; }
+  .phone-row{ display:flex; gap:8px; }
+  .phone-row select{ padding:10px 8px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; }
+  .phone-row input{ flex:1; }
+
+  .file-row{ display:flex; align-items:center; gap:10px; }
+  .file-row .file-name{ flex:1; font-size:12.5px; color:var(--mist-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .file-row input[type="file"]{ display:none; }
+
+  @media (max-width: 700px){ .grid-2{ grid-template-columns:1fr; } }
+
+  /* Selector de paletas */
+  .palette-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  @media (max-width: 700px){ .palette-grid{ grid-template-columns:repeat(2, 1fr); } }
+  .palette-card{ border:2px solid var(--line); border-radius:14px; padding:14px; cursor:pointer; background:var(--navy-panel-2); transition:border-color .2s ease, transform .2s ease; }
+  .palette-card:hover{ transform:translateY(-2px); }
+  .palette-card.selected{ border-color:var(--blue-bright); }
+  .palette-dots{ display:flex; gap:6px; margin-bottom:10px; }
+  .palette-dots span{ width:18px; height:18px; border-radius:50%; display:inline-block; }
+  .palette-card .p-label{ font-size:12px; font-weight:600; }
+  .palette-card .p-check{ font-size:10px; color:var(--blue-glow); font-family:'JetBrains Mono',monospace; text-transform:uppercase; margin-top:4px; display:none; }
+  .palette-card.selected .p-check{ display:block; }
+
+  .btn-save{ padding:12px 26px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
+  .btn-save:disabled{ opacity:.6; }
+  .save-msg{ margin-top:14px; font-size:13px; display:none; }
+  .save-msg.ok{ display:block; color:#7bd88f; }
+  .save-msg.error{ display:block; color:var(--danger); }
+
+  .readonly-card p{ font-size:13.5px; color:var(--mist); line-height:1.7; }
+  .readonly-card .label-dim{ color:var(--mist-dim); font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; font-family:'JetBrains Mono',monospace; margin-top:14px; }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Configuración</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <h1>Configuración</h1>
+      <p>Datos del negocio y personalización visual de la plataforma.</p>
+    </div>
+
+    <div class="subtabs">
+      <div class="subtab active">Personalización</div>
+    </div>
+
+    <!-- Vista de administrador: formulario editable -->
+    <div id="adminView" style="display:none;">
+      <div class="card">
+        <h2>Identidad del negocio</h2>
+        <div class="logo-row">
+          <img id="logoPreview" src="logo.png" alt="Logo" class="logo-preview">
+          <div class="logo-name-input">
+            <label>Nombre del colegio / negocio</label>
+            <input type="text" id="fNombre" placeholder="Talento Canes">
+          </div>
+          <button type="button" class="btn-secondary" id="btnCambiarFoto">Cambiar foto</button>
+          <input type="file" id="fileLogo" accept="image/*">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Información general del negocio</h2>
+        <div class="field">
+          <label>Descripción del negocio</label>
+          <textarea id="fDescripcion" placeholder="Introduce una descripción sobre tu negocio"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Número de celular / teléfono</label>
+            <div class="phone-row">
+              <select id="fCodigoPais">
+                <option value="+57">🇨🇴 +57</option>
+                <option value="+52">🇲🇽 +52</option>
+                <option value="+54">🇦🇷 +54</option>
+                <option value="+56">🇨🇱 +56</option>
+                <option value="+51">🇵🇪 +51</option>
+                <option value="+593">🇪🇨 +593</option>
+                <option value="+507">🇵🇦 +507</option>
+                <option value="+58">🇻🇪 +58</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+1">🇺🇸 +1</option>
+              </select>
+              <input type="text" id="fTelefono" placeholder="3001234567">
+            </div>
+          </div>
+          <div class="field">
+            <label>Ciudad</label>
+            <input type="text" id="fCiudad" placeholder="Popayán">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Dirección</label>
+            <input type="text" id="fDireccion" placeholder="Dirección física">
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" id="fCorreo" placeholder="contacto@talentocanes.online">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Subir contrato</label>
+            <div class="file-row">
+              <button type="button" class="btn-secondary" id="btnSubirContrato">Elegir archivo</button>
+              <span class="file-name" id="contratoNombre">Ningún archivo</span>
+              <input type="file" id="fileContrato" accept=".pdf,.doc,.docx">
+            </div>
+          </div>
+          <div class="field">
+            <label>Página web</label>
+            <input type="text" id="fPaginaWeb" placeholder="www.talentocanes.online">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Estilo (selecciona la paleta que más combine con tu marca)</h2>
+        <div class="palette-grid" id="paletteGrid"></div>
+      </div>
+
+      <button class="btn-save" id="btnGuardar">Guardar cambios</button>
+      <div class="save-msg" id="saveMsg"></div>
+    </div>
+
+    <!-- Vista de solo lectura para trabajadores/clientes -->
+    <div id="readonlyView" style="display:none;">
+      <div class="card readonly-card">
+        <h2 id="roNombre">Talento Canes</h2>
+        <p id="roDescripcion">—</p>
+        <div class="label-dim">Contacto</div>
+        <p id="roContacto">—</p>
+        <div class="label-dim">Página web</div>
+        <p id="roWeb">—</p>
+      </div>
+      <div class="card">
+        <p style="color:var(--mist-dim); font-size:13px;">Solo el administrador puede personalizar estos datos.</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initLayout, obtenerConfiguracionActual } from './layout.js';
+    import { supabase } from './supabaseClient.js';
+    import { PALETAS, aplicarPaleta } from './theme.js';
+
+    let esAdmin = false;
+    let config = null;
+    let paletaSeleccionada = 'azul-original';
+    let archivoLogo = null;
+    let archivoContrato = null;
+
+    (async () => {
+      const profile = await initLayout({ activeKey: 'configuracion' });
+      if (!profile) return;
+
+      esAdmin = profile.role === 'admin';
+      config = obtenerConfiguracionActual();
+      paletaSeleccionada = config?.paleta || 'azul-original';
+
+      if (esAdmin) {
+        document.getElementById('adminView').style.display = 'block';
+        rellenarFormulario();
+        pintarPaletas();
+      } else {
+        document.getElementById('readonlyView').style.display = 'block';
+        rellenarSoloLectura();
+      }
+    })();
+
+    function rellenarFormulario(){
+      if (!config) return;
+      document.getElementById('fNombre').value = config.nombre_negocio || '';
+      document.getElementById('logoPreview').src = config.logo_url || 'logo.png';
+      document.getElementById('fDescripcion').value = config.descripcion || '';
+      document.getElementById('fCodigoPais').value = config.codigo_pais || '+57';
+      document.getElementById('fTelefono').value = config.telefono || '';
+      document.getElementById('fCiudad').value = config.ciudad || '';
+      document.getElementById('fDireccion').value = config.direccion || '';
+      document.getElementById('fCorreo').value = config.correo || '';
+      document.getElementById('fPaginaWeb').value = config.pagina_web || '';
+      document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
+    }
+
+    function rellenarSoloLectura(){
+      if (!config) return;
+      document.getElementById('roNombre').textContent = config.nombre_negocio || 'Talento Canes';
+      document.getElementById('roDescripcion').textContent = config.descripcion || 'Sin descripción registrada.';
+      const contacto = [config.telefono ? `${config.codigo_pais || ''} ${config.telefono}` : null, config.correo, config.direccion ? `${config.direccion}${config.ciudad ? ', ' + config.ciudad : ''}` : null]
+        .filter(Boolean).join(' · ');
+      document.getElementById('roContacto').textContent = contacto || '—';
+      document.getElementById('roWeb').textContent = config.pagina_web || '—';
+    }
+
+    function pintarPaletas(){
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = PALETAS.map(p => `
+        <div class="palette-card ${p.key === paletaSeleccionada ? 'selected' : ''}" data-key="${p.key}">
+          <div class="palette-dots">
+            <span style="background:${p.colors.blueDeep}"></span>
+            <span style="background:${p.colors.blueBright}"></span>
+            <span style="background:${p.colors.navyPanel2}"></span>
+          </div>
+          <div class="p-label">${p.label}</div>
+          <div class="p-check">✓ Seleccionada</div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.palette-card').forEach(card => {
+        card.addEventListener('click', () => {
+          paletaSeleccionada = card.dataset.key;
+          aplicarPaleta(paletaSeleccionada); // vista previa inmediata
+          grid.querySelectorAll('.palette-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+        });
+      });
+    }
+
+    // ---------------- Selección de archivos ----------------
+    document.getElementById('btnCambiarFoto').addEventListener('click', () => {
+      document.getElementById('fileLogo').click();
+    });
+    document.getElementById('fileLogo').addEventListener('change', (e) => {
+      archivoLogo = e.target.files[0] || null;
+      if (archivoLogo) {
+        document.getElementById('logoPreview').src = URL.createObjectURL(archivoLogo);
+      }
+    });
+
+    document.getElementById('btnSubirContrato').addEventListener('click', () => {
+      document.getElementById('fileContrato').click();
+    });
+    document.getElementById('fileContrato').addEventListener('change', (e) => {
+      archivoContrato = e.target.files[0] || null;
+      if (archivoContrato) {
+        document.getElementById('contratoNombre').textContent = archivoContrato.name;
+      }
+    });
+
+    // ---------------- Guardar ----------------
+    document.getElementById('btnGuardar').addEventListener('click', async () => {
+      const btn = document.getElementById('btnGuardar');
+      const msg = document.getElementById('saveMsg');
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      msg.className = 'save-msg';
+
+      try {
+        const payload = {
+          nombre_negocio: document.getElementById('fNombre').value.trim() || 'Talento Canes',
+          descripcion: document.getElementById('fDescripcion').value.trim(),
+          codigo_pais: document.getElementById('fCodigoPais').value,
+          telefono: document.getElementById('fTelefono').value.trim(),
+          ciudad: document.getElementById('fCiudad').value.trim(),
+          direccion: document.getElementById('fDireccion').value.trim(),
+          correo: document.getElementById('fCorreo').value.trim(),
+          pagina_web: document.getElementById('fPaginaWeb').value.trim(),
+          paleta: paletaSeleccionada
+        };
+
+        if (archivoLogo) {
+          const ruta = `logo/${Date.now()}-${archivoLogo.name}`;
+          const { error: upErr } = await supabase.storage.from('negocio').upload(ruta, archivoLogo, { upsert: true });
+          if (upErr) throw new Error('No se pudo subir el logo: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('negocio').getPublicUrl(ruta);
+          payload.logo_url = pub.publicUrl;
+        }
+
+        if (archivoContrato) {
+          const ruta = `contratos/${Date.now()}-${archivoContrato.name}`;
+          const { error: upErr } = await supabase.storage.from('negocio').upload(ruta, archivoContrato, { upsert: true });
+          if (upErr) throw new Error('No se pudo subir el contrato: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('negocio').getPublicUrl(ruta);
+          payload.contrato_url = pub.publicUrl;
+          payload.contrato_nombre = archivoContrato.name;
+        }
+
+        const { error } = await supabase.from('configuracion_negocio').update(payload).eq('id', 1);
+        if (error) throw new Error(error.message);
+
+        msg.textContent = 'Cambios guardados correctamente.';
+        msg.classList.add('ok');
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.classList.add('error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar cambios';
+      }
+    });
+  </script>
+</body>
+</html>
