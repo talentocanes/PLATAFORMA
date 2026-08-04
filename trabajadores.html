@@ -70,6 +70,17 @@
   .switch input:checked + .slider::before{ transform:translateX(16px); }
   .btn-save{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
   .btn-save:disabled{ opacity:.6; }
+
+  .btn-functions{ width:100%; padding:11px; margin-bottom:18px; border:1px dashed var(--line-strong); border-radius:10px; background:rgba(41,182,246,0.06); color:var(--blue-glow); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-functions svg{ width:15px; height:15px; transition:transform .2s ease; }
+  .btn-functions.open svg{ transform:rotate(180deg); }
+
+  .functions-panel{ display:none; margin:-6px 0 18px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .functions-panel.open{ display:block; }
+  .function-row{ display:flex; align-items:center; justify-content:space-between; padding:11px 14px; border-bottom:1px solid var(--line); background:var(--ink); }
+  .function-row:last-child{ border-bottom:none; }
+  .function-row span{ font-size:13px; }
+  .function-note{ font-size:11.5px; color:var(--mist-dim); padding:10px 14px; background:var(--navy-panel-2); }
 </style>
 </head>
 <body>
@@ -179,6 +190,15 @@
         </label>
       </div>
 
+      <button type="button" class="btn-functions" id="btnFunciones">
+        <span>Funciones habilitadas</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="functions-panel" id="functionsPanel">
+        <div class="function-note">Inicio y Configuración siempre están disponibles y no se pueden deshabilitar.</div>
+        <div id="functionsList"></div>
+      </div>
+
       <div class="modal-msg" id="editMsg"></div>
       <button class="btn-save" id="editSaveBtn">Guardar cambios</button>
       <button class="modal-close" id="editCloseBtn">Cancelar</button>
@@ -186,7 +206,7 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js';
+    import { initLayout, obtenerModulosAsignables } from './layout.js';
     import { supabase } from './supabaseClient.js';
 
     const ROL = 'trabajador';
@@ -218,7 +238,7 @@
       const tbody = document.getElementById('tableBody');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, fecha_ingreso, activo)')
+        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, fecha_ingreso, activo, modulos_habilitados)')
         .eq('role', ROL)
         .order('created_at', { ascending: false });
 
@@ -236,7 +256,8 @@
         status: p.status,
         cargo: p.trabajador_detalle?.cargo || null,
         fecha_ingreso: p.trabajador_detalle?.fecha_ingreso || null,
-        activo: p.trabajador_detalle?.activo ?? true
+        activo: p.trabajador_detalle?.activo ?? true,
+        modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || []
       }));
 
       pintarTabla(filas);
@@ -321,7 +342,40 @@
     // ---------------- Modal de edición ----------------
     const editOverlay = document.getElementById('editOverlay');
     const editMsg = document.getElementById('editMsg');
+    const btnFunciones = document.getElementById('btnFunciones');
+    const functionsPanel = document.getElementById('functionsPanel');
+    const functionsList = document.getElementById('functionsList');
+    const MODULOS = obtenerModulosAsignables();
     let editandoId = null;
+    let modulosSeleccionados = [];
+
+    function pintarFunciones(){
+      functionsList.innerHTML = MODULOS.map(m => `
+        <div class="function-row">
+          <span>${m.label}</span>
+          <label class="switch">
+            <input type="checkbox" data-mod="${m.key}" ${modulosSeleccionados.includes(m.key) ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      `).join('');
+
+      functionsList.querySelectorAll('input[data-mod]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const key = chk.dataset.mod;
+          if (chk.checked) {
+            if (!modulosSeleccionados.includes(key)) modulosSeleccionados.push(key);
+          } else {
+            modulosSeleccionados = modulosSeleccionados.filter(k => k !== key);
+          }
+        });
+      });
+    }
+
+    btnFunciones.addEventListener('click', () => {
+      btnFunciones.classList.toggle('open');
+      functionsPanel.classList.toggle('open');
+    });
 
     function abrirEdicion(id){
       const fila = filas.find(f => f.id === id);
@@ -334,6 +388,11 @@
       document.getElementById('editFechaIngreso').value = fila.fecha_ingreso || '';
       document.getElementById('editCargo').value = fila.cargo || '';
       document.getElementById('editActivo').checked = !!fila.activo;
+
+      modulosSeleccionados = [...(fila.modulos_habilitados || [])];
+      pintarFunciones();
+      btnFunciones.classList.remove('open');
+      functionsPanel.classList.remove('open');
 
       editOverlay.classList.add('active');
     }
@@ -357,7 +416,7 @@
 
       const [r1, r2] = await Promise.all([
         supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', editandoId),
-        supabase.from('trabajador_detalle').update({ cargo, fecha_ingreso: fechaIngreso, activo }).eq('id', editandoId)
+        supabase.from('trabajador_detalle').update({ cargo, fecha_ingreso: fechaIngreso, activo, modulos_habilitados: modulosSeleccionados }).eq('id', editandoId)
       ]);
 
       btn.disabled = false;

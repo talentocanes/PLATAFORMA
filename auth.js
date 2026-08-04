@@ -47,7 +47,7 @@ export async function iniciarSesion(identificador, password) {
 // ---------------------------------------------------------
 export async function cerrarSesion() {
   await supabase.auth.signOut();
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 
 // ---------------------------------------------------------
@@ -67,7 +67,7 @@ export async function obtenerPerfilActual() {
 }
 
 // ---------------------------------------------------------
-// Guardia de página: redirige a login.html si no hay sesión
+// Guardia de página: redirige a index.html si no hay sesión
 // aprobada, o a inicio.html si el rol no está permitido.
 // Úsala al inicio de cada página protegida:
 //   const perfil = await protegerPagina({ rolesPermitidos: ['admin'] });
@@ -76,7 +76,7 @@ export async function protegerPagina({ rolesPermitidos = null } = {}) {
   const profile = await obtenerPerfilActual();
 
   if (!profile || profile.status !== 'approved') {
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
     return null;
   }
 

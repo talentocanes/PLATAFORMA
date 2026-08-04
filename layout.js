@@ -1,4 +1,9 @@
 import { protegerPagina, cerrarSesion } from './auth.js';
+import { supabase } from './supabaseClient.js';
+
+// Claves que SIEMPRE están disponibles para cualquier trabajador,
+// sin importar sus permisos asignados.
+const CLAVES_SIEMPRE_DISPONIBLES = ['inicio', 'configuracion'];
 
 // ---------------------------------------------------------
 // Definición de las 12 opciones definitivas del menú.
@@ -59,6 +64,18 @@ const NAV_GROUPS = [
 
 const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: 'Cliente' };
 
+// ---------------------------------------------------------
+// Módulos asignables (todos menos Inicio y Configuración,
+// que siempre están disponibles). Se usa en el panel de
+// "Funciones" dentro de Editar trabajador.
+// ---------------------------------------------------------
+export function obtenerModulosAsignables(){
+  return NAV_GROUPS
+    .flatMap(group => group.items)
+    .filter(item => !CLAVES_SIEMPRE_DISPONIBLES.includes(item.key))
+    .map(item => ({ key: item.key, label: item.label }));
+}
+
 function iniciales(nombre){
   return (nombre || '?').trim().split(/\s+/).slice(0,2).map(p => p[0]?.toUpperCase() || '').join('');
 }
@@ -76,8 +93,17 @@ function renderNavItem(item, activeKey){
     </${tag}>`;
 }
 
-function renderSidebarHTML(activeKey, profile){
-  const todosLosItems = NAV_GROUPS.flatMap(group => group.items);
+function renderSidebarHTML(activeKey, profile, modulosPermitidos){
+  let todosLosItems = NAV_GROUPS.flatMap(group => group.items);
+
+  // Si es trabajador, se filtran por completo los módulos que el
+  // admin no le haya habilitado (no se muestran en gris: desaparecen).
+  if (modulosPermitidos) {
+    todosLosItems = todosLosItems.filter(item =>
+      CLAVES_SIEMPRE_DISPONIBLES.includes(item.key) || modulosPermitidos.includes(item.key)
+    );
+  }
+
   const itemsHtml = todosLosItems.map(item => renderNavItem(item, activeKey)).join('');
 
   return `
@@ -112,8 +138,28 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
   const profile = await protegerPagina({ rolesPermitidos });
   if (!profile) return null;
 
+  // Los trabajadores solo ven/acceden a los módulos que el admin les
+  // haya habilitado (más Inicio y Configuración, siempre disponibles).
+  let modulosPermitidos = null;
+  if (profile.role === 'trabajador') {
+    const { data, error } = await supabase
+      .from('trabajador_detalle')
+      .select('modulos_habilitados')
+      .eq('id', profile.id)
+      .single();
+
+    if (error) console.error('Error al leer permisos del trabajador:', error);
+    modulosPermitidos = data?.modulos_habilitados || [];
+
+    const tieneAcceso = CLAVES_SIEMPRE_DISPONIBLES.includes(activeKey) || modulosPermitidos.includes(activeKey);
+    if (!tieneAcceso) {
+      window.location.href = 'inicio.html';
+      return null;
+    }
+  }
+
   const sidebar = document.getElementById('sidebar');
-  sidebar.innerHTML = renderSidebarHTML(activeKey, profile);
+  sidebar.innerHTML = renderSidebarHTML(activeKey, profile, modulosPermitidos);
 
   document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
 
