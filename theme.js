@@ -86,6 +86,10 @@ export function aplicarPaleta(key){
   root.setProperty('--blue-mid', paleta.colors.blueMid);
   root.setProperty('--blue-bright', paleta.colors.blueBright);
   root.setProperty('--blue-glow', paleta.colors.blueGlow);
+
+  // Se guarda localmente para que theme-inline.js pueda aplicarla de
+  // inmediato en la próxima carga, sin esperar la respuesta de Supabase.
+  try { localStorage.setItem('tc_paleta', paleta.key); } catch (e) { /* ignorar */ }
 }
 
 // ---------------------------------------------------------
