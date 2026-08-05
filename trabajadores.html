@@ -198,15 +198,9 @@
         <label>Nombre completo</label>
         <input type="text" id="editFullName">
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Teléfono</label>
-          <input type="text" id="editPhone" placeholder="Ej: 3001234567">
-        </div>
-        <div class="field">
-          <label>Fecha de ingreso</label>
-          <input type="date" id="editFechaIngreso">
-        </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="text" id="editPhone" placeholder="Ej: 3001234567">
       </div>
       <div class="field">
         <label>Cargo</label>
@@ -219,6 +213,10 @@
           <option value="Jefe de entrenamiento">Jefe de entrenamiento</option>
           <option value="Otro">Otro</option>
         </select>
+      </div>
+      <div class="field" id="editCargoOtroWrap" style="display:none;">
+        <label>Especifica el cargo</label>
+        <input type="text" id="editCargoOtro" placeholder="Escribe el cargo">
       </div>
 
       <div class="toggle-row">
@@ -264,23 +262,21 @@
           <input type="text" id="manPhone" placeholder="3001234567">
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Cargo</label>
-          <select id="manCargo">
-            <option value="">Sin definir</option>
-            <option value="Conductor">Conductor</option>
-            <option value="Auxiliar canino">Auxiliar canino</option>
-            <option value="Entrenador">Entrenador</option>
-            <option value="Coordinador de logística">Coordinador de logística</option>
-            <option value="Jefe de entrenamiento">Jefe de entrenamiento</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Fecha de ingreso</label>
-          <input type="date" id="manFechaIngreso">
-        </div>
+      <div class="field">
+        <label>Cargo</label>
+        <select id="manCargo">
+          <option value="">Sin definir</option>
+          <option value="Conductor">Conductor</option>
+          <option value="Auxiliar canino">Auxiliar canino</option>
+          <option value="Entrenador">Entrenador</option>
+          <option value="Coordinador de logística">Coordinador de logística</option>
+          <option value="Jefe de entrenamiento">Jefe de entrenamiento</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="field" id="manCargoOtroWrap" style="display:none;">
+        <label>Especifica el cargo</label>
+        <input type="text" id="manCargoOtro" placeholder="Escribe el cargo">
       </div>
       <div class="field">
         <label>Contraseña temporal</label>
@@ -329,7 +325,7 @@
       const tbody = document.getElementById('tableBody');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, fecha_ingreso, activo, modulos_habilitados)')
+        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, activo, modulos_habilitados)')
         .eq('role', ROL)
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
@@ -347,7 +343,6 @@
         phone: p.phone,
         status: p.status,
         cargo: p.trabajador_detalle?.cargo || null,
-        fecha_ingreso: p.trabajador_detalle?.fecha_ingreso || null,
         activo: p.trabajador_detalle?.activo ?? true,
         modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || []
       }));
@@ -472,6 +467,39 @@
       functionsPanel.classList.toggle('open');
     });
 
+    const CARGOS_CONOCIDOS = ['', 'Conductor', 'Auxiliar canino', 'Entrenador', 'Coordinador de logística', 'Jefe de entrenamiento'];
+
+    function aplicarCargoASelect(selectId, otroWrapId, otroInputId, cargoActual){
+      const select = document.getElementById(selectId);
+      const otroWrap = document.getElementById(otroWrapId);
+      const otroInput = document.getElementById(otroInputId);
+
+      if (cargoActual && !CARGOS_CONOCIDOS.includes(cargoActual)) {
+        select.value = 'Otro';
+        otroInput.value = cargoActual;
+        otroWrap.style.display = 'block';
+      } else {
+        select.value = cargoActual || '';
+        otroInput.value = '';
+        otroWrap.style.display = 'none';
+      }
+    }
+
+    function obtenerCargoFinal(selectId, otroInputId){
+      const select = document.getElementById(selectId);
+      if (select.value === 'Otro') {
+        return document.getElementById(otroInputId).value.trim() || 'Otro';
+      }
+      return select.value || null;
+    }
+
+    document.getElementById('editCargo').addEventListener('change', (e) => {
+      document.getElementById('editCargoOtroWrap').style.display = e.target.value === 'Otro' ? 'block' : 'none';
+    });
+    document.getElementById('manCargo').addEventListener('change', (e) => {
+      document.getElementById('manCargoOtroWrap').style.display = e.target.value === 'Otro' ? 'block' : 'none';
+    });
+
     function abrirEdicion(id){
       const fila = filas.find(f => f.id === id);
       if (!fila) return;
@@ -480,8 +508,7 @@
 
       document.getElementById('editFullName').value = fila.full_name || '';
       document.getElementById('editPhone').value = fila.phone || '';
-      document.getElementById('editFechaIngreso').value = fila.fecha_ingreso || '';
-      document.getElementById('editCargo').value = fila.cargo || '';
+      aplicarCargoASelect('editCargo', 'editCargoOtroWrap', 'editCargoOtro', fila.cargo);
       document.getElementById('editActivo').checked = !!fila.activo;
 
       modulosSeleccionados = [...(fila.modulos_habilitados || [])];
@@ -505,13 +532,12 @@
 
       const fullName = document.getElementById('editFullName').value.trim();
       const phone = document.getElementById('editPhone').value.trim();
-      const fechaIngreso = document.getElementById('editFechaIngreso').value || null;
-      const cargo = document.getElementById('editCargo').value || null;
+      const cargo = obtenerCargoFinal('editCargo', 'editCargoOtro');
       const activo = document.getElementById('editActivo').checked;
 
       const [r1, r2] = await Promise.all([
         supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', editandoId),
-        supabase.from('trabajador_detalle').update({ cargo, fecha_ingreso: fechaIngreso, activo, modulos_habilitados: modulosSeleccionados }).eq('id', editandoId)
+        supabase.from('trabajador_detalle').update({ cargo, activo, modulos_habilitados: modulosSeleccionados }).eq('id', editandoId)
       ]);
 
       btn.disabled = false;
@@ -600,7 +626,8 @@
       document.getElementById('manUsername').value = '';
       document.getElementById('manPhone').value = '';
       document.getElementById('manCargo').value = '';
-      document.getElementById('manFechaIngreso').value = '';
+      document.getElementById('manCargoOtro').value = '';
+      document.getElementById('manCargoOtroWrap').style.display = 'none';
       document.getElementById('manPassword').value = generarPassword();
       manualOverlay.classList.add('active');
     }
@@ -620,8 +647,7 @@
       const full_name = document.getElementById('manFullName').value.trim();
       const username = document.getElementById('manUsername').value.trim();
       const phone = document.getElementById('manPhone').value.trim();
-      const cargo = document.getElementById('manCargo').value || null;
-      const fecha_ingreso = document.getElementById('manFechaIngreso').value || null;
+      const cargo = obtenerCargoFinal('manCargo', 'manCargoOtro');
       const password = document.getElementById('manPassword').value;
 
       if (!username || !password) {
@@ -645,8 +671,7 @@
             email_sintetico: usernameToEmail(username),
             password,
             phone,
-            cargo,
-            fecha_ingreso
+            cargo
           }
         });
 

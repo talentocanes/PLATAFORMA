@@ -112,7 +112,7 @@
     <div class="toolbar">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" id="searchInput" placeholder="Buscar por nombre, usuario o dirección…">
+        <input type="text" id="searchInput" placeholder="Buscar por nombre o usuario…">
       </div>
       <div class="count-tag" id="countTag"></div>
     </div>
@@ -121,12 +121,12 @@
       <table>
         <thead>
           <tr>
-            <th>Nombre</th><th>Usuario</th><th>Teléfono</th><th>Dirección</th>
+            <th>Nombre</th><th>Usuario</th><th>Teléfono</th>
             <th>Activo</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="6" class="empty-note">Cargando…</td></tr>
+          <tr><td colspan="5" class="empty-note">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -183,19 +183,9 @@
         <label>Nombre completo</label>
         <input type="text" id="editFullName">
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Teléfono</label>
-          <input type="text" id="editPhone" placeholder="Ej: 3001234567">
-        </div>
-        <div class="field">
-          <label>Fecha de registro</label>
-          <input type="date" id="editFechaRegistro">
-        </div>
-      </div>
       <div class="field">
-        <label>Dirección</label>
-        <input type="text" id="editDireccion" placeholder="Dirección para recogida/entrega">
+        <label>Teléfono</label>
+        <input type="text" id="editPhone" placeholder="Ej: 3001234567">
       </div>
 
       <div class="toggle-row">
@@ -230,16 +220,6 @@
         <div class="field">
           <label>Teléfono</label>
           <input type="text" id="manPhone" placeholder="3001234567">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Dirección</label>
-          <input type="text" id="manDireccion" placeholder="Dirección para recogida/entrega">
-        </div>
-        <div class="field">
-          <label>Fecha de registro</label>
-          <input type="date" id="manFechaRegistro">
         </div>
       </div>
       <div class="field">
@@ -289,14 +269,14 @@
       const tbody = document.getElementById('tableBody');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, phone, status, cliente_detalle(direccion, fecha_registro, activo)')
+        .select('id, username, full_name, phone, status, cliente_detalle(activo)')
         .eq('role', ROL)
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error al cargar clientes:', error);
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-note">No se pudo cargar el listado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-note">No se pudo cargar el listado.</td></tr>`;
         return;
       }
 
@@ -305,8 +285,6 @@
         username: p.username,
         full_name: p.full_name,
         phone: p.phone,
-        direccion: p.cliente_detalle?.direccion || null,
-        fecha_registro: p.cliente_detalle?.fecha_registro || null,
         activo: p.cliente_detalle?.activo ?? true
       }));
 
@@ -318,7 +296,7 @@
       document.getElementById('countTag').textContent = `${lista.length} registrado(s)`;
 
       if (lista.length === 0){
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-note">Aún no hay clientes que coincidan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-note">Aún no hay clientes que coincidan.</td></tr>`;
         return;
       }
 
@@ -332,7 +310,6 @@
           <td>${p.full_name || '—'}</td>
           <td>@${p.username}</td>
           <td class="${p.phone ? '' : 'cell-dim'}">${p.phone || '—'}</td>
-          <td class="${p.direccion ? '' : 'cell-dim'}">${p.direccion || 'Sin definir'}</td>
           <td><span class="badge-activo ${p.activo ? 'si' : 'no'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
           <td>
             ${esAdmin ? `
@@ -365,8 +342,7 @@
       if (!q){ pintarTabla(filas); return; }
       const filtradas = filas.filter(p =>
         (p.full_name || '').toLowerCase().includes(q) ||
-        (p.username || '').toLowerCase().includes(q) ||
-        (p.direccion || '').toLowerCase().includes(q)
+        (p.username || '').toLowerCase().includes(q)
       );
       pintarTabla(filtradas);
     });
@@ -404,8 +380,6 @@
 
       document.getElementById('editFullName').value = fila.full_name || '';
       document.getElementById('editPhone').value = fila.phone || '';
-      document.getElementById('editFechaRegistro').value = fila.fecha_registro || '';
-      document.getElementById('editDireccion').value = fila.direccion || '';
       document.getElementById('editActivo').checked = !!fila.activo;
 
       editOverlay.classList.add('active');
@@ -424,13 +398,11 @@
 
       const fullName = document.getElementById('editFullName').value.trim();
       const phone = document.getElementById('editPhone').value.trim();
-      const fechaRegistro = document.getElementById('editFechaRegistro').value || null;
-      const direccion = document.getElementById('editDireccion').value.trim();
       const activo = document.getElementById('editActivo').checked;
 
       const [r1, r2] = await Promise.all([
         supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', editandoId),
-        supabase.from('cliente_detalle').update({ direccion, fecha_registro: fechaRegistro, activo }).eq('id', editandoId)
+        supabase.from('cliente_detalle').update({ activo }).eq('id', editandoId)
       ]);
 
       btn.disabled = false;
@@ -518,8 +490,6 @@
       document.getElementById('manFullName').value = '';
       document.getElementById('manUsername').value = '';
       document.getElementById('manPhone').value = '';
-      document.getElementById('manDireccion').value = '';
-      document.getElementById('manFechaRegistro').value = '';
       document.getElementById('manPassword').value = generarPassword();
       manualOverlay.classList.add('active');
     }
@@ -539,8 +509,6 @@
       const full_name = document.getElementById('manFullName').value.trim();
       const username = document.getElementById('manUsername').value.trim();
       const phone = document.getElementById('manPhone').value.trim();
-      const direccion = document.getElementById('manDireccion').value.trim();
-      const fecha_registro = document.getElementById('manFechaRegistro').value || null;
       const password = document.getElementById('manPassword').value;
 
       if (!username || !password) {
@@ -563,9 +531,7 @@
             full_name,
             email_sintetico: usernameToEmail(username),
             password,
-            phone,
-            direccion,
-            fecha_registro
+            phone
           }
         });
 
