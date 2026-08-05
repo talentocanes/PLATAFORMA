@@ -18,7 +18,7 @@ export async function iniciarSesion(identificador, password) {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('id, username, full_name, role, status')
+    .select('id, username, full_name, role, status, requiere_cambio_password')
     .eq('id', data.user.id)
     .single();
 
@@ -59,7 +59,7 @@ export async function obtenerPerfilActual() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, username, full_name, role, status')
+    .select('id, username, full_name, role, status, requiere_cambio_password')
     .eq('id', session.user.id)
     .single();
 

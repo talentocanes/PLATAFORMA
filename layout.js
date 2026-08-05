@@ -173,6 +173,24 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
     }
   }
 
+  // Los clientes deben completar su configuración inicial antes de
+  // usar cualquier parte del panel (independientemente de si su
+  // cuenta se creó por invitación o de forma manual).
+  if (profile.role === 'cliente') {
+    const { data, error } = await supabase
+      .from('cliente_detalle')
+      .select('perfil_completo')
+      .eq('id', profile.id)
+      .single();
+
+    if (error) console.error('Error al leer el estado del perfil del cliente:', error);
+
+    if (!data?.perfil_completo) {
+      window.location.href = 'configuracion-inicial-cliente.html';
+      return null;
+    }
+  }
+
   const sidebar = document.getElementById('sidebar');
   sidebar.innerHTML = renderSidebarHTML(activeKey, profile, modulosPermitidos, config);
 
