@@ -82,6 +82,17 @@
   .function-row:last-child{ border-bottom:none; }
   .function-row span{ font-size:13px; }
   .function-note{ font-size:11.5px; color:var(--mist-dim); padding:10px 14px; background:var(--navy-panel-2); }
+
+  .choice-card{ display:flex; align-items:flex-start; gap:14px; padding:16px; border:1px solid var(--line); border-radius:14px; cursor:pointer; margin-bottom:12px; transition:border-color .2s ease, background .2s ease; }
+  .choice-card:hover{ border-color:var(--line-strong); background:color-mix(in srgb, var(--blue-bright) 5%, transparent); }
+  .choice-icon{ width:36px; height:36px; border-radius:10px; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .choice-icon svg{ width:18px; height:18px; color:var(--blue-glow); }
+  .choice-title{ font-weight:600; font-size:14px; margin-bottom:3px; }
+  .choice-desc{ font-size:12px; color:var(--mist-dim); line-height:1.5; }
+
+  .pwd-row{ display:flex; gap:8px; }
+  .pwd-row input{ flex:1; }
+  .btn-generate{ padding:0 14px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12px; cursor:pointer; white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -126,21 +137,48 @@
         <thead>
           <tr>
             <th>Nombre</th><th>Usuario</th><th>Cargo</th><th>Teléfono</th>
-            <th>Acceso</th><th>Laboral</th><th>Acciones</th>
+            <th>Laboral</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="7" class="empty-note">Cargando…</td></tr>
+          <tr><td colspan="6" class="empty-note">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
   </main>
 
+  <!-- Modal: elegir cómo añadir -->
+  <div class="modal-overlay" id="chooseOverlay">
+    <div class="modal">
+      <h2>Añadir trabajador</h2>
+      <p>Elige cómo quieres darle acceso a la persona.</p>
+      <div class="choice-card" id="choiceInvite">
+        <div class="choice-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+        </div>
+        <div>
+          <div class="choice-title">Enviar enlace de invitación</div>
+          <div class="choice-desc">La persona se registra sola y queda pendiente de tu aprobación. El enlace caduca en 24 horas.</div>
+        </div>
+      </div>
+      <div class="choice-card" id="choiceManual">
+        <div class="choice-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/><path d="M12 3v0"/></svg>
+        </div>
+        <div>
+          <div class="choice-title">Crear trabajador manualmente</div>
+          <div class="choice-desc">Tú defines sus datos y una contraseña temporal. Queda activo de inmediato, sin aprobación.</div>
+        </div>
+      </div>
+      <button class="modal-close" id="chooseCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
   <!-- Modal: enlace de invitación -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h2>Invitar trabajador</h2>
-      <p>Comparte este enlace con la persona. Al registrarse, su cuenta quedará pendiente de tu aprobación.</p>
+      <p>Comparte este enlace con la persona. Al registrarse, su cuenta quedará pendiente de tu aprobación. <b>El enlace caduca en 24 horas.</b></p>
       <div class="link-box">
         <input type="text" id="linkInput" readonly>
         <button id="copyBtn">Copiar</button>
@@ -206,9 +244,61 @@
     </div>
   </div>
 
+  <!-- Modal: crear trabajador manualmente -->
+  <div class="modal-overlay" id="manualOverlay">
+    <div class="modal">
+      <h2>Crear trabajador manualmente</h2>
+      <p>Queda activo de inmediato, sin pasar por aprobación. La contraseña es temporal para su primer acceso.</p>
+
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="manFullName">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="manUsername" placeholder="ej: juanperez">
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="text" id="manPhone" placeholder="3001234567">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Cargo</label>
+          <select id="manCargo">
+            <option value="">Sin definir</option>
+            <option value="Conductor">Conductor</option>
+            <option value="Auxiliar canino">Auxiliar canino</option>
+            <option value="Entrenador">Entrenador</option>
+            <option value="Coordinador de logística">Coordinador de logística</option>
+            <option value="Jefe de entrenamiento">Jefe de entrenamiento</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fecha de ingreso</label>
+          <input type="date" id="manFechaIngreso">
+        </div>
+      </div>
+      <div class="field">
+        <label>Contraseña temporal</label>
+        <div class="pwd-row">
+          <input type="text" id="manPassword" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="btn-generate" id="btnGenerarPwd">Generar</button>
+        </div>
+      </div>
+
+      <div class="modal-msg" id="manualMsg"></div>
+      <button class="btn-save" id="manualSaveBtn">Crear trabajador</button>
+      <button class="modal-close" id="manualCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initLayout, obtenerModulosAsignables } from './layout.js';
-    import { supabase } from './supabaseClient.js';
+    import { supabase, usernameToEmail } from './supabaseClient.js';
 
     const ROL = 'trabajador';
     let filas = [];
@@ -241,11 +331,12 @@
         .from('profiles')
         .select('id, username, full_name, phone, status, trabajador_detalle(cargo, fecha_ingreso, activo, modulos_habilitados)')
         .eq('role', ROL)
+        .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error al cargar trabajadores:', error);
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-note">No se pudo cargar el listado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-note">No se pudo cargar el listado.</td></tr>`;
         return;
       }
 
@@ -269,19 +360,22 @@
       document.getElementById('countTag').textContent = `${lista.length} registrado(s)`;
 
       if (lista.length === 0){
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-note">Aún no hay trabajadores que coincidan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-note">Aún no hay trabajadores que coincidan.</td></tr>`;
         return;
       }
 
-      const estadoLabels = { approved:'Aprobado', pending:'Pendiente', denied:'Denegado' };
+      // Activos primero, luego inactivos; alfabético dentro de cada grupo
+      const ordenada = [...lista].sort((a, b) => {
+        if (a.activo !== b.activo) return a.activo ? -1 : 1;
+        return (a.full_name || a.username || '').localeCompare(b.full_name || b.username || '', 'es', { sensitivity: 'base' });
+      });
 
-      tbody.innerHTML = lista.map(p => `
+      tbody.innerHTML = ordenada.map(p => `
         <tr data-id="${p.id}">
           <td>${p.full_name || '—'}</td>
           <td>@${p.username}</td>
           <td class="${p.cargo ? '' : 'cell-dim'}">${p.cargo || 'Sin definir'}</td>
           <td class="${p.phone ? '' : 'cell-dim'}">${p.phone || '—'}</td>
-          <td><span class="badge-status ${p.status}">${estadoLabels[p.status]}</span></td>
           <td><span class="badge-activo ${p.activo ? 'si' : 'no'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
           <td>
             ${esAdmin ? `
@@ -433,19 +527,39 @@
       await cargarLista();
     });
 
-    // ---------------- Modal de invitación ----------------
+    // ---------------- Modal de elección ----------------
+    const chooseOverlay = document.getElementById('chooseOverlay');
+
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      chooseOverlay.classList.add('active');
+    });
+    document.getElementById('chooseCloseBtn').addEventListener('click', () => {
+      chooseOverlay.classList.remove('active');
+    });
+    document.getElementById('choiceInvite').addEventListener('click', () => {
+      chooseOverlay.classList.remove('active');
+      abrirModalInvitacion();
+    });
+    document.getElementById('choiceManual').addEventListener('click', () => {
+      chooseOverlay.classList.remove('active');
+      abrirModalManual();
+    });
+
+    // ---------------- Modal de invitación (caduca en 24h) ----------------
     const overlay = document.getElementById('modalOverlay');
     const linkInput = document.getElementById('linkInput');
     const modalMsg = document.getElementById('modalMsg');
 
-    document.getElementById('btnAdd').addEventListener('click', async () => {
+    async function abrirModalInvitacion(){
       modalMsg.style.display = 'none';
       linkInput.value = 'Generando enlace…';
       overlay.classList.add('active');
 
+      const expira = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
       const { data, error } = await supabase
         .from('invitations')
-        .insert({ role: ROL })
+        .insert({ role: ROL, expires_at: expira })
         .select('token')
         .single();
 
@@ -458,7 +572,7 @@
 
       const url = `${window.location.origin}${window.location.pathname.replace('trabajadores.html','registro.html')}?token=${data.token}`;
       linkInput.value = url;
-    });
+    }
 
     document.getElementById('copyBtn').addEventListener('click', () => {
       linkInput.select();
@@ -467,6 +581,87 @@
 
     document.getElementById('modalClose').addEventListener('click', () => {
       overlay.classList.remove('active');
+    });
+
+    // ---------------- Modal de creación manual ----------------
+    const manualOverlay = document.getElementById('manualOverlay');
+    const manualMsg = document.getElementById('manualMsg');
+
+    function generarPassword(){
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+      let out = '';
+      for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    }
+
+    function abrirModalManual(){
+      manualMsg.style.display = 'none';
+      document.getElementById('manFullName').value = '';
+      document.getElementById('manUsername').value = '';
+      document.getElementById('manPhone').value = '';
+      document.getElementById('manCargo').value = '';
+      document.getElementById('manFechaIngreso').value = '';
+      document.getElementById('manPassword').value = generarPassword();
+      manualOverlay.classList.add('active');
+    }
+
+    document.getElementById('btnGenerarPwd').addEventListener('click', () => {
+      document.getElementById('manPassword').value = generarPassword();
+    });
+
+    document.getElementById('manualCloseBtn').addEventListener('click', () => {
+      manualOverlay.classList.remove('active');
+    });
+
+    document.getElementById('manualSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('manualSaveBtn');
+      manualMsg.style.display = 'none';
+
+      const full_name = document.getElementById('manFullName').value.trim();
+      const username = document.getElementById('manUsername').value.trim();
+      const phone = document.getElementById('manPhone').value.trim();
+      const cargo = document.getElementById('manCargo').value || null;
+      const fecha_ingreso = document.getElementById('manFechaIngreso').value || null;
+      const password = document.getElementById('manPassword').value;
+
+      if (!username || !password) {
+        manualMsg.textContent = 'El usuario y la contraseña son obligatorios.';
+        manualMsg.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creando…';
+
+      try {
+        const { data: sesion } = await supabase.auth.getSession();
+        const token = sesion?.session?.access_token;
+
+        const { data, error } = await supabase.functions.invoke('crear-trabajador-manual', {
+          headers: { Authorization: `Bearer ${token}` },
+          body: {
+            username,
+            full_name,
+            email_sintetico: usernameToEmail(username),
+            password,
+            phone,
+            cargo,
+            fecha_ingreso
+          }
+        });
+
+        if (error) throw new Error(error.message);
+        if (data && data.ok === false) throw new Error(data.error);
+
+        manualOverlay.classList.remove('active');
+        await cargarLista();
+      } catch (err) {
+        manualMsg.textContent = 'No se pudo crear: ' + err.message;
+        manualMsg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Crear trabajador';
+      }
     });
   </script>
 </body>
