@@ -156,6 +156,13 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=2';
     import { cargarConfiguracionNegocio } from './theme.js?v=2';
 
+    // Evita que el navegador "recuerde" y restaure una posición de
+    // scroll de una carga anterior de esta misma página.
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
     cargarConfiguracionNegocio();
 
     let profile = null;
@@ -219,6 +226,8 @@
       }
       if (detalle?.tipo_identificacion) document.getElementById('tipoIdentificacion').value = detalle.tipo_identificacion;
       document.getElementById('numeroIdentificacion').value = detalle?.numero_identificacion || '';
+
+      window.scrollTo(0, 0);
     })();
 
     const msg = document.getElementById('msg');

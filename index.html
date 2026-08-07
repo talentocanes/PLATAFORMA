@@ -126,6 +126,11 @@
     import { cargarConfiguracionNegocio } from './theme.js?v=2';
     import { definirRecordarSesion, supabase } from './supabaseClient.js?v=2';
 
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
     // Si ya hay una sesión válida (por ejemplo, se abrió esta página en
     // una pestaña nueva estando ya logueado), no mostrar el formulario:
     // redirige directo al panel.

@@ -118,6 +118,11 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=2';
     import { cargarConfiguracionNegocio } from './theme.js?v=2';
 
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
     cargarConfiguracionNegocio();
 
     const params = new URLSearchParams(window.location.search);
