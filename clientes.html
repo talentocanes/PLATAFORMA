@@ -258,6 +258,32 @@
     </div>
   </div>
 
+  <!-- Aplica de inmediato el término cacheado (evita el "flash" del
+       valor por defecto mientras se espera la respuesta de Supabase).
+       Este script NO es un módulo: se ejecuta de forma bloqueante,
+       antes que el script de abajo, apenas existen estos elementos. -->
+  <script>
+    (function () {
+      try {
+        var singular = localStorage.getItem('tc_etiqueta_cliente') || 'Acudiente';
+        var plural = localStorage.getItem('tc_etiqueta_cliente_plural') || 'Acudientes';
+        var sMin = singular.toLowerCase();
+        document.title = 'Talento Canes · ' + plural;
+        document.getElementById('crumbLabel').textContent = plural;
+        document.getElementById('pageTitle').textContent = plural;
+        document.getElementById('btnAddLabel').textContent = 'Añadir ' + sMin;
+        document.getElementById('chooseModalTitle').textContent = 'Añadir ' + sMin;
+        document.getElementById('choiceManualTitle').textContent = 'Crear ' + sMin + ' manualmente';
+        document.getElementById('inviteModalTitle').textContent = 'Invitar ' + sMin;
+        document.getElementById('editModalTitle').textContent = 'Editar ' + sMin;
+        document.getElementById('activoLabel').textContent = singular + ' activo';
+        document.getElementById('manualModalTitle').textContent = 'Crear ' + sMin + ' manualmente';
+        document.getElementById('manualSaveBtn').textContent = 'Crear ' + sMin;
+        document.getElementById('deleteModalTitle').textContent = 'Eliminar ' + sMin;
+      } catch (e) { /* si algo falla, el script de módulo lo corrige igual */ }
+    })();
+  </script>
+
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=2';
     import { supabase, usernameToEmail } from './supabaseClient.js?v=2';

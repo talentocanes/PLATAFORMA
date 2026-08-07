@@ -109,5 +109,17 @@ export async function cargarConfiguracionNegocio(){
   }
 
   aplicarPaleta(data.paleta);
+
+  // Se cachean localmente los textos que se muestran de inmediato al
+  // cargar cualquier página (nombre, logo, terminología), para que un
+  // pequeño script bloqueante los aplique antes de esperar esta misma
+  // consulta la próxima vez — evita el "flash" del valor por defecto.
+  try {
+    localStorage.setItem('tc_nombre_negocio', data.nombre_negocio || 'Talento Canes');
+    localStorage.setItem('tc_logo_url', data.logo_url || '');
+    localStorage.setItem('tc_etiqueta_cliente', data.etiqueta_cliente || 'Acudiente');
+    localStorage.setItem('tc_etiqueta_cliente_plural', data.etiqueta_cliente_plural || 'Acudientes');
+  } catch (e) { /* ignorar */ }
+
   return data;
 }

@@ -199,6 +199,16 @@
     </div>
   </main>
 
+  <!-- Evita el "flash" del valor por defecto en la tarjeta del módulo -->
+  <script>
+    (function () {
+      try {
+        var plural = localStorage.getItem('tc_etiqueta_cliente_plural') || 'Acudientes';
+        document.getElementById('moduloAcudientesTitulo').textContent = plural;
+      } catch (e) { /* el script de módulo lo corrige igual */ }
+    })();
+  </script>
+
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=2';
     import { supabase } from './supabaseClient.js?v=2';
