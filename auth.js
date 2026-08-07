@@ -13,7 +13,11 @@ export async function iniciarSesion(identificador, password) {
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    throw new Error('Usuario o contraseña incorrectos.');
+    console.error('Error en signInWithPassword:', error);
+    if (error.message?.toLowerCase().includes('invalid login credentials')) {
+      throw new Error('Usuario o contraseña incorrectos.');
+    }
+    throw new Error('No se pudo conectar con Supabase: ' + error.message);
   }
 
   const { data: profile, error: profileError } = await supabase
