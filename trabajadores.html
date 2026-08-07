@@ -132,7 +132,7 @@
     <div class="toolbar">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" id="searchInput" placeholder="Buscar por nombre, usuario o cargo…">
+        <input type="text" id="searchInput" placeholder="Buscar por nombre, usuario o cargo…" autocomplete="off">
       </div>
       <div class="count-tag" id="countTag"></div>
     </div>
@@ -185,7 +185,7 @@
       <h2>Invitar trabajador</h2>
       <p>Comparte este enlace con la persona. Al registrarse, su cuenta quedará pendiente de tu aprobación. <b>El enlace caduca en 24 horas.</b></p>
       <div class="link-box">
-        <input type="text" id="linkInput" readonly>
+        <input type="text" id="linkInput" readonly autocomplete="off">
         <button id="copyBtn">Copiar</button>
       </div>
       <div class="modal-msg" id="modalMsg"></div>
@@ -201,15 +201,15 @@
 
       <div class="field">
         <label>Nombre completo</label>
-        <input type="text" id="editFullName">
+        <input type="text" id="editFullName" autocomplete="off">
       </div>
       <div class="field">
         <label>Teléfono</label>
-        <input type="text" id="editPhone" placeholder="Ej: 3001234567">
+        <input type="text" id="editPhone" placeholder="Ej: 3001234567" autocomplete="off">
       </div>
       <div class="field">
         <label>Cargo</label>
-        <select id="editCargo">
+        <select id="editCargo" autocomplete="off">
           <option value="">Sin definir</option>
           <option value="Conductor">Conductor</option>
           <option value="Auxiliar canino">Auxiliar canino</option>
@@ -221,13 +221,13 @@
       </div>
       <div class="field" id="editCargoOtroWrap" style="display:none;">
         <label>Especifica el cargo</label>
-        <input type="text" id="editCargoOtro" placeholder="Escribe el cargo">
+        <input type="text" id="editCargoOtro" placeholder="Escribe el cargo" autocomplete="off">
       </div>
 
       <div class="toggle-row">
         <span>Activo (en nómina actualmente)</span>
         <label class="switch">
-          <input type="checkbox" id="editActivo">
+          <input type="checkbox" id="editActivo" autocomplete="off">
           <span class="slider"></span>
         </label>
       </div>
@@ -255,21 +255,21 @@
 
       <div class="field">
         <label>Nombre completo</label>
-        <input type="text" id="manFullName">
+        <input type="text" id="manFullName" autocomplete="off">
       </div>
       <div class="field-row">
         <div class="field">
           <label>Usuario</label>
-          <input type="text" id="manUsername" placeholder="ej: juanperez">
+          <input type="text" id="manUsername" placeholder="ej: juanperez" autocomplete="off">
         </div>
         <div class="field">
           <label>Teléfono</label>
-          <input type="text" id="manPhone" placeholder="3001234567">
+          <input type="text" id="manPhone" placeholder="3001234567" autocomplete="off">
         </div>
       </div>
       <div class="field">
         <label>Cargo</label>
-        <select id="manCargo">
+        <select id="manCargo" autocomplete="off">
           <option value="">Sin definir</option>
           <option value="Conductor">Conductor</option>
           <option value="Auxiliar canino">Auxiliar canino</option>
@@ -281,12 +281,12 @@
       </div>
       <div class="field" id="manCargoOtroWrap" style="display:none;">
         <label>Especifica el cargo</label>
-        <input type="text" id="manCargoOtro" placeholder="Escribe el cargo">
+        <input type="text" id="manCargoOtro" placeholder="Escribe el cargo" autocomplete="off">
       </div>
       <div class="field">
         <label>Contraseña temporal</label>
         <div class="pwd-row">
-          <input type="text" id="manPassword" placeholder="Mínimo 6 caracteres">
+          <input type="text" id="manPassword" placeholder="Mínimo 6 caracteres" autocomplete="off">
           <button type="button" class="btn-generate" id="btnGenerarPwd">Generar</button>
         </div>
       </div>
@@ -306,7 +306,7 @@
       </div>
       <p>Para confirmar, escribe el usuario <b id="deleteUsernameLabel"></b> exactamente:</p>
       <div class="field">
-        <input type="text" id="deleteConfirmInput" placeholder="Escribe el usuario aquí">
+        <input type="text" id="deleteConfirmInput" placeholder="Escribe el usuario aquí" autocomplete="off">
       </div>
       <div class="modal-msg" id="deleteMsg"></div>
       <button class="btn-delete-confirm" id="deleteConfirmBtn" disabled>Eliminar definitivamente</button>
@@ -473,7 +473,7 @@
         <div class="function-row">
           <span>${m.label}</span>
           <label class="switch">
-            <input type="checkbox" data-mod="${m.key}" ${modulosSeleccionados.includes(m.key) ? 'checked' : ''}>
+            <input type="checkbox" data-mod="${m.key}" ${modulosSeleccionados.includes(m.key) ? 'checked' : ''} autocomplete="off">
             <span class="slider"></span>
           </label>
         </div>
