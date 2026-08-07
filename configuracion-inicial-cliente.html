@@ -162,7 +162,18 @@
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0);
+
+    // Se refuerza varias veces: algunos navegadores intentan desplazar
+    // la vista hacia los campos de contraseña (por el gestor de
+    // contraseñas) después de que termina de cargar el formulario.
+    function forzarScrollArriba(){
+      window.scrollTo(0, 0);
+    }
+    forzarScrollArriba();
+    window.addEventListener('load', forzarScrollArriba);
+    setTimeout(forzarScrollArriba, 50);
+    setTimeout(forzarScrollArriba, 300);
+    setTimeout(forzarScrollArriba, 800);
 
     cargarConfiguracionNegocio();
 
@@ -228,7 +239,9 @@
       if (detalle?.tipo_identificacion) document.getElementById('tipoIdentificacion').value = detalle.tipo_identificacion;
       document.getElementById('numeroIdentificacion').value = detalle?.numero_identificacion || '';
 
-      window.scrollTo(0, 0);
+      forzarScrollArriba();
+      setTimeout(forzarScrollArriba, 50);
+      setTimeout(forzarScrollArriba, 300);
     })();
 
     const msg = document.getElementById('msg');
