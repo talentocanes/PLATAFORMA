@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js"></script>
+<script src="theme-inline.js?v=2"></script>
 <style>
   /* ---------- HERO (propio de Inicio) ---------- */
   .hero{
@@ -200,8 +200,8 @@
   </main>
 
   <script type="module">
-    import { initLayout } from './layout.js';
-    import { supabase } from './supabaseClient.js';
+    import { initLayout } from './layout.js?v=2';
+    import { supabase } from './supabaseClient.js?v=2';
 
     const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: 'Cliente' };
 

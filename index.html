@@ -83,7 +83,7 @@
   .msg.error{ display:block; background:rgba(255,107,107,0.12); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
   .msg.info{ display:block; background:color-mix(in srgb, var(--blue-bright) 10%, transparent); color:var(--blue-glow); border:1px solid var(--line-strong); }
 </style>
-<script src="theme-inline.js"></script>
+<script src="theme-inline.js?v=2"></script>
 </head>
 <body>
   <div class="card">
@@ -123,9 +123,9 @@
   </div>
 
   <script type="module">
-    import { iniciarSesion } from './auth.js';
-    import { cargarConfiguracionNegocio } from './theme.js';
-    import { definirRecordarSesion } from './supabaseClient.js';
+    import { iniciarSesion } from './auth.js?v=2';
+    import { cargarConfiguracionNegocio } from './theme.js?v=2';
+    import { definirRecordarSesion } from './supabaseClient.js?v=2';
 
     cargarConfiguracionNegocio().then(config => {
       if (!config) return;

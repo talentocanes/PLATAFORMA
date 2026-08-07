@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js';
-import { supabase } from './supabaseClient.js';
-import { cargarConfiguracionNegocio } from './theme.js';
+import { protegerPagina, cerrarSesion } from './auth.js?v=2';
+import { supabase } from './supabaseClient.js?v=2';
+import { cargarConfiguracionNegocio } from './theme.js?v=2';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.

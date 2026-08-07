@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js"></script>
+<script src="theme-inline.js?v=2"></script>
 <style>
   .page-header{ margin-bottom:22px; }
   .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
@@ -192,9 +192,9 @@
   </main>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js';
-    import { supabase } from './supabaseClient.js';
-    import { PALETAS, aplicarPaleta } from './theme.js';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=2';
+    import { supabase } from './supabaseClient.js?v=2';
+    import { PALETAS, aplicarPaleta } from './theme.js?v=2';
 
     let esAdmin = false;
     let config = null;
