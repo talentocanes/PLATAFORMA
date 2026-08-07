@@ -125,7 +125,17 @@
   <script type="module">
     import { iniciarSesion } from './auth.js?v=2';
     import { cargarConfiguracionNegocio } from './theme.js?v=2';
-    import { definirRecordarSesion } from './supabaseClient.js?v=2';
+    import { definirRecordarSesion, supabase } from './supabaseClient.js?v=2';
+
+    // Si ya hay una sesión válida (por ejemplo, se abrió esta página en
+    // una pestaña nueva estando ya logueado), no mostrar el formulario:
+    // redirige directo al panel.
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        window.location.href = 'inicio.html';
+      }
+    })();
 
     cargarConfiguracionNegocio().then(config => {
       if (!config) return;
