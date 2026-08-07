@@ -79,6 +79,52 @@ export function obtenerConfiguracionActual(){
 }
 
 // ---------------------------------------------------------
+// Caché en localStorage del último perfil y permisos conocidos,
+// para poder pintar el sidebar de inmediato en la siguiente carga
+// de página, sin esperar a que Supabase confirme la sesión otra
+// vez. Es solo para la primera pintura ("esqueleto"): siempre se
+// reemplaza por los datos reales apenas responde Supabase.
+// ---------------------------------------------------------
+function guardarPerfilCache(profile){
+  try {
+    localStorage.setItem('tc_perfil_cache', JSON.stringify({
+      id: profile.id, role: profile.role,
+      full_name: profile.full_name, username: profile.username
+    }));
+  } catch (e) { /* ignorar */ }
+}
+
+function leerPerfilCache(){
+  try {
+    const raw = localStorage.getItem('tc_perfil_cache');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function guardarModulosCache(modulos){
+  try { localStorage.setItem('tc_modulos_trabajador', JSON.stringify(modulos || [])); }
+  catch (e) { /* ignorar */ }
+}
+
+function leerModulosCache(){
+  try {
+    const raw = localStorage.getItem('tc_modulos_trabajador');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function leerConfigCacheParaEsqueleto(){
+  try {
+    return {
+      nombre_negocio: localStorage.getItem('tc_nombre_negocio') || 'Talento Canes',
+      logo_url: localStorage.getItem('tc_logo_url') || '',
+      etiqueta_cliente: localStorage.getItem('tc_etiqueta_cliente') || 'Acudiente',
+      etiqueta_cliente_plural: localStorage.getItem('tc_etiqueta_cliente_plural') || 'Acudientes'
+    };
+  } catch (e) { return null; }
+}
+
+// ---------------------------------------------------------
 // Módulos asignables (todos menos Inicio y Configuración,
 // que siempre están disponibles). Se usa en el panel de
 // "Funciones" dentro de Editar trabajador.
@@ -152,8 +198,21 @@ function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
 // comportamiento móvil (menú hamburguesa) + reloj.
 // ---------------------------------------------------------
 export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
+  // Pintura inmediata con lo último conocido (evita el sidebar en
+  // blanco mientras se confirma la sesión con Supabase). Se sobrescribe
+  // más abajo apenas se confirman los datos reales.
+  const sidebarEl = document.getElementById('sidebar');
+  const perfilCache = leerPerfilCache();
+  if (perfilCache) {
+    let modulosEsqueleto = null;
+    if (perfilCache.role === 'trabajador') modulosEsqueleto = leerModulosCache();
+    else if (perfilCache.role === 'cliente') modulosEsqueleto = CLAVES_CLIENTE;
+    sidebarEl.innerHTML = renderSidebarHTML(activeKey, perfilCache, modulosEsqueleto, leerConfigCacheParaEsqueleto());
+  }
+
   const profile = await protegerPagina({ rolesPermitidos });
   if (!profile) return null;
+  guardarPerfilCache(profile);
 
   // Nombre, logo y paleta de colores del negocio (aplica en toda la app)
   const config = await cargarConfiguracionNegocio();
@@ -173,6 +232,7 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
 
     if (error) console.error('Error al leer permisos del trabajador:', error);
     modulosPermitidos = data?.modulos_habilitados || [];
+    guardarModulosCache(modulosPermitidos);
   } else if (profile.role === 'cliente') {
     modulosPermitidos = CLAVES_CLIENTE;
   }
@@ -203,7 +263,7 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
     }
   }
 
-  const sidebar = document.getElementById('sidebar');
+  const sidebar = sidebarEl;
   sidebar.innerHTML = renderSidebarHTML(activeKey, profile, modulosPermitidos, config);
 
   document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
