@@ -138,7 +138,7 @@
       </a>
       <a href="clientes.html" class="module">
         <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/><path d="M15.6 11.8l1.6 1.6 3.2-3.4"/></svg></div>
-        <h3>Clientes</h3>
+        <h3 id="moduloAcudientesTitulo">Acudientes</h3>
         <p>Datos de contacto y seguimiento de los dueños.</p>
         <div class="status-pill live"><span class="dot"></span>Disponible</div>
       </a>
@@ -200,14 +200,21 @@
   </main>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=2';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=2';
     import { supabase } from './supabaseClient.js?v=2';
 
-    const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: 'Cliente' };
+    let etiquetaClienteGlobal = 'Acudiente';
 
     (async () => {
       const profile = await initLayout({ activeKey: 'inicio' });
       if (!profile) return;
+
+      const config = obtenerConfiguracionActual();
+      etiquetaClienteGlobal = config?.etiqueta_cliente || 'Acudiente';
+      const etiquetaClientePlural = config?.etiqueta_cliente_plural || 'Acudientes';
+      const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: etiquetaClienteGlobal };
+
+      document.getElementById('moduloAcudientesTitulo').textContent = etiquetaClientePlural;
 
       const primerNombre = (profile.full_name || profile.username).split(' ')[0];
       document.getElementById('heroTitle').innerHTML =
@@ -244,9 +251,8 @@
         .subscribe();
     }
 
-    const ROLE_TAG = { trabajador: 'Trabajador', cliente: 'Cliente' };
-
     async function cargarSolicitudes(){
+      const ROLE_TAG = { trabajador: 'Trabajador', cliente: etiquetaClienteGlobal };
       const listEl = document.getElementById('requestsList');
       const { data, error } = await supabase
         .from('profiles')

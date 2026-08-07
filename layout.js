@@ -29,7 +29,7 @@ const NAV_GROUPS = [
     items: [
       { key:'trabajadores', label:'Trabajadores', href:'trabajadores.html', enabled:true,
         icon:'<circle cx="12" cy="8" r="3.2"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/>' },
-      { key:'clientes', label:'Clientes', href:'clientes.html', enabled:true,
+      { key:'clientes', label:'Acudientes', href:'clientes.html', enabled:true,
         icon:'<circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/><path d="M15.6 11.8l1.6 1.6 3.2-3.4"/>' },
       { key:'alumnos', label:'Alumnos', href:null, enabled:false,
         icon:'<ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/>' }
@@ -68,7 +68,7 @@ const NAV_GROUPS = [
   }
 ];
 
-const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: 'Cliente' };
+const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: 'Acudiente' };
 
 let configuracionActual = null;
 
@@ -94,15 +94,16 @@ function iniciales(nombre){
   return (nombre || '?').trim().split(/\s+/).slice(0,2).map(p => p[0]?.toUpperCase() || '').join('');
 }
 
-function renderNavItem(item, activeKey){
+function renderNavItem(item, activeKey, config){
   const activeClass = item.key === activeKey ? 'active' : (item.enabled ? '' : 'disabled');
   const tag = item.enabled ? 'a' : 'div';
   const href = item.enabled ? ` href="${item.href}"` : '';
   const tagHtml = item.enabled ? '' : '<span class="tag">Próx.</span>';
+  const label = item.key === 'clientes' ? (config?.etiqueta_cliente_plural || item.label) : item.label;
   return `
     <${tag} class="nav-item ${activeClass}"${href}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${item.icon}</svg>
-      ${item.label}
+      ${label}
       ${tagHtml}
     </${tag}>`;
 }
@@ -118,7 +119,7 @@ function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
     );
   }
 
-  const itemsHtml = todosLosItems.map(item => renderNavItem(item, activeKey)).join('');
+  const itemsHtml = todosLosItems.map(item => renderNavItem(item, activeKey, config)).join('');
   const nombreNegocio = config?.nombre_negocio || 'Talento Canes';
   const logoSrc = config?.logo_url || 'logo.png';
 
@@ -138,7 +139,7 @@ function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
         <div class="avatar-ring"><div class="avatar">${iniciales(profile.full_name || profile.username)}</div></div>
         <div class="who">
           <div class="n">${profile.full_name || profile.username}</div>
-          <div class="r">${ROLE_LABELS[profile.role] || profile.role}</div>
+          <div class="r">${profile.role === 'cliente' ? (config?.etiqueta_cliente || 'Acudiente') : (ROLE_LABELS[profile.role] || profile.role)}</div>
         </div>
       </div>
       <button id="logoutBtn" class="logout-link">Cerrar sesión</button>

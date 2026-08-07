@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Talento Canes · Clientes</title>
+<title>Talento Canes · Acudientes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
@@ -96,7 +96,7 @@
         <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Clientes</b></div>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b id="crumbLabel">Acudientes</b></div>
       </div>
       <div class="top-right">
         <div class="clock" id="clock">— — —</div>
@@ -105,12 +105,12 @@
 
     <div class="page-header">
       <div>
-        <h1>Clientes</h1>
+        <h1 id="pageTitle">Acudientes</h1>
         <p>Dueños registrados y sus datos de contacto.</p>
       </div>
       <button class="btn-add" id="btnAdd">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Añadir cliente
+        <span id="btnAddLabel">Añadir acudiente</span>
       </button>
     </div>
 
@@ -140,7 +140,7 @@
   <!-- Modal: elegir cómo añadir -->
   <div class="modal-overlay" id="chooseOverlay">
     <div class="modal">
-      <h2>Añadir cliente</h2>
+      <h2 id="chooseModalTitle">Añadir acudiente</h2>
       <p>Elige cómo quieres darle acceso a la persona.</p>
       <div class="choice-card" id="choiceInvite">
         <div class="choice-icon">
@@ -156,7 +156,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/></svg>
         </div>
         <div>
-          <div class="choice-title">Crear cliente manualmente</div>
+          <div class="choice-title" id="choiceManualTitle">Crear acudiente manualmente</div>
           <div class="choice-desc">Tú defines sus datos y una contraseña temporal. Queda activo de inmediato, sin aprobación.</div>
         </div>
       </div>
@@ -167,7 +167,7 @@
   <!-- Modal: enlace de invitación -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-      <h2>Invitar cliente</h2>
+      <h2 id="inviteModalTitle">Invitar acudiente</h2>
       <p>Comparte este enlace con la persona. Al registrarse, su cuenta quedará pendiente de tu aprobación. <b>El enlace caduca en 24 horas.</b></p>
       <div class="link-box">
         <input type="text" id="linkInput" readonly autocomplete="off">
@@ -181,7 +181,7 @@
   <!-- Modal: editar cliente -->
   <div class="modal-overlay" id="editOverlay">
     <div class="modal">
-      <h2>Editar cliente</h2>
+      <h2 id="editModalTitle">Editar acudiente</h2>
       <p>Estos cambios los define el administrador.</p>
 
       <div class="field">
@@ -194,7 +194,7 @@
       </div>
 
       <div class="toggle-row">
-        <span>Cliente activo</span>
+        <span id="activoLabel">Acudiente activo</span>
         <label class="switch">
           <input type="checkbox" id="editActivo" autocomplete="off">
           <span class="slider"></span>
@@ -210,7 +210,7 @@
   <!-- Modal: crear cliente manualmente -->
   <div class="modal-overlay" id="manualOverlay">
     <div class="modal">
-      <h2>Crear cliente manualmente</h2>
+      <h2 id="manualModalTitle">Crear acudiente manualmente</h2>
       <p>Queda activo de inmediato, sin pasar por aprobación. La contraseña es temporal para su primer acceso.</p>
 
       <div class="field">
@@ -236,7 +236,7 @@
       </div>
 
       <div class="modal-msg" id="manualMsg"></div>
-      <button class="btn-save" id="manualSaveBtn">Crear cliente</button>
+      <button class="btn-save" id="manualSaveBtn">Crear acudiente</button>
       <button class="modal-close" id="manualCloseBtn">Cancelar</button>
     </div>
   </div>
@@ -244,7 +244,7 @@
   <!-- Modal: eliminar definitivamente -->
   <div class="modal-overlay" id="deleteOverlay">
     <div class="modal">
-      <h2>Eliminar cliente</h2>
+      <h2 id="deleteModalTitle">Eliminar acudiente</h2>
       <div class="danger-box">
         <b>Esta acción es permanente.</b> Se borra su cuenta de acceso y toda su ficha. No se puede deshacer. Si solo quieres quitarle el acceso temporalmente, usa "Desactivar" en su lugar.
       </div>
@@ -259,17 +259,40 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=2';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=2';
     import { supabase, usernameToEmail } from './supabaseClient.js?v=2';
 
     const ROL = 'cliente';
     let filas = [];
     let esAdmin = false;
+    let etiquetaCliente = 'Acudiente';
+    let etiquetaClientePlural = 'Acudientes';
+
+    function aplicarTerminologia(){
+      document.title = `Talento Canes · ${etiquetaClientePlural}`;
+      document.getElementById('crumbLabel').textContent = etiquetaClientePlural;
+      document.getElementById('pageTitle').textContent = etiquetaClientePlural;
+      document.getElementById('btnAddLabel').textContent = `Añadir ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('chooseModalTitle').textContent = `Añadir ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('choiceManualTitle').textContent = `Crear ${etiquetaCliente.toLowerCase()} manualmente`;
+      document.getElementById('inviteModalTitle').textContent = `Invitar ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('editModalTitle').textContent = `Editar ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('activoLabel').textContent = `${etiquetaCliente} activo`;
+      document.getElementById('manualModalTitle').textContent = `Crear ${etiquetaCliente.toLowerCase()} manualmente`;
+      document.getElementById('manualSaveBtn').textContent = `Crear ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('deleteModalTitle').textContent = `Eliminar ${etiquetaCliente.toLowerCase()}`;
+      document.getElementById('searchInput').placeholder = 'Buscar por nombre o usuario…';
+    }
 
     (async () => {
       const profile = await initLayout({ activeKey: 'clientes' });
       if (!profile) return;
       esAdmin = profile.role === 'admin';
+
+      const config = obtenerConfiguracionActual();
+      etiquetaCliente = config?.etiqueta_cliente || 'Acudiente';
+      etiquetaClientePlural = config?.etiqueta_cliente_plural || 'Acudientes';
+      aplicarTerminologia();
 
       if (!esAdmin) {
         document.getElementById('btnAdd').style.display = 'none';
@@ -297,7 +320,7 @@
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error al cargar clientes:', error);
+        console.error('Error al cargar acudientes:', error);
         tbody.innerHTML = `<tr><td colspan="5" class="empty-note">No se pudo cargar el listado.</td></tr>`;
         return;
       }
@@ -318,7 +341,7 @@
       document.getElementById('countTag').textContent = `${lista.length} registrado(s)`;
 
       if (lista.length === 0){
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-note">Aún no hay clientes que coincidan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-note">Aún no hay ${etiquetaClientePlural.toLowerCase()} que coincidan.</td></tr>`;
         return;
       }
 
@@ -380,8 +403,8 @@
     async function alternarActivo(id, activoActual){
       const nuevo = !activoActual;
       const confirmMsg = nuevo
-        ? '¿Reactivar a este cliente?'
-        : '¿Desactivar a este cliente? Conserva su historial, pero deja de figurar como activo.';
+        ? `¿Reactivar a este ${etiquetaCliente.toLowerCase()}?`
+        : `¿Desactivar a este ${etiquetaCliente.toLowerCase()}? Conserva su historial, pero deja de figurar como activo.`;
       if (!confirm(confirmMsg)) return;
 
       const { error } = await supabase
@@ -583,7 +606,7 @@
         manualMsg.style.display = 'block';
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Crear cliente';
+        btn.textContent = `Crear ${etiquetaCliente.toLowerCase()}`;
       }
     });
 
