@@ -26,10 +26,10 @@
     padding:0 20px;
   }
   .card{
-    width:100%; max-width:620px;
+    width:100%; max-width:900px;
     margin-top:2rem; margin-bottom:3rem; margin-left:auto; margin-right:auto;
     background:var(--navy-panel); border:1px solid var(--line-strong);
-    border-radius:20px; padding:26px 30px;
+    border-radius:20px; padding:26px 34px;
   }
   .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--blue-glow); margin-bottom:6px; }
   h1{ font-family:'Space Grotesk',sans-serif; font-size:21px; margin-bottom:5px; }
@@ -44,7 +44,9 @@
   .field input:focus, .field select:focus{ border-color:var(--blue-bright); }
   .field input:disabled{ opacity:.6; cursor:not-allowed; }
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  @media (max-width:560px){ .grid-2{ grid-template-columns:1fr; } .card{ padding:22px 18px; } body{ padding:16px 12px; } }
+  .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:760px){ .grid-3{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .grid-2{ grid-template-columns:1fr; } .grid-3{ grid-template-columns:1fr; } .card{ padding:22px 18px; } body{ padding:16px 12px; } }
 
   .password-wrap{ position:relative; }
   .password-wrap input{ padding-right:42px; }
@@ -69,7 +71,7 @@
 
     <form id="onboardingForm" autocomplete="off">
       <div class="section-title">Identificación</div>
-      <div class="grid-2">
+      <div class="grid-3">
         <div class="field">
           <label>Tipo de persona</label>
           <select id="tipoPersona" autocomplete="off">
@@ -81,18 +83,24 @@
           <label>Tipo de identificación</label>
           <select id="tipoIdentificacion" autocomplete="off"></select>
         </div>
+        <div class="field">
+          <label>Número de identificación</label>
+          <input type="text" id="numeroIdentificacion" placeholder="Número de documento" autocomplete="off">
+        </div>
       </div>
-      <div class="field">
-        <label>Número de identificación</label>
-        <input type="text" id="numeroIdentificacion" placeholder="Número de documento" autocomplete="off">
-      </div>
-      <div class="field">
-        <label id="labelNombre">Nombre completo</label>
-        <input type="text" id="fullName" autocomplete="off">
+      <div class="grid-2">
+        <div class="field">
+          <label id="labelNombre">Nombre completo</label>
+          <input type="text" id="fullName" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="username" disabled autocomplete="off">
+        </div>
       </div>
 
       <div class="section-title">Contacto</div>
-      <div class="grid-2">
+      <div class="grid-3">
         <div class="field">
           <label>Teléfono</label>
           <input type="text" id="phone" placeholder="3001234567" autocomplete="off">
@@ -101,29 +109,25 @@
           <label>Correo electrónico</label>
           <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" autocomplete="off">
         </div>
-      </div>
-      <div class="field">
-        <label>Dirección</label>
-        <input type="text" id="direccion" placeholder="Dirección para recogida/entrega" autocomplete="off">
-      </div>
-      <div class="field">
-        <label>Usuario</label>
-        <input type="text" id="username" disabled autocomplete="off">
+        <div class="field">
+          <label>Dirección</label>
+          <input type="text" id="direccion" placeholder="Dirección para recogida/entrega" autocomplete="off">
+        </div>
       </div>
 
       <div id="securitySection" style="display:none;">
         <div class="section-title">Seguridad</div>
-        <div class="field">
-          <label>Contraseña temporal (la que te dieron)</label>
-          <div class="password-wrap">
-            <input type="password" id="currentPassword" autocomplete="current-password">
-            <button type="button" class="toggle-password" data-target="currentPassword" aria-label="Mostrar">
-              <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C3.4 8.7 1.5 12 1.5 12S5 19 12 19a10.7 10.7 0 0 0 5.4-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
-            </button>
+        <div class="grid-3">
+          <div class="field">
+            <label>Contraseña temporal (la que te dieron)</label>
+            <div class="password-wrap">
+              <input type="password" id="currentPassword" autocomplete="current-password">
+              <button type="button" class="toggle-password" data-target="currentPassword" aria-label="Mostrar">
+                <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C3.4 8.7 1.5 12 1.5 12S5 19 12 19a10.7 10.7 0 0 0 5.4-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="grid-2">
           <div class="field">
             <label>Nueva contraseña</label>
             <div class="password-wrap">
