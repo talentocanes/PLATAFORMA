@@ -6,6 +6,11 @@ import { cargarConfiguracionNegocio } from './theme.js?v=2';
 // sin importar sus permisos asignados.
 const CLAVES_SIEMPRE_DISPONIBLES = ['inicio', 'configuracion'];
 
+// Módulos habilitados para el rol Cliente (fijo para todos los
+// clientes, a diferencia de los trabajadores que se configuran
+// individualmente desde "Funciones" en Editar trabajador).
+const CLAVES_CLIENTE = ['inicio', 'servicios', 'cartera', 'configuracion'];
+
 // ---------------------------------------------------------
 // Definición de las 12 opciones definitivas del menú.
 // enabled:true = ya tiene página propia y es clicable.
@@ -155,6 +160,8 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
 
   // Los trabajadores solo ven/acceden a los módulos que el admin les
   // haya habilitado (más Inicio y Configuración, siempre disponibles).
+  // Los clientes ven un conjunto fijo: Inicio, Servicios, Cartera y
+  // Configuración.
   let modulosPermitidos = null;
   if (profile.role === 'trabajador') {
     const { data, error } = await supabase
@@ -165,7 +172,11 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
 
     if (error) console.error('Error al leer permisos del trabajador:', error);
     modulosPermitidos = data?.modulos_habilitados || [];
+  } else if (profile.role === 'cliente') {
+    modulosPermitidos = CLAVES_CLIENTE;
+  }
 
+  if (modulosPermitidos) {
     const tieneAcceso = CLAVES_SIEMPRE_DISPONIBLES.includes(activeKey) || modulosPermitidos.includes(activeKey);
     if (!tieneAcceso) {
       window.location.href = 'inicio.html';
