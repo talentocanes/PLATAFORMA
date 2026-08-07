@@ -675,7 +675,16 @@
           }
         });
 
-        if (error) throw new Error(error.message);
+        if (error) {
+          let detalle = error.message;
+          try {
+            if (error.context) {
+              const cuerpo = await error.context.json();
+              if (cuerpo?.error) detalle = cuerpo.error;
+            }
+          } catch (e) { /* se queda con el mensaje genérico */ }
+          throw new Error(detalle);
+        }
         if (data && data.ok === false) throw new Error(data.error);
 
         manualOverlay.classList.remove('active');
