@@ -5,8 +5,8 @@
 // =========================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
-const SUPABASE_ANON_KEY = 'TU-ANON-KEY-PUBLICA';
+const SUPABASE_URL = 'https://fyfigitwigwjzorbyxvj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmlnaXR3aWd3anpvcmJ5eHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2MTg1MjIsImV4cCI6MjEwMTE5NDUyMn0.AR5DZCbdhROZ9Lth6n5fewMB-ZArAgAdtIKWL0CejYs';
 
 // ---------------------------------------------------------
 // Adaptador de almacenamiento para "Mantener sesión iniciada".
