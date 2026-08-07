@@ -15,15 +15,15 @@
     --danger:#ff6b6b;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; font-family:'Inter',sans-serif; }
+  html{ font-family:'Inter',sans-serif; }
   body{
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:flex-start; justify-content:center;
     min-height:100vh; color:var(--white);
     background:
       radial-gradient(1200px 700px at 85% -10%, color-mix(in srgb, var(--blue-bright) 16%, transparent), transparent 60%),
       radial-gradient(900px 600px at -10% 100%, color-mix(in srgb, var(--blue-deep) 22%, transparent), transparent 60%),
       var(--navy-deep);
-    padding:20px;
+    padding:40px 20px;
     transition: background-color .3s ease;
   }
   .card{
