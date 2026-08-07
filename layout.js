@@ -122,7 +122,7 @@ function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
       <img src="${logoSrc}" alt="${nombreNegocio}" class="brand-logo">
       <div class="brand-text">
         <div class="name">${nombreNegocio}</div>
-        <div class="sub">SGITC · Panel</div>
+        <div class="sub">Barkley · Panel</div>
       </div>
     </div>
 
