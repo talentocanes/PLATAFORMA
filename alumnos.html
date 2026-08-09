@@ -362,12 +362,16 @@
             </div>
           </div>
           <div class="pending-actions">
+            <button class="btn-icon" data-action="ver" data-id="${m.id}">Ver</button>
             <button class="btn-approve" data-action="approve" data-id="${m.id}">Aceptar</button>
             <button class="btn-deny" data-action="deny" data-id="${m.id}">Denegar</button>
           </div>
         </div>
       `).join('');
 
+      list.querySelectorAll('[data-action="ver"]').forEach(btn => {
+        btn.addEventListener('click', () => abrirModal(btn.dataset.id));
+      });
       list.querySelectorAll('[data-action="approve"]').forEach(btn => {
         btn.addEventListener('click', () => resolverPendiente(btn.dataset.id, 'approve'));
       });
@@ -564,7 +568,7 @@
       if (!m) return;
       editandoId = id;
       limpiarFormulario();
-      document.getElementById('petModalTitle').textContent = 'Editar alumno';
+      document.getElementById('petModalTitle').textContent = m.status === 'pending' ? 'Revisar alumno (pendiente)' : 'Editar alumno';
 
       document.getElementById('fAcudiente').value = m.acudiente_id || '';
       document.getElementById('fNombre').value = m.nombre || '';
