@@ -1,7 +1,7 @@
 // =========================================================
 // Recortador de fotos con vista circular, arrastrable y con zoom.
 // Uso:
-//   import { abrirRecortador } from './photocrop.js?v=10';
+//   import { abrirRecortador } from './photocrop.js?v=11';
 //   abrirRecortador(archivo, (blobRecortado) => { ... });
 //
 // abrirRecortador recibe un File (de un <input type="file">) y

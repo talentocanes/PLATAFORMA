@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Tienda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<script src="theme-inline.js?v=11"></script>
+<style>
+  .page-header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+  .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
+  .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
+  .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
+  .btn-add svg{ width:16px; height:16px; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .filter-pill{ padding:8px 14px; border-radius:20px; border:1px solid var(--line); background:var(--navy-panel); color:var(--mist); font-size:12.5px; cursor:pointer; }
+  .filter-pill.active{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); }
+  .search-box{ flex:1; min-width:180px; max-width:320px; display:flex; align-items:center; gap:8px; background:var(--navy-panel); border:1px solid var(--line); padding:9px 13px; border-radius:10px; color:var(--mist); font-size:13px; margin-left:auto; }
+  .search-box svg{ width:15px; height:15px; opacity:.7; flex-shrink:0; }
+  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--white); font-size:13px; }
+
+  .empty-note{ color:var(--mist-dim); font-size:13px; padding:40px; text-align:center; background:var(--navy-panel); border:1px dashed var(--line); border-radius:var(--radius); }
+
+  .items-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+  .item-card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:border-color .2s ease; display:flex; flex-direction:column; }
+  .item-card:hover{ border-color:var(--line-strong); }
+  .item-photo{ width:100%; height:160px; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+  .item-photo img{ width:100%; height:100%; object-fit:cover; }
+  .item-photo svg{ width:36px; height:36px; color:var(--mist-dim); opacity:.5; }
+  .item-badge{ position:absolute; top:10px; left:10px; font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; background:rgba(5,10,20,0.75); backdrop-filter:blur(4px); }
+  .item-badge.producto{ color:var(--blue-glow); border:1px solid var(--line-strong); }
+  .item-badge.servicio{ color:#7bd88f; border:1px solid rgba(123,216,143,0.3); }
+  .item-inactivo-badge{ position:absolute; top:10px; right:10px; font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; padding:3px 8px; border-radius:20px; background:rgba(255,107,107,0.15); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
+  .item-body{ padding:13px 14px; display:flex; flex-direction:column; gap:4px; flex:1; }
+  .item-cat{ font-size:11px; color:var(--mist-dim); }
+  .item-name{ font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:700; line-height:1.3; }
+  .item-price{ font-size:14px; font-weight:700; color:var(--blue-glow); margin-top:auto; padding-top:6px; }
+  .item-stock{ font-size:10.5px; color:var(--mist-dim); }
+  .item-actions{ display:flex; gap:6px; padding:0 14px 13px; }
+  .btn-icon{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:6px 8px; border-radius:8px; font-size:11.5px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
+  .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
+  .btn-icon.danger:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+
+  /* Modal genérico */
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.8); z-index:200; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+  .modal-overlay.active{ display:flex; }
+  .modal{ width:100%; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:18px; padding:28px; max-height:90vh; overflow-y:auto; margin:auto; }
+  .modal.modal-sm{ max-width:420px; }
+  .modal.modal-md{ max-width:620px; }
+  .modal.modal-lg{ max-width:920px; }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:4px; }
+  .modal .modal-lead{ color:var(--mist-dim); font-size:12.5px; margin-bottom:18px; }
+
+  .tipo-choice-row{ display:flex; gap:12px; margin-bottom:6px; }
+  .tipo-choice{ flex:1; padding:22px 14px; border-radius:14px; border:1px solid var(--line); background:var(--navy-panel-2); text-align:center; cursor:pointer; }
+  .tipo-choice:hover{ border-color:var(--line-strong); }
+  .tipo-choice svg{ width:26px; height:26px; margin-bottom:8px; color:var(--blue-glow); }
+  .tipo-choice .t{ font-weight:600; font-size:13.5px; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .field input, .field select, .field textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; font-family:inherit; }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--blue-bright); }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .photos-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:8px; margin-bottom:10px; }
+  .photo-thumb{ position:relative; width:100%; aspect-ratio:1; border-radius:10px; overflow:hidden; background:var(--navy-panel-2); border:1px solid var(--line); }
+  .photo-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .photo-thumb .remove-photo{ position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; background:rgba(5,10,20,0.8); border:none; color:var(--white); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .photo-thumb .remove-photo svg{ width:11px; height:11px; }
+  .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; }
+  .toggle-row span{ font-size:13px; }
+  .switch{ position:relative; width:38px; height:22px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; inset:0; background:var(--line); border-radius:20px; cursor:pointer; transition:.2s; }
+  .slider::before{ content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:var(--white); border-radius:50%; transition:.2s; }
+  .switch input:checked + .slider{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); }
+  .switch input:checked + .slider::before{ transform:translateX(16px); }
+
+  .btn-save{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; margin-top:6px; }
+  .btn-save:disabled{ opacity:.6; }
+  .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
+  .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+  .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
+  .danger-box b{ color:var(--danger); }
+  .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
+
+  /* Vista de detalle estilo "producto" */
+  .detail-layout{ display:grid; grid-template-columns:96px 1fr 1fr; gap:18px; }
+  @media (max-width:680px){ .detail-layout{ grid-template-columns:1fr; } }
+  .detail-thumbs{ display:flex; flex-direction:row; gap:8px; order:2; }
+  @media (min-width:681px){ .detail-thumbs{ flex-direction:column; order:0; } }
+  .detail-thumb{ width:72px; height:72px; border-radius:10px; overflow:hidden; border:1.5px solid var(--line); cursor:pointer; flex-shrink:0; background:var(--navy-panel-2); }
+  .detail-thumb.active{ border-color:var(--blue-bright); }
+  .detail-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .detail-main{ width:100%; aspect-ratio:1; border-radius:14px; overflow:hidden; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; order:1; }
+  .detail-main img{ width:100%; height:100%; object-fit:cover; }
+  .detail-main svg{ width:56px; height:56px; color:var(--mist-dim); opacity:.4; }
+  .detail-info{ order:3; }
+  @media (min-width:681px){ .detail-info{ order:0; } }
+  .detail-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:6px; }
+  .detail-eyebrow.producto{ color:var(--blue-glow); }
+  .detail-eyebrow.servicio{ color:#7bd88f; }
+  .detail-title{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; margin-bottom:4px; }
+  .detail-cat{ color:var(--mist-dim); font-size:13px; margin-bottom:14px; }
+  .detail-price{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--white); margin-bottom:16px; }
+  .detail-stock{ font-size:12px; color:var(--mist-dim); margin-bottom:16px; }
+  .detail-desc{ font-size:13.5px; line-height:1.7; color:var(--mist); white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+  <script src="sidebar-inline.js?v=11" data-active="servicios"></script>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Tienda</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1>Tienda</h1>
+        <p>Productos y servicios disponibles.</p>
+      </div>
+      <button class="btn-add" id="btnAdd" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Crear
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-pill active" data-filtro="todos">Todos</div>
+      <div class="filter-pill" data-filtro="producto">Productos</div>
+      <div class="filter-pill" data-filtro="servicio">Servicios</div>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar…">
+      </div>
+    </div>
+
+    <div id="itemsGrid" class="items-grid">
+      <div class="empty-note">Cargando…</div>
+    </div>
+  </main>
+
+  <!-- Modal: elegir tipo -->
+  <div class="modal-overlay" id="tipoOverlay">
+    <div class="modal modal-sm">
+      <h2>¿Qué quieres crear?</h2>
+      <p class="modal-lead">Elige una opción para continuar.</p>
+      <div class="tipo-choice-row">
+        <div class="tipo-choice" data-tipo="producto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/></svg>
+          <div class="t">Producto</div>
+        </div>
+        <div class="tipo-choice" data-tipo="servicio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.2 8h11.6l-1 12H7.2L6.2 8Z"/><path d="M9.2 8V6.2a2.8 2.8 0 0 1 5.6 0V8"/></svg>
+          <div class="t">Servicio</div>
+        </div>
+      </div>
+      <button class="modal-close" id="tipoCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: crear/editar -->
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal modal-md">
+      <h2 id="formTitle">Crear producto</h2>
+      <p class="modal-lead" id="formLead">Completa la información para publicarlo.</p>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="fNombre" placeholder="Nombre del producto o servicio" autocomplete="off">
+      </div>
+
+      <div class="grid-2">
+        <div class="field" id="fCategoriaWrap">
+          <label id="fCategoriaLabel">Categoría</label>
+          <select id="fCategoria" autocomplete="off"></select>
+        </div>
+        <div class="field" id="fCategoriaOtraWrap" style="display:none;">
+          <label>Especifica</label>
+          <input type="text" id="fCategoriaOtra" placeholder="Escribe la categoría" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Precio ($)</label>
+          <input type="number" id="fPrecio" min="0" step="100" placeholder="0" autocomplete="off">
+        </div>
+        <div class="field" id="fStockWrap" style="display:none;">
+          <label>Stock</label>
+          <input type="number" id="fStock" min="0" step="1" placeholder="0" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="fDescripcion" placeholder="Detalles, beneficios, condiciones..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Imágenes</label>
+        <div class="photos-grid" id="photosGrid"></div>
+        <button type="button" class="btn-secondary" id="btnFotos">Añadir fotos (galería o cámara)</button>
+        <input type="file" id="fileFotos" accept="image/*" multiple style="display:none" autocomplete="off">
+      </div>
+
+      <div class="toggle-row">
+        <span>Publicado (visible para clientes)</span>
+        <label class="switch">
+          <input type="checkbox" id="fActivo" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-msg" id="formMsg"></div>
+      <button class="btn-save" id="formSaveBtn">Guardar</button>
+      <button class="modal-close" id="formCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: eliminar -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal modal-sm">
+      <h2>Eliminar</h2>
+      <div class="danger-box"><b>Esta acción es permanente.</b> No se puede deshacer.</div>
+      <div class="modal-msg" id="deleteMsg"></div>
+      <button class="btn-delete-confirm" id="deleteConfirmBtn">Eliminar definitivamente</button>
+      <button class="modal-close" id="deleteCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: detalle (vista tipo producto) -->
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal modal-lg">
+      <div class="detail-layout">
+        <div class="detail-thumbs" id="detailThumbs"></div>
+        <div class="detail-main" id="detailMain"></div>
+        <div class="detail-info">
+          <div class="detail-eyebrow" id="detailEyebrow">Producto</div>
+          <div class="detail-title" id="detailTitle">—</div>
+          <div class="detail-cat" id="detailCat"></div>
+          <div class="detail-price" id="detailPrice">—</div>
+          <div class="detail-stock" id="detailStock"></div>
+          <div class="detail-desc" id="detailDesc"></div>
+        </div>
+      </div>
+      <button class="modal-close" id="detailCloseBtn" style="margin-top:20px;">Cerrar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initLayout } from './layout.js?v=11';
+    import { supabase } from './supabaseClient.js?v=11';
+    import { capitalizarPalabras } from './textutils.js?v=11';
+
+    const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
+    const TIPOS_SERVICIO = ['Planes de colegio', 'Plan por Tickets', 'Otros'];
+
+    let items = [];
+    let puedeEditar = false;
+    let tipoActual = 'producto'; // el que se está creando/editando en el formulario
+    let editandoId = null;
+    let fotosActuales = []; // URLs ya subidas (al editar) + previews nuevas pendientes
+    let archivosNuevos = []; // Files pendientes de subir
+    let eliminandoId = null;
+    let filtroActivo = 'todos';
+    let terminoBusqueda = '';
+
+    (async () => {
+      const profile = await initLayout({ activeKey: 'servicios' });
+      if (!profile) return;
+
+      if (profile.role === 'admin') {
+        puedeEditar = true;
+      } else if (profile.role === 'trabajador') {
+        const { data } = await supabase
+          .from('trabajador_detalle')
+          .select('modulos_edicion')
+          .eq('id', profile.id)
+          .single();
+        puedeEditar = !!data?.modulos_edicion?.includes('servicios');
+      }
+
+      if (puedeEditar) document.getElementById('btnAdd').style.display = 'flex';
+
+      await cargarItems();
+      suscribirEnVivo();
+    })();
+
+    function suscribirEnVivo(){
+      supabase
+        .channel('tienda-cambios')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tienda_items' }, cargarItems)
+        .subscribe();
+    }
+
+    async function cargarItems(){
+      const grid = document.getElementById('itemsGrid');
+      const { data, error } = await supabase
+        .from('tienda_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error al cargar la tienda:', error);
+        grid.innerHTML = `<div class="empty-note">No se pudo cargar la tienda.</div>`;
+        return;
+      }
+
+      items = data || [];
+      pintarGrid();
+    }
+
+    function pintarGrid(){
+      const grid = document.getElementById('itemsGrid');
+      let filtrados = items;
+      if (filtroActivo !== 'todos') filtrados = filtrados.filter(i => i.tipo_item === filtroActivo);
+      if (terminoBusqueda) {
+        const q = terminoBusqueda.toLowerCase();
+        filtrados = filtrados.filter(i => (i.nombre || '').toLowerCase().includes(q) || (i.categoria || '').toLowerCase().includes(q));
+      }
+      if (!puedeEditar) filtrados = filtrados.filter(i => i.activo);
+
+      if (filtrados.length === 0) {
+        grid.innerHTML = `<div class="empty-note">No hay nada que mostrar todavía.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtrados.map(i => `
+        <div class="item-card" data-id="${i.id}">
+          <div class="item-photo">
+            <span class="item-badge ${i.tipo_item}">${i.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
+            ${puedeEditar && !i.activo ? '<span class="item-inactivo-badge">Oculto</span>' : ''}
+            ${i.fotos && i.fotos[0]
+              ? `<img src="${i.fotos[0]}" alt="${i.nombre}">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/></svg>`}
+          </div>
+          <div class="item-body">
+            <div class="item-cat">${i.categoria || (i.tipo_item === 'producto' ? 'Sin categoría' : 'Sin tipo')}</div>
+            <div class="item-name">${i.nombre}</div>
+            <div class="item-price">$ ${Number(i.precio).toLocaleString('es-CO')}</div>
+            ${i.tipo_item === 'producto' && i.stock !== null ? `<div class="item-stock">Stock: ${i.stock}</div>` : ''}
+          </div>
+          ${puedeEditar ? `
+            <div class="item-actions">
+              <button class="btn-icon" data-action="edit" data-id="${i.id}">Editar</button>
+              <button class="btn-icon danger" data-action="delete" data-id="${i.id}">Eliminar</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.item-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('[data-action]')) return;
+          abrirDetalle(card.dataset.id);
+        });
+      });
+      grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.stopPropagation(); abrirFormulario(btn.dataset.id); });
+      });
+      grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.stopPropagation(); abrirEliminar(btn.dataset.id); });
+      });
+    }
+
+    // ---------------- Filtros y búsqueda ----------------
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        filtroActivo = pill.dataset.filtro;
+        pintarGrid();
+      });
+    });
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      terminoBusqueda = e.target.value.trim();
+      pintarGrid();
+    });
+
+    // ---------------- Paso 1: elegir tipo ----------------
+    const tipoOverlay = document.getElementById('tipoOverlay');
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      tipoOverlay.classList.add('active');
+    });
+    document.getElementById('tipoCloseBtn').addEventListener('click', () => tipoOverlay.classList.remove('active'));
+    document.querySelectorAll('.tipo-choice').forEach(el => {
+      el.addEventListener('click', () => {
+        tipoOverlay.classList.remove('active');
+        editandoId = null;
+        abrirFormularioNuevo(el.dataset.tipo);
+      });
+    });
+
+    // ---------------- Formulario (crear/editar) ----------------
+    const formOverlay = document.getElementById('formOverlay');
+    const formMsg = document.getElementById('formMsg');
+
+    function poblarCategoriaSelect(tipo){
+      const opciones = tipo === 'producto' ? CATEGORIAS_PRODUCTO : TIPOS_SERVICIO;
+      document.getElementById('fCategoriaLabel').textContent = tipo === 'producto' ? 'Categoría' : 'Tipo';
+      document.getElementById('fCategoria').innerHTML =
+        `<option value="">Selecciona ${tipo === 'producto' ? 'una categoría' : 'un tipo'}</option>` +
+        opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+    }
+
+    document.getElementById('fCategoria').addEventListener('change', (e) => {
+      document.getElementById('fCategoriaOtraWrap').style.display = e.target.value === 'Otros' ? 'block' : 'none';
+    });
+
+    function limpiarFormulario(){
+      document.getElementById('fNombre').value = '';
+      document.getElementById('fCategoria').value = '';
+      document.getElementById('fCategoriaOtra').value = '';
+      document.getElementById('fCategoriaOtraWrap').style.display = 'none';
+      document.getElementById('fPrecio').value = '';
+      document.getElementById('fStock').value = '';
+      document.getElementById('fDescripcion').value = '';
+      document.getElementById('fActivo').checked = true;
+      fotosActuales = [];
+      archivosNuevos = [];
+      pintarFotosGrid();
+    }
+
+    function abrirFormularioNuevo(tipo){
+      tipoActual = tipo;
+      limpiarFormulario();
+      poblarCategoriaSelect(tipo);
+      document.getElementById('fStockWrap').style.display = tipo === 'producto' ? 'block' : 'none';
+      document.getElementById('formTitle').textContent = tipo === 'producto' ? 'Crear producto' : 'Crear servicio';
+      document.getElementById('formLead').textContent = 'Completa la información para publicarlo.';
+      formMsg.style.display = 'none';
+      formOverlay.classList.add('active');
+    }
+
+    function abrirFormulario(id){
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      editandoId = id;
+      tipoActual = item.tipo_item;
+      limpiarFormulario();
+      poblarCategoriaSelect(tipoActual);
+
+      document.getElementById('fStockWrap').style.display = tipoActual === 'producto' ? 'block' : 'none';
+      document.getElementById('formTitle').textContent = tipoActual === 'producto' ? 'Editar producto' : 'Editar servicio';
+      document.getElementById('formLead').textContent = '';
+
+      document.getElementById('fNombre').value = item.nombre || '';
+      const opciones = tipoActual === 'producto' ? CATEGORIAS_PRODUCTO : TIPOS_SERVICIO;
+      if (item.categoria && !opciones.includes(item.categoria)) {
+        document.getElementById('fCategoria').value = 'Otros';
+        document.getElementById('fCategoriaOtra').value = item.categoria;
+        document.getElementById('fCategoriaOtraWrap').style.display = 'block';
+      } else {
+        document.getElementById('fCategoria').value = item.categoria || '';
+      }
+      document.getElementById('fPrecio').value = item.precio ?? '';
+      document.getElementById('fStock').value = item.stock ?? '';
+      document.getElementById('fDescripcion').value = item.descripcion || '';
+      document.getElementById('fActivo').checked = !!item.activo;
+
+      fotosActuales = [...(item.fotos || [])];
+      pintarFotosGrid();
+
+      formMsg.style.display = 'none';
+      formOverlay.classList.add('active');
+    }
+
+    document.getElementById('formCloseBtn').addEventListener('click', () => formOverlay.classList.remove('active'));
+
+    // ---------------- Fotos ----------------
+    function pintarFotosGrid(){
+      const grid = document.getElementById('photosGrid');
+      const urlsPreview = archivosNuevos.map(f => URL.createObjectURL(f));
+      const todas = [...fotosActuales.map(u => ({ url: u, esNueva: false })), ...urlsPreview.map((u, idx) => ({ url: u, esNueva: true, idx }))];
+
+      grid.innerHTML = todas.map((f, i) => `
+        <div class="photo-thumb">
+          <img src="${f.url}" alt="Foto ${i + 1}">
+          <button type="button" class="remove-photo" data-index="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.remove-photo').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.index, 10);
+          if (idx < fotosActuales.length) {
+            fotosActuales.splice(idx, 1);
+          } else {
+            archivosNuevos.splice(idx - fotosActuales.length, 1);
+          }
+          pintarFotosGrid();
+        });
+      });
+    }
+
+    document.getElementById('btnFotos').addEventListener('click', () => document.getElementById('fileFotos').click());
+    document.getElementById('fileFotos').addEventListener('change', (e) => {
+      archivosNuevos.push(...Array.from(e.target.files));
+      pintarFotosGrid();
+      e.target.value = '';
+    });
+
+    // ---------------- Guardar ----------------
+    document.getElementById('formSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('formSaveBtn');
+      formMsg.style.display = 'none';
+
+      const nombre = capitalizarPalabras(document.getElementById('fNombre').value.trim());
+      const categoria = document.getElementById('fCategoria').value === 'Otros'
+        ? (capitalizarPalabras(document.getElementById('fCategoriaOtra').value.trim()) || 'Otros')
+        : (document.getElementById('fCategoria').value || null);
+      const precio = parseFloat(document.getElementById('fPrecio').value);
+      const stock = tipoActual === 'producto' && document.getElementById('fStock').value !== ''
+        ? parseInt(document.getElementById('fStock').value, 10) : null;
+      const descripcion = document.getElementById('fDescripcion').value.trim() || null;
+      const activo = document.getElementById('fActivo').checked;
+
+      if (!nombre) { formMsg.textContent = 'El nombre es obligatorio.'; formMsg.style.display = 'block'; return; }
+      if (isNaN(precio) || precio < 0) { formMsg.textContent = 'Ingresa un precio válido.'; formMsg.style.display = 'block'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      try {
+        // Subir fotos nuevas
+        const urlsSubidas = [];
+        for (const archivo of archivosNuevos) {
+          const ruta = `${tipoActual}/${Date.now()}-${Math.random().toString(36).slice(2)}-${archivo.name}`;
+          const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, archivo);
+          if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
+          urlsSubidas.push(pub.publicUrl);
+        }
+
+        const fotosFinal = [...fotosActuales, ...urlsSubidas];
+
+        const payload = {
+          tipo_item: tipoActual, nombre, categoria, precio, stock, descripcion, fotos: fotosFinal, activo
+        };
+
+        if (editandoId) {
+          const { error } = await supabase.from('tienda_items').update(payload).eq('id', editandoId);
+          if (error) throw new Error(error.message);
+        } else {
+          const { error } = await supabase.from('tienda_items').insert(payload);
+          if (error) throw new Error(error.message);
+        }
+
+        formOverlay.classList.remove('active');
+        await cargarItems();
+      } catch (err) {
+        formMsg.textContent = 'No se pudo guardar: ' + err.message;
+        formMsg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    });
+
+    // ---------------- Eliminar ----------------
+    const deleteOverlay = document.getElementById('deleteOverlay');
+    const deleteMsg = document.getElementById('deleteMsg');
+
+    function abrirEliminar(id){
+      eliminandoId = id;
+      deleteMsg.style.display = 'none';
+      deleteOverlay.classList.add('active');
+    }
+    document.getElementById('deleteCloseBtn').addEventListener('click', () => deleteOverlay.classList.remove('active'));
+
+    document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
+      const { error } = await supabase.from('tienda_items').delete().eq('id', eliminandoId);
+      if (error) {
+        deleteMsg.textContent = 'No se pudo eliminar: ' + error.message;
+        deleteMsg.style.display = 'block';
+        return;
+      }
+      deleteOverlay.classList.remove('active');
+      await cargarItems();
+    });
+
+    // ---------------- Detalle (vista estilo producto) ----------------
+    const detailOverlay = document.getElementById('detailOverlay');
+
+    function abrirDetalle(id){
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('detailEyebrow').className = `detail-eyebrow ${item.tipo_item}`;
+      document.getElementById('detailEyebrow').textContent = item.tipo_item === 'producto' ? 'Producto' : 'Servicio';
+      document.getElementById('detailTitle').textContent = item.nombre;
+      document.getElementById('detailCat').textContent = item.categoria || '';
+      document.getElementById('detailPrice').textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
+      document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
+      document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
+
+      const fotos = item.fotos && item.fotos.length ? item.fotos : [null];
+      let activa = 0;
+
+      function pintarPrincipal(){
+        const main = document.getElementById('detailMain');
+        main.innerHTML = fotos[activa]
+          ? `<img src="${fotos[activa]}" alt="${item.nombre}">`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/></svg>`;
+      }
+
+      document.getElementById('detailThumbs').innerHTML = fotos.map((f, i) => `
+        <div class="detail-thumb ${i === activa ? 'active' : ''}" data-idx="${i}">
+          ${f ? `<img src="${f}" alt="Miniatura ${i + 1}">` : ''}
+        </div>
+      `).join('');
+
+      document.getElementById('detailThumbs').querySelectorAll('.detail-thumb').forEach(t => {
+        t.addEventListener('click', () => {
+          activa = parseInt(t.dataset.idx, 10);
+          document.querySelectorAll('.detail-thumb').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          pintarPrincipal();
+        });
+      });
+
+      pintarPrincipal();
+      detailOverlay.classList.add('active');
+    }
+
+    document.getElementById('detailCloseBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
+  </script>
+</body>
+</html>
