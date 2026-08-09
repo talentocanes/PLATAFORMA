@@ -519,7 +519,7 @@
     function obtenerCargoFinal(selectId, otroInputId){
       const select = document.getElementById(selectId);
       if (select.value === 'Otro') {
-        return document.getElementById(otroInputId).value.trim() || 'Otro';
+        return capitalizarPalabras(document.getElementById(otroInputId).value.trim()) || 'Otro';
       }
       return select.value || null;
     }

@@ -625,9 +625,9 @@
 
       const fechaISO = fechaInput.dataset.iso || null;
       const raza = document.getElementById('fRaza').value === 'Otra'
-        ? (document.getElementById('fRazaOtra').value.trim() || 'Otra')
+        ? (capitalizarPalabras(document.getElementById('fRazaOtra').value.trim()) || 'Otra')
         : (document.getElementById('fRaza').value || null);
-      const color = document.getElementById('fColor').value.trim() || null;
+      const color = capitalizarPalabras(document.getElementById('fColor').value.trim()) || null;
       const activo = document.getElementById('fActivo').checked;
 
       btn.disabled = true;
