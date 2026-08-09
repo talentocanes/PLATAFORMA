@@ -1,4 +1,4 @@
-import { supabase, usernameToEmail } from './supabaseClient.js?v=7';
+import { supabase, usernameToEmail } from './supabaseClient.js?v=8';
 
 // ---------------------------------------------------------
 // Iniciar sesión con usuario y contraseña
@@ -73,13 +73,31 @@ export async function obtenerPerfilActual() {
 // ---------------------------------------------------------
 // Guardia de página: redirige a index.html si no hay sesión
 // aprobada, o a inicio.html si el rol no está permitido.
+// Si la sesión sigue "viva" en el navegador pero el admin borró
+// la cuenta, la cierra antes de redirigir — evita el bucle
+// infinito entre el login y las páginas protegidas.
 // Úsala al inicio de cada página protegida:
 //   const perfil = await protegerPagina({ rolesPermitidos: ['admin'] });
 // ---------------------------------------------------------
 export async function protegerPagina({ rolesPermitidos = null } = {}) {
-  const profile = await obtenerPerfilActual();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!profile || profile.status !== 'approved') {
+  if (!session) {
+    window.location.href = 'index.html';
+    return null;
+  }
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id, username, full_name, role, status, requiere_cambio_password')
+    .eq('id', session.user.id)
+    .single();
+
+  if (error || !profile || profile.status !== 'approved') {
+    // Sesión inválida (perfil borrado, denegado o pendiente):
+    // se cierra por completo antes de mandar al login, para que
+    // no quede un token viejo causando redirecciones en bucle.
+    await supabase.auth.signOut();
     window.location.href = 'index.html';
     return null;
   }

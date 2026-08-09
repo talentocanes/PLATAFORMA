@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js?v=7';
+import { supabase } from './supabaseClient.js?v=8';
 
 // ---------------------------------------------------------
 // 8 paletas de color. La primera ("azul-original") es el tono
