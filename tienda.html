@@ -60,6 +60,17 @@
   .tipo-choice svg{ width:26px; height:26px; margin-bottom:8px; color:var(--blue-glow); }
   .tipo-choice .t{ font-weight:600; font-size:13.5px; }
 
+  .plan-row{ display:grid; grid-template-columns:1fr 110px 130px 32px; gap:8px; align-items:center; margin-bottom:8px; }
+  @media (max-width:560px){ .plan-row{ grid-template-columns:1fr; } }
+  .plan-row input, .plan-row select{ width:100%; padding:9px 10px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; outline:none; }
+  .plan-row input:focus, .plan-row select:focus{ border-color:var(--blue-bright); }
+  .plan-row .remove-plan{ width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .plan-row .remove-plan:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+  .plan-row .remove-plan svg{ width:14px; height:14px; }
+  .plan-labels{ display:grid; grid-template-columns:1fr 110px 130px 32px; gap:8px; margin-bottom:6px; font-size:10.5px; color:var(--mist-dim); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.4px; }
+  @media (max-width:560px){ .plan-labels{ display:none; } }
+  .btn-add-plan{ padding:9px 14px; border-radius:9px; border:1px dashed var(--line-strong); background:none; color:var(--blue-glow); font-size:12.5px; font-weight:600; cursor:pointer; width:100%; margin-top:4px; }
+
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
   .field input, .field select, .field textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; font-family:inherit; }
@@ -176,6 +187,74 @@
         </div>
       </div>
       <button class="modal-close" id="tipoCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: elegir tipo de servicio -->
+  <div class="modal-overlay" id="tipoServicioOverlay">
+    <div class="modal modal-sm">
+      <h2>¿Qué tipo de servicio?</h2>
+      <p class="modal-lead">Elige una opción para continuar.</p>
+      <div class="tipo-choice-row">
+        <div class="tipo-choice" data-tiposervicio="Planes de colegio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+          <div class="t">Planes de colegio</div>
+        </div>
+        <div class="tipo-choice" data-tiposervicio="Plan por Tickets">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8.5a2.5 2.5 0 0 0 0 5V17a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3.5Z"/><path d="M11 5v14" stroke-dasharray="2.4 2.4"/></svg>
+          <div class="t">Plan por Tickets</div>
+        </div>
+        <div class="tipo-choice" data-tiposervicio="Otros">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+          <div class="t">Otros</div>
+        </div>
+      </div>
+      <button class="modal-close" id="tipoServicioBackBtn">Volver</button>
+    </div>
+  </div>
+
+  <!-- Modal: crear/editar Plan de colegio -->
+  <div class="modal-overlay" id="planesOverlay">
+    <div class="modal modal-md">
+      <h2 id="planesFormTitle">Planes de colegio</h2>
+      <p class="modal-lead">Define los planes que va a poder elegir el acudiente. Puedes editar, eliminar o añadir los que quieras.</p>
+
+      <div class="field">
+        <label>Nombre del servicio</label>
+        <input type="text" id="pNombre" placeholder="Planes de colegio" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="pDescripcion" placeholder="Explica brevemente en qué consisten los planes..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Imágenes</label>
+        <div class="photos-grid" id="pPhotosGrid"></div>
+        <button type="button" class="btn-secondary" id="pBtnFotos">Añadir fotos (galería o cámara)</button>
+        <input type="file" id="pFileFotos" accept="image/*" multiple style="display:none" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>Planes</label>
+        <div class="plan-labels">
+          <span>Nombre del plan</span><span>Precio ($)</span><span>Días / semana</span><span></span>
+        </div>
+        <div id="planesLista"></div>
+        <button type="button" class="btn-add-plan" id="btnAddPlan">+ Añadir plan</button>
+      </div>
+
+      <div class="toggle-row">
+        <span>Publicado (visible para clientes)</span>
+        <label class="switch">
+          <input type="checkbox" id="pActivo" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-msg" id="planesMsg"></div>
+      <button class="btn-save" id="planesSaveBtn">Guardar</button>
+      <button class="modal-close" id="planesCloseBtn">Cancelar</button>
     </div>
   </div>
 
@@ -398,17 +477,42 @@
       pintarGrid();
     });
 
-    // ---------------- Paso 1: elegir tipo ----------------
+    // ---------------- Paso 1: elegir tipo (producto / servicio) ----------------
     const tipoOverlay = document.getElementById('tipoOverlay');
+    const tipoServicioOverlay = document.getElementById('tipoServicioOverlay');
+
     document.getElementById('btnAdd').addEventListener('click', () => {
       tipoOverlay.classList.add('active');
     });
     document.getElementById('tipoCloseBtn').addEventListener('click', () => tipoOverlay.classList.remove('active'));
-    document.querySelectorAll('.tipo-choice').forEach(el => {
+
+    tipoOverlay.querySelectorAll('.tipo-choice').forEach(el => {
       el.addEventListener('click', () => {
         tipoOverlay.classList.remove('active');
         editandoId = null;
-        abrirFormularioNuevo(el.dataset.tipo);
+        if (el.dataset.tipo === 'servicio') {
+          tipoServicioOverlay.classList.add('active');
+        } else {
+          abrirFormularioNuevo('producto', null);
+        }
+      });
+    });
+
+    // ---------------- Paso 2: elegir tipo de servicio ----------------
+    document.getElementById('tipoServicioBackBtn').addEventListener('click', () => {
+      tipoServicioOverlay.classList.remove('active');
+      tipoOverlay.classList.add('active');
+    });
+
+    tipoServicioOverlay.querySelectorAll('.tipo-choice').forEach(el => {
+      el.addEventListener('click', () => {
+        tipoServicioOverlay.classList.remove('active');
+        const tipoServicio = el.dataset.tiposervicio;
+        if (tipoServicio === 'Planes de colegio') {
+          abrirFormularioPlanesNuevo();
+        } else {
+          abrirFormularioNuevo('servicio', tipoServicio);
+        }
       });
     });
 
@@ -442,13 +546,19 @@
       pintarFotosGrid();
     }
 
-    function abrirFormularioNuevo(tipo){
+    function abrirFormularioNuevo(tipo, tipoServicioPreseleccionado){
       tipoActual = tipo;
       limpiarFormulario();
       poblarCategoriaSelect(tipo);
       document.getElementById('fStockWrap').style.display = tipo === 'producto' ? 'block' : 'none';
       document.getElementById('formTitle').textContent = tipo === 'producto' ? 'Crear producto' : 'Crear servicio';
       document.getElementById('formLead').textContent = 'Completa la información para publicarlo.';
+
+      if (tipoServicioPreseleccionado) {
+        document.getElementById('fCategoria').value = tipoServicioPreseleccionado;
+        if (tipoServicioPreseleccionado === 'Otros') document.getElementById('fCategoriaOtraWrap').style.display = 'block';
+      }
+
       formMsg.style.display = 'none';
       formOverlay.classList.add('active');
     }
@@ -456,6 +566,12 @@
     function abrirFormulario(id){
       const item = items.find(i => i.id === id);
       if (!item) return;
+
+      if (item.tipo_item === 'servicio' && item.categoria === 'Planes de colegio') {
+        abrirFormularioPlanesEditar(item);
+        return;
+      }
+
       editandoId = id;
       tipoActual = item.tipo_item;
       limpiarFormulario();
@@ -572,6 +688,220 @@
       } catch (err) {
         formMsg.textContent = 'No se pudo guardar: ' + err.message;
         formMsg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    });
+
+    // ---------------- Planes de colegio ----------------
+    const planesOverlay = document.getElementById('planesOverlay');
+    const planesMsg = document.getElementById('planesMsg');
+    const DIAS_OPCIONES = [1, 2, 3, 4, 5, 6, 7];
+
+    let planesEditandoId = null;
+    let filasPlanes = [];
+    let planesFotosActuales = [];
+    let planesArchivosNuevos = [];
+    let siguienteFilaId = 1;
+
+    function nuevaFilaPlan(nombre, precio, dias){
+      return { filaId: siguienteFilaId++, id: null, nombre: nombre || '', precio: precio ?? '', dias_semana: dias ?? '' };
+    }
+
+    function planesPorDefecto(){
+      return [
+        nuevaFilaPlan('Plan 1 día a la semana', '', 1),
+        nuevaFilaPlan('Plan 2 días a la semana', '', 2),
+        nuevaFilaPlan('Plan 3 días a la semana', '', 3),
+        nuevaFilaPlan('Plan 4 días a la semana', '', 4),
+        nuevaFilaPlan('Plan 5 días a la semana', '', 5)
+      ];
+    }
+
+    function pintarFilasPlanes(){
+      const cont = document.getElementById('planesLista');
+      cont.innerHTML = filasPlanes.map(f => `
+        <div class="plan-row" data-fila="${f.filaId}">
+          <input type="text" placeholder="Nombre del plan" data-campo="nombre" value="${f.nombre.replace(/"/g,'&quot;')}">
+          <input type="number" min="0" step="100" placeholder="0" data-campo="precio" value="${f.precio}">
+          <select data-campo="dias_semana">
+            <option value="">Días</option>
+            ${DIAS_OPCIONES.map(d => `<option value="${d}" ${String(f.dias_semana) === String(d) ? 'selected' : ''}>${d} ${d === 1 ? 'día' : 'días'}</option>`).join('')}
+          </select>
+          <button type="button" class="remove-plan" data-fila-quitar="${f.filaId}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join('');
+
+      cont.querySelectorAll('.plan-row').forEach(row => {
+        const filaId = parseInt(row.dataset.fila, 10);
+        row.querySelectorAll('[data-campo]').forEach(input => {
+          input.addEventListener('input', () => {
+            const fila = filasPlanes.find(f => f.filaId === filaId);
+            if (fila) fila[input.dataset.campo] = input.value;
+          });
+        });
+      });
+      cont.querySelectorAll('[data-fila-quitar]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const filaId = parseInt(btn.dataset.filaQuitar, 10);
+          filasPlanes = filasPlanes.filter(f => f.filaId !== filaId);
+          pintarFilasPlanes();
+        });
+      });
+    }
+
+    document.getElementById('btnAddPlan').addEventListener('click', () => {
+      filasPlanes.push(nuevaFilaPlan('', '', ''));
+      pintarFilasPlanes();
+    });
+
+    function pintarFotosPlanesGrid(){
+      const grid = document.getElementById('pPhotosGrid');
+      const urlsPreview = planesArchivosNuevos.map(f => URL.createObjectURL(f));
+      const todas = [...planesFotosActuales.map(u => ({ url: u })), ...urlsPreview.map(u => ({ url: u }))];
+
+      grid.innerHTML = todas.map((f, i) => `
+        <div class="photo-thumb">
+          <img src="${f.url}" alt="Foto ${i + 1}">
+          <button type="button" class="remove-photo" data-index="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.remove-photo').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.index, 10);
+          if (idx < planesFotosActuales.length) planesFotosActuales.splice(idx, 1);
+          else planesArchivosNuevos.splice(idx - planesFotosActuales.length, 1);
+          pintarFotosPlanesGrid();
+        });
+      });
+    }
+
+    document.getElementById('pBtnFotos').addEventListener('click', () => document.getElementById('pFileFotos').click());
+    document.getElementById('pFileFotos').addEventListener('change', (e) => {
+      planesArchivosNuevos.push(...Array.from(e.target.files));
+      pintarFotosPlanesGrid();
+      e.target.value = '';
+    });
+
+    function abrirFormularioPlanesNuevo(){
+      planesEditandoId = null;
+      document.getElementById('planesFormTitle').textContent = 'Crear planes de colegio';
+      document.getElementById('pNombre').value = 'Planes de colegio';
+      document.getElementById('pDescripcion').value = '';
+      document.getElementById('pActivo').checked = true;
+      planesFotosActuales = [];
+      planesArchivosNuevos = [];
+      pintarFotosPlanesGrid();
+      filasPlanes = planesPorDefecto();
+      pintarFilasPlanes();
+      planesMsg.style.display = 'none';
+      planesOverlay.classList.add('active');
+    }
+
+    async function abrirFormularioPlanesEditar(item){
+      planesEditandoId = item.id;
+      document.getElementById('planesFormTitle').textContent = 'Editar planes de colegio';
+      document.getElementById('pNombre').value = item.nombre || '';
+      document.getElementById('pDescripcion').value = item.descripcion || '';
+      document.getElementById('pActivo').checked = !!item.activo;
+      planesFotosActuales = [...(item.fotos || [])];
+      planesArchivosNuevos = [];
+      pintarFotosPlanesGrid();
+
+      const { data, error } = await supabase
+        .from('tienda_planes')
+        .select('*')
+        .eq('tienda_item_id', item.id)
+        .order('orden', { ascending: true });
+
+      filasPlanes = (error || !data || data.length === 0)
+        ? planesPorDefecto()
+        : data.map(p => ({ filaId: siguienteFilaId++, id: p.id, nombre: p.nombre, precio: p.precio, dias_semana: p.dias_semana ?? '' }));
+
+      pintarFilasPlanes();
+      planesMsg.style.display = 'none';
+      planesOverlay.classList.add('active');
+    }
+
+    document.getElementById('planesCloseBtn').addEventListener('click', () => planesOverlay.classList.remove('active'));
+
+    document.getElementById('planesSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('planesSaveBtn');
+      planesMsg.style.display = 'none';
+
+      const nombre = capitalizarPalabras(document.getElementById('pNombre').value.trim()) || 'Planes de colegio';
+      const descripcion = document.getElementById('pDescripcion').value.trim() || null;
+      const activo = document.getElementById('pActivo').checked;
+
+      const planesValidos = filasPlanes.filter(f => f.nombre.trim() !== '');
+      if (planesValidos.length === 0) {
+        planesMsg.textContent = 'Añade al menos un plan con nombre.';
+        planesMsg.style.display = 'block';
+        return;
+      }
+      for (const f of planesValidos) {
+        if (f.precio === '' || isNaN(parseFloat(f.precio)) || parseFloat(f.precio) < 0) {
+          planesMsg.textContent = `Ingresa un precio válido para "${f.nombre}".`;
+          planesMsg.style.display = 'block';
+          return;
+        }
+        if (!f.dias_semana) {
+          planesMsg.textContent = `Selecciona los días a la semana para "${f.nombre}".`;
+          planesMsg.style.display = 'block';
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      try {
+        const urlsSubidas = [];
+        for (const archivo of planesArchivosNuevos) {
+          const ruta = `servicio/${Date.now()}-${Math.random().toString(36).slice(2)}-${archivo.name}`;
+          const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, archivo);
+          if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
+          urlsSubidas.push(pub.publicUrl);
+        }
+        const fotosFinal = [...planesFotosActuales, ...urlsSubidas];
+
+        const payloadItem = {
+          tipo_item: 'servicio', nombre, categoria: 'Planes de colegio',
+          precio: Math.min(...planesValidos.map(f => parseFloat(f.precio))),
+          descripcion, fotos: fotosFinal, activo
+        };
+
+        let itemId = planesEditandoId;
+        if (itemId) {
+          const { error } = await supabase.from('tienda_items').update(payloadItem).eq('id', itemId);
+          if (error) throw new Error(error.message);
+          await supabase.from('tienda_planes').delete().eq('tienda_item_id', itemId);
+        } else {
+          const { data, error } = await supabase.from('tienda_items').insert(payloadItem).select('id').single();
+          if (error) throw new Error(error.message);
+          itemId = data.id;
+        }
+
+        const filasInsert = planesValidos.map((f, idx) => ({
+          tienda_item_id: itemId,
+          nombre: capitalizarPalabras(f.nombre.trim()),
+          precio: parseFloat(f.precio),
+          dias_semana: parseInt(f.dias_semana, 10),
+          orden: idx
+        }));
+        const { error: errPlanes } = await supabase.from('tienda_planes').insert(filasInsert);
+        if (errPlanes) throw new Error(errPlanes.message);
+
+        planesOverlay.classList.remove('active');
+        await cargarItems();
+      } catch (err) {
+        planesMsg.textContent = 'No se pudo guardar: ' + err.message;
+        planesMsg.style.display = 'block';
       } finally {
         btn.disabled = false;
         btn.textContent = 'Guardar';
