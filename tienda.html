@@ -123,6 +123,11 @@
   .detail-cat{ color:var(--mist-dim); font-size:13px; margin-bottom:14px; }
   .detail-price{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--white); margin-bottom:16px; }
   .detail-stock{ font-size:12px; color:var(--mist-dim); margin-bottom:16px; }
+  .detail-plans-label{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:8px; }
+  .detail-plans-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+  .detail-plan-pill{ padding:9px 14px; border-radius:10px; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); font-size:12.5px; font-weight:500; cursor:pointer; }
+  .detail-plan-pill:hover{ border-color:var(--line-strong); color:var(--white); }
+  .detail-plan-pill.active{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 14%, transparent); font-weight:600; }
   .detail-desc{ font-size:13.5px; line-height:1.7; color:var(--mist); white-space:pre-wrap; }
 </style>
 </head>
@@ -338,6 +343,10 @@
           <div class="detail-eyebrow" id="detailEyebrow">Producto</div>
           <div class="detail-title" id="detailTitle">—</div>
           <div class="detail-cat" id="detailCat"></div>
+          <div id="detailPlansBlock" style="display:none;">
+            <div class="detail-plans-label">Elige un plan</div>
+            <div class="detail-plans-row" id="detailPlansRow"></div>
+          </div>
           <div class="detail-price" id="detailPrice">—</div>
           <div class="detail-stock" id="detailStock"></div>
           <div class="detail-desc" id="detailDesc"></div>
@@ -449,7 +458,9 @@
           <div class="item-body">
             <div class="item-cat">${i.categoria || (i.tipo_item === 'producto' ? 'Sin categoría' : 'Sin tipo')}</div>
             <div class="item-name">${i.nombre}</div>
-            <div class="item-price">$ ${Number(i.precio).toLocaleString('es-CO')}</div>
+            <div class="item-price">${i.precio_max != null && i.precio_max !== i.precio
+              ? `$ ${Number(i.precio).toLocaleString('es-CO')} - $ ${Number(i.precio_max).toLocaleString('es-CO')}`
+              : `$ ${Number(i.precio).toLocaleString('es-CO')}`}</div>
             ${i.tipo_item === 'producto' && i.stock !== null ? `<div class="item-stock">Stock: ${i.stock}</div>` : ''}
           </div>
           ${puedeEditar ? `
@@ -898,6 +909,7 @@
         const payloadItem = {
           tipo_item: 'servicio', nombre, categoria: 'Planes de colegio',
           precio: Math.min(...planesValidos.map(f => parseFloat(f.precio))),
+          precio_max: Math.max(...planesValidos.map(f => parseFloat(f.precio))),
           descripcion, fotos: fotosFinal, activo
         };
 
@@ -958,7 +970,7 @@
     // ---------------- Detalle (vista estilo producto) ----------------
     const detailOverlay = document.getElementById('detailOverlay');
 
-    function abrirDetalle(id){
+    async function abrirDetalle(id){
       const item = items.find(i => i.id === id);
       if (!item) return;
 
@@ -966,9 +978,50 @@
       document.getElementById('detailEyebrow').textContent = item.tipo_item === 'producto' ? 'Producto' : 'Servicio';
       document.getElementById('detailTitle').textContent = item.nombre;
       document.getElementById('detailCat').textContent = item.categoria || '';
-      document.getElementById('detailPrice').textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
       document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
       document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
+
+      const esPlanesColegio = item.tipo_item === 'servicio' && item.categoria === 'Planes de colegio';
+      const plansBlock = document.getElementById('detailPlansBlock');
+      const priceEl = document.getElementById('detailPrice');
+
+      if (esPlanesColegio) {
+        const { data: planes, error } = await supabase
+          .from('tienda_planes')
+          .select('*')
+          .eq('tienda_item_id', id)
+          .order('orden', { ascending: true });
+
+        if (!error && planes && planes.length > 0) {
+          plansBlock.style.display = 'block';
+          let planActivo = 0;
+
+          function pintarPrecioPlan(){
+            priceEl.textContent = '$ ' + Number(planes[planActivo].precio).toLocaleString('es-CO');
+          }
+
+          document.getElementById('detailPlansRow').innerHTML = planes.map((p, i) => `
+            <button type="button" class="detail-plan-pill ${i === 0 ? 'active' : ''}" data-idx="${i}">${p.nombre}</button>
+          `).join('');
+
+          document.getElementById('detailPlansRow').querySelectorAll('.detail-plan-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+              planActivo = parseInt(btn.dataset.idx, 10);
+              document.querySelectorAll('.detail-plan-pill').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              pintarPrecioPlan();
+            });
+          });
+
+          pintarPrecioPlan();
+        } else {
+          plansBlock.style.display = 'none';
+          priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
+        }
+      } else {
+        plansBlock.style.display = 'none';
+        priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
+      }
 
       const fotos = item.fotos && item.fotos.length ? item.fotos : [null];
       let activa = 0;
