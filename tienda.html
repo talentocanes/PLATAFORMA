@@ -283,7 +283,7 @@
       <div class="grid-2">
         <div class="field">
           <label>Precio ($)</label>
-          <input type="number" id="fPrecio" min="0" step="100" placeholder="0" autocomplete="off">
+          <input type="text" inputmode="numeric" id="fPrecio" placeholder="Ej: 400.000" autocomplete="off">
         </div>
         <div class="field" id="fStockWrap" style="display:none;">
           <label>Stock</label>
@@ -353,6 +353,18 @@
     import { capitalizarPalabras } from './textutils.js?v=11';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
+
+    // Convierte "440000" -> "440.000". Ignora cualquier caracter
+    // que no sea dígito (para que se pueda llamar con el valor
+    // crudo del input mientras la persona sigue escribiendo).
+    function formatearMiles(valor){
+      const soloDigitos = String(valor || '').replace(/\D/g, '');
+      if (!soloDigitos) return '';
+      return Number(soloDigitos).toLocaleString('es-CO');
+    }
+    function quitarFormatoMiles(valor){
+      return String(valor || '').replace(/\D/g, '');
+    }
     const TIPOS_SERVICIO = ['Planes de colegio', 'Plan por Tickets', 'Otros'];
 
     let items = [];
@@ -532,6 +544,10 @@
       document.getElementById('fCategoriaOtraWrap').style.display = e.target.value === 'Otros' ? 'block' : 'none';
     });
 
+    document.getElementById('fPrecio').addEventListener('input', (e) => {
+      e.target.value = formatearMiles(e.target.value);
+    });
+
     function limpiarFormulario(){
       document.getElementById('fNombre').value = '';
       document.getElementById('fCategoria').value = '';
@@ -590,7 +606,7 @@
       } else {
         document.getElementById('fCategoria').value = item.categoria || '';
       }
-      document.getElementById('fPrecio').value = item.precio ?? '';
+      document.getElementById('fPrecio').value = item.precio != null ? formatearMiles(item.precio) : '';
       document.getElementById('fStock').value = item.stock ?? '';
       document.getElementById('fDescripcion').value = item.descripcion || '';
       document.getElementById('fActivo').checked = !!item.activo;
@@ -646,7 +662,7 @@
       const categoria = document.getElementById('fCategoria').value === 'Otros'
         ? (capitalizarPalabras(document.getElementById('fCategoriaOtra').value.trim()) || 'Otros')
         : (document.getElementById('fCategoria').value || null);
-      const precio = parseFloat(document.getElementById('fPrecio').value);
+      const precio = parseFloat(quitarFormatoMiles(document.getElementById('fPrecio').value));
       const stock = tipoActual === 'producto' && document.getElementById('fStock').value !== ''
         ? parseInt(document.getElementById('fStock').value, 10) : null;
       const descripcion = document.getElementById('fDescripcion').value.trim() || null;
@@ -724,7 +740,7 @@
       cont.innerHTML = filasPlanes.map(f => `
         <div class="plan-row" data-fila="${f.filaId}">
           <input type="text" placeholder="Nombre del plan" data-campo="nombre" value="${f.nombre.replace(/"/g,'&quot;')}">
-          <input type="number" min="0" step="100" placeholder="0" data-campo="precio" value="${f.precio}">
+          <input type="text" inputmode="numeric" placeholder="Ej: 400.000" data-campo="precio" value="${formatearMiles(f.precio)}">
           <select data-campo="dias_semana">
             <option value="">Días</option>
             ${DIAS_OPCIONES.map(d => `<option value="${d}" ${String(f.dias_semana) === String(d) ? 'selected' : ''}>${d} ${d === 1 ? 'día' : 'días'}</option>`).join('')}
@@ -738,10 +754,19 @@
       cont.querySelectorAll('.plan-row').forEach(row => {
         const filaId = parseInt(row.dataset.fila, 10);
         row.querySelectorAll('[data-campo]').forEach(input => {
-          input.addEventListener('input', () => {
-            const fila = filasPlanes.find(f => f.filaId === filaId);
-            if (fila) fila[input.dataset.campo] = input.value;
-          });
+          if (input.dataset.campo === 'precio') {
+            input.addEventListener('input', () => {
+              const crudo = quitarFormatoMiles(input.value);
+              const fila = filasPlanes.find(f => f.filaId === filaId);
+              if (fila) fila.precio = crudo;
+              input.value = formatearMiles(crudo);
+            });
+          } else {
+            input.addEventListener('input', () => {
+              const fila = filasPlanes.find(f => f.filaId === filaId);
+              if (fila) fila[input.dataset.campo] = input.value;
+            });
+          }
         });
       });
       cont.querySelectorAll('[data-fila-quitar]').forEach(btn => {
