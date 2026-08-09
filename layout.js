@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=4';
-import { supabase } from './supabaseClient.js?v=4';
-import { cargarConfiguracionNegocio } from './theme.js?v=4';
+import { protegerPagina, cerrarSesion } from './auth.js?v=5';
+import { supabase } from './supabaseClient.js?v=5';
+import { cargarConfiguracionNegocio } from './theme.js?v=5';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -265,6 +265,14 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
       window.location.href = 'configuracion-inicial-cliente.html';
       return null;
     }
+  }
+
+  // Los trabajadores creados manualmente por el admin (contraseña
+  // temporal) deben completar su correo y cambiar la contraseña
+  // antes de usar el resto del panel.
+  if (profile.role === 'trabajador' && profile.requiere_cambio_password) {
+    window.location.href = 'configuracion-inicial-trabajador.html';
+    return null;
   }
 
   const sidebar = sidebarEl;
