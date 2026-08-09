@@ -2,7 +2,7 @@
 // Selector de fecha con calendario desplegable, estilizado para
 // combinar con el resto del panel. Uso:
 //
-//   import { initDatePicker } from './datepicker.js?v=5';
+//   import { initDatePicker } from './datepicker.js?v=6';
 //   initDatePicker(document.getElementById('miInput'), {
 //     onChange: (isoDate) => { ... } // 'YYYY-MM-DD' o null
 //   });

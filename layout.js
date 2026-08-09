@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=5';
-import { supabase } from './supabaseClient.js?v=5';
-import { cargarConfiguracionNegocio } from './theme.js?v=5';
+import { protegerPagina, cerrarSesion } from './auth.js?v=6';
+import { supabase } from './supabaseClient.js?v=6';
+import { cargarConfiguracionNegocio } from './theme.js?v=6';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -227,15 +227,17 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
   // Los clientes ven un conjunto fijo: Inicio, Servicios, Cartera y
   // Configuración.
   let modulosPermitidos = null;
+  let trabajadorPerfilCompleto = true;
   if (profile.role === 'trabajador') {
     const { data, error } = await supabase
       .from('trabajador_detalle')
-      .select('modulos_habilitados')
+      .select('modulos_habilitados, perfil_completo')
       .eq('id', profile.id)
       .single();
 
     if (error) console.error('Error al leer permisos del trabajador:', error);
     modulosPermitidos = data?.modulos_habilitados || [];
+    trabajadorPerfilCompleto = !!data?.perfil_completo;
     guardarModulosCache(modulosPermitidos);
   } else if (profile.role === 'cliente') {
     modulosPermitidos = CLAVES_CLIENTE;
@@ -267,10 +269,11 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
     }
   }
 
-  // Los trabajadores creados manualmente por el admin (contraseña
-  // temporal) deben completar su correo y cambiar la contraseña
-  // antes de usar el resto del panel.
-  if (profile.role === 'trabajador' && profile.requiere_cambio_password) {
+  // Los trabajadores también deben completar su configuración
+  // inicial (correo, y si aplica, cambio de contraseña temporal)
+  // antes de usar el resto del panel — sin importar si su cuenta
+  // se creó por invitación o de forma manual.
+  if (profile.role === 'trabajador' && !trabajadorPerfilCompleto) {
     window.location.href = 'configuracion-inicial-trabajador.html';
     return null;
   }
