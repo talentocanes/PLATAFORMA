@@ -80,6 +80,19 @@
   .btn-generate{ padding:0 14px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12px; cursor:pointer; white-space:nowrap; }
 
   .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
+
+  .view-section-title{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--mist-dim); margin:18px 0 10px; }
+  .view-section-title:first-of-type{ margin-top:0; }
+  .view-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; margin-bottom:4px; }
+  .view-item{ font-size:13px; }
+  .view-item b{ display:block; font-size:10.5px; color:var(--mist-dim); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px; }
+  .pets-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; }
+  .pet-mini-card{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 10px; }
+  .pet-mini-photo{ width:56px; height:56px; border-radius:50%; background:var(--navy-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .pet-mini-photo img{ width:100%; height:100%; object-fit:cover; }
+  .pet-mini-photo svg{ width:22px; height:22px; color:var(--mist-dim); opacity:.5; }
+  .pet-mini-name{ font-size:12.5px; font-weight:600; }
+  .pet-mini-meta{ font-size:10.5px; color:var(--mist-dim); }
   .danger-box b{ color:var(--danger); }
   .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
   .btn-delete-confirm:disabled{ opacity:.4; cursor:not-allowed; }
@@ -176,6 +189,31 @@
       </div>
       <div class="modal-msg" id="modalMsg"></div>
       <button class="modal-close" id="modalClose">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal: ver acudiente y sus mascotas -->
+  <div class="modal-overlay" id="viewOverlay">
+    <div class="modal">
+      <h2>Ficha del acudiente</h2>
+      <p>Información registrada y mascotas a su nombre.</p>
+
+      <div class="view-section-title">Datos de contacto</div>
+      <div class="view-grid">
+        <div class="view-item"><b>Nombre completo</b><span id="vNombre">—</span></div>
+        <div class="view-item"><b>Usuario</b><span id="vUsuario">—</span></div>
+        <div class="view-item"><b>Teléfono</b><span id="vTelefono">—</span></div>
+        <div class="view-item"><b>Correo</b><span id="vCorreo">—</span></div>
+        <div class="view-item"><b>Tipo / N.° identificación</b><span id="vIdentificacion">—</span></div>
+        <div class="view-item"><b>Ubicación</b><span id="vUbicacion">—</span></div>
+      </div>
+
+      <div class="view-section-title">Mascotas</div>
+      <div class="pets-grid" id="vMascotas">
+        <div class="empty-note">Cargando…</div>
+      </div>
+
+      <button class="modal-close" id="viewCloseBtn" style="margin-top:18px;">Cerrar</button>
     </div>
   </div>
 
@@ -387,6 +425,10 @@
           <td>
             ${esAdmin ? `
               <div class="row-actions">
+                <button class="btn-icon" data-action="ver" data-id="${p.id}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Ver
+                </button>
                 <button class="btn-icon" data-action="edit" data-id="${p.id}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                   Editar
@@ -405,6 +447,9 @@
         </tr>
       `).join('');
 
+      tbody.querySelectorAll('[data-action="ver"]').forEach(btn => {
+        btn.addEventListener('click', () => abrirVista(btn.dataset.id));
+      });
       tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', () => abrirEdicion(btn.dataset.id));
       });
@@ -446,6 +491,71 @@
       }
       await cargarLista();
     }
+
+    // ---------------- Modal Ver (ficha + mascotas) ----------------
+    const viewOverlay = document.getElementById('viewOverlay');
+
+    async function abrirVista(id){
+      viewOverlay.classList.add('active');
+      document.getElementById('vNombre').textContent = 'Cargando…';
+      document.getElementById('vUsuario').textContent = '';
+      document.getElementById('vTelefono').textContent = '';
+      document.getElementById('vCorreo').textContent = '';
+      document.getElementById('vIdentificacion').textContent = '';
+      document.getElementById('vUbicacion').textContent = '';
+      document.getElementById('vMascotas').innerHTML = '<div class="empty-note">Cargando…</div>';
+
+      const [{ data: persona, error: errPersona }, { data: mascotas, error: errMascotas }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('username, full_name, phone, cliente_detalle(correo, tipo_identificacion, numero_identificacion, direccion, ciudad, departamento)')
+          .eq('id', id)
+          .single(),
+        supabase
+          .from('alumnos')
+          .select('id, nombre, foto_url, raza, sexo, status')
+          .eq('acudiente_id', id)
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (errPersona || !persona) {
+        document.getElementById('vNombre').textContent = 'No se pudo cargar la información.';
+        return;
+      }
+
+      const detalle = persona.cliente_detalle || {};
+      document.getElementById('vNombre').textContent = persona.full_name || '—';
+      document.getElementById('vUsuario').textContent = '@' + persona.username;
+      document.getElementById('vTelefono').textContent = persona.phone || '—';
+      document.getElementById('vCorreo').textContent = detalle.correo || '—';
+      document.getElementById('vIdentificacion').textContent = (detalle.tipo_identificacion && detalle.numero_identificacion)
+        ? `${detalle.tipo_identificacion} ${detalle.numero_identificacion}` : '—';
+      const ubicacion = [detalle.direccion, detalle.ciudad, detalle.departamento].filter(Boolean).join(', ');
+      document.getElementById('vUbicacion').textContent = ubicacion || '—';
+
+      const mascotasGrid = document.getElementById('vMascotas');
+      if (errMascotas) {
+        mascotasGrid.innerHTML = '<div class="empty-note">No se pudieron cargar las mascotas.</div>';
+      } else if (!mascotas || mascotas.length === 0) {
+        mascotasGrid.innerHTML = '<div class="empty-note">Aún no ha registrado mascotas.</div>';
+      } else {
+        mascotasGrid.innerHTML = mascotas.map(m => `
+          <div class="pet-mini-card">
+            <div class="pet-mini-photo">
+              ${m.foto_url
+                ? `<img src="${m.foto_url}" alt="${m.nombre}">`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>`}
+            </div>
+            <div class="pet-mini-name">${m.nombre}</div>
+            <div class="pet-mini-meta">${m.raza || 'Sin raza'}${m.status === 'pending' ? ' · Pendiente' : ''}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    document.getElementById('viewCloseBtn').addEventListener('click', () => {
+      viewOverlay.classList.remove('active');
+    });
 
     // ---------------- Modal de edición ----------------
     const editOverlay = document.getElementById('editOverlay');
