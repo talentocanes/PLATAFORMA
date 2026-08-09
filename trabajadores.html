@@ -79,6 +79,10 @@
   .functions-panel{ display:none; margin:-6px 0 18px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
   .functions-panel.open{ display:block; }
   .function-row{ display:flex; align-items:center; justify-content:space-between; padding:11px 14px; border-bottom:1px solid var(--line); background:var(--ink); }
+  .function-subrow{ display:flex; align-items:center; justify-content:space-between; padding:8px 14px 8px 26px; border-bottom:1px solid var(--line); background:var(--navy-panel-2); font-size:12px; color:var(--mist-dim); }
+  .function-subrow .switch{ width:32px; height:18px; }
+  .function-subrow .slider::before{ width:12px; height:12px; }
+  .function-subrow input:checked + .slider::before{ transform:translateX(14px); }
   .function-row:last-child{ border-bottom:none; }
   .function-row span{ font-size:13px; }
   .function-note{ font-size:11.5px; color:var(--mist-dim); padding:10px 14px; background:var(--navy-panel-2); }
@@ -349,7 +353,7 @@
       const tbody = document.getElementById('tableBody');
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, activo, modulos_habilitados)')
+        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, activo, modulos_habilitados, modulos_edicion)')
         .eq('role', ROL)
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
@@ -368,7 +372,8 @@
         status: p.status,
         cargo: p.trabajador_detalle?.cargo || null,
         activo: p.trabajador_detalle?.activo ?? true,
-        modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || []
+        modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || [],
+        modulos_edicion: p.trabajador_detalle?.modulos_edicion || []
       }));
 
       pintarTabla(filas);
@@ -469,26 +474,56 @@
     const MODULOS = obtenerModulosAsignables();
     let editandoId = null;
     let modulosSeleccionados = [];
+    let modulosEdicionSeleccionados = [];
 
     function pintarFunciones(){
-      functionsList.innerHTML = MODULOS.map(m => `
+      functionsList.innerHTML = MODULOS.map(m => {
+        const habilitado = modulosSeleccionados.includes(m.key);
+        const conEdicion = modulosEdicionSeleccionados.includes(m.key);
+        return `
         <div class="function-row">
           <span>${m.label}</span>
           <label class="switch">
-            <input type="checkbox" data-mod="${m.key}" ${modulosSeleccionados.includes(m.key) ? 'checked' : ''} autocomplete="off">
+            <input type="checkbox" data-mod="${m.key}" ${habilitado ? 'checked' : ''} autocomplete="off">
             <span class="slider"></span>
           </label>
         </div>
-      `).join('');
+        <div class="function-subrow" data-sub-for="${m.key}" style="${habilitado ? '' : 'display:none;'}">
+          <span>${conEdicion ? 'Editar y eliminar' : 'Solo ver'}</span>
+          <label class="switch">
+            <input type="checkbox" data-mod-edicion="${m.key}" ${conEdicion ? 'checked' : ''} autocomplete="off">
+            <span class="slider"></span>
+          </label>
+        </div>
+      `;}).join('');
 
       functionsList.querySelectorAll('input[data-mod]').forEach(chk => {
         chk.addEventListener('change', () => {
           const key = chk.dataset.mod;
+          const subrow = functionsList.querySelector(`[data-sub-for="${key}"]`);
           if (chk.checked) {
             if (!modulosSeleccionados.includes(key)) modulosSeleccionados.push(key);
+            subrow.style.display = '';
           } else {
             modulosSeleccionados = modulosSeleccionados.filter(k => k !== key);
+            modulosEdicionSeleccionados = modulosEdicionSeleccionados.filter(k => k !== key);
+            subrow.style.display = 'none';
+            const subChk = subrow.querySelector('input[data-mod-edicion]');
+            subChk.checked = false;
+            subrow.querySelector('span').textContent = 'Solo ver';
           }
+        });
+      });
+
+      functionsList.querySelectorAll('input[data-mod-edicion]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const key = chk.dataset.modEdicion;
+          if (chk.checked) {
+            if (!modulosEdicionSeleccionados.includes(key)) modulosEdicionSeleccionados.push(key);
+          } else {
+            modulosEdicionSeleccionados = modulosEdicionSeleccionados.filter(k => k !== key);
+          }
+          chk.closest('.function-subrow').querySelector('span').textContent = chk.checked ? 'Editar y eliminar' : 'Solo ver';
         });
       });
     }
@@ -543,6 +578,7 @@
       document.getElementById('editActivo').checked = !!fila.activo;
 
       modulosSeleccionados = [...(fila.modulos_habilitados || [])];
+      modulosEdicionSeleccionados = [...(fila.modulos_edicion || [])];
       pintarFunciones();
       btnFunciones.classList.remove('open');
       functionsPanel.classList.remove('open');
@@ -568,7 +604,7 @@
 
       const [r1, r2] = await Promise.all([
         supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', editandoId),
-        supabase.from('trabajador_detalle').update({ cargo, activo, modulos_habilitados: modulosSeleccionados }).eq('id', editandoId)
+        supabase.from('trabajador_detalle').update({ cargo, activo, modulos_habilitados: modulosSeleccionados, modulos_edicion: modulosEdicionSeleccionados }).eq('id', editandoId)
       ]);
 
       btn.disabled = false;

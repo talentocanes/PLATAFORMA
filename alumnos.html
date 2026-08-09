@@ -318,10 +318,28 @@
     let archivoFoto = null;
     let archivoCarne = null;
     let eliminandoId = null;
+    let puedeEditar = false;
+    let soloLectura = false;
 
     (async () => {
       const profile = await initLayout({ activeKey: 'alumnos' });
       if (!profile) return;
+
+      if (profile.role === 'admin') {
+        puedeEditar = true;
+      } else {
+        const { data } = await supabase
+          .from('trabajador_detalle')
+          .select('modulos_edicion')
+          .eq('id', profile.id)
+          .single();
+        puedeEditar = !!data?.modulos_edicion?.includes('alumnos');
+      }
+
+      if (!puedeEditar) {
+        document.getElementById('btnAdd').style.display = 'none';
+      }
+
       await cargarAcudientes();
       await cargarAlumnos();
       await cargarPendientes();
@@ -364,8 +382,10 @@
           </div>
           <div class="pending-actions">
             <button class="btn-icon" data-action="ver" data-id="${m.id}">Ver</button>
-            <button class="btn-approve" data-action="approve" data-id="${m.id}">Aceptar</button>
-            <button class="btn-deny" data-action="deny" data-id="${m.id}">Denegar</button>
+            ${puedeEditar ? `
+              <button class="btn-approve" data-action="approve" data-id="${m.id}">Aceptar</button>
+              <button class="btn-deny" data-action="deny" data-id="${m.id}">Denegar</button>
+            ` : ''}
           </div>
         </div>
       `).join('');
@@ -465,14 +485,21 @@
           <td>${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : `<span class="badge-activo ${m.activo ? 'si' : 'no'}">${m.activo ? 'Activo' : 'Inactivo'}</span>`}</td>
           <td>
             <div class="row-actions">
-              <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>
-              <button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>
+              ${puedeEditar ? `
+                <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>
+                <button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>
+              ` : `
+                <button class="btn-icon" data-action="ver" data-id="${m.id}">Ver</button>
+              `}
             </div>
           </td>
         </tr>
       `;}).join('');
 
       tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', () => abrirModal(btn.dataset.id));
+      });
+      tbody.querySelectorAll('[data-action="ver"]').forEach(btn => {
         btn.addEventListener('click', () => abrirModal(btn.dataset.id));
       });
       tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
@@ -559,6 +586,11 @@
     document.getElementById('btnAdd').addEventListener('click', () => {
       editandoId = null;
       limpiarFormulario();
+      soloLectura = false;
+      const modal = petOverlay.querySelector('.modal');
+      modal.querySelectorAll('input, select, button.btn-secondary').forEach(el => { el.disabled = false; });
+      modal.querySelectorAll('.toggle-pill').forEach(el => { el.style.pointerEvents = ''; el.style.opacity = ''; });
+      document.getElementById('petSaveBtn').style.display = '';
       document.getElementById('petModalTitle').textContent = 'Añadir alumno';
       petMsg.style.display = 'none';
       petOverlay.classList.add('active');
@@ -569,7 +601,9 @@
       if (!m) return;
       editandoId = id;
       limpiarFormulario();
-      document.getElementById('petModalTitle').textContent = m.status === 'pending' ? 'Revisar alumno (pendiente)' : 'Editar alumno';
+      soloLectura = !puedeEditar;
+      const tituloBase = m.status === 'pending' ? 'Revisar alumno (pendiente)' : (soloLectura ? 'Ver alumno' : 'Editar alumno');
+      document.getElementById('petModalTitle').textContent = tituloBase;
 
       document.getElementById('fAcudiente').value = m.acudiente_id || '';
       document.getElementById('fNombre').value = m.nombre || '';
@@ -599,6 +633,12 @@
       if (m.carne_vacunacion_url) document.getElementById('carneNombre').textContent = 'Ya tiene un archivo subido';
 
       petMsg.style.display = 'none';
+
+      const modal = petOverlay.querySelector('.modal');
+      modal.querySelectorAll('input, select, button.btn-secondary').forEach(el => { el.disabled = soloLectura; });
+      modal.querySelectorAll('.toggle-pill').forEach(el => { el.style.pointerEvents = soloLectura ? 'none' : ''; el.style.opacity = soloLectura ? '.6' : ''; });
+      document.getElementById('petSaveBtn').style.display = soloLectura ? 'none' : '';
+
       petOverlay.classList.add('active');
     }
 
