@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Mis mascotas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<script src="theme-inline.js"></script>
+<style>
+  .page-header{ margin-bottom:22px; }
+  .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
+  .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
+
+  .top-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+  .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
+  .btn-add svg{ width:16px; height:16px; }
+
+  .grid-pets{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px; }
+  .pet-card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .pet-photo{ width:100%; height:170px; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .pet-photo img{ width:100%; height:100%; object-fit:cover; }
+  .pet-photo svg{ width:48px; height:48px; color:var(--mist-dim); opacity:.5; }
+  .pet-body{ padding:16px; }
+  .pet-name-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .pet-name{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; }
+  .badge-sexo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; }
+  .badge-sexo.macho{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); border:1px solid var(--line-strong); }
+  .badge-sexo.hembra{ color:#ff9ecb; background:rgba(255,158,203,0.12); border:1px solid rgba(255,158,203,0.3); }
+  .pet-meta{ font-size:12.5px; color:var(--mist-dim); line-height:1.7; margin-top:8px; }
+  .pet-meta b{ color:var(--mist); font-weight:600; }
+  .vac-alert{ display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:#ffc266; background:rgba(255,194,102,0.1); border:1px solid rgba(255,194,102,0.3); padding:6px 9px; border-radius:8px; }
+  .vac-alert svg{ width:13px; height:13px; flex-shrink:0; }
+  .pet-actions{ display:flex; gap:8px; margin-top:14px; }
+  .btn-icon{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 10px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
+  .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
+  .btn-icon.danger:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+  .btn-icon svg{ width:13px; height:13px; }
+
+  .empty-note{ color:var(--mist-dim); font-size:13px; padding:40px; text-align:center; background:var(--navy-panel); border:1px dashed var(--line); border-radius:var(--radius); }
+
+  /* Modal */
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.75); z-index:200; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+  .modal-overlay.active{ display:flex; }
+  .modal{ width:100%; max-width:640px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:18px; padding:28px; max-height:90vh; overflow-y:auto; margin:auto; }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:4px; }
+  .modal .modal-lead{ color:var(--mist-dim); font-size:12.5px; margin-bottom:18px; }
+  .section-title{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--mist-dim); margin:18px 0 10px; }
+  .section-title:first-of-type{ margin-top:0; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .field input, .field select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; }
+  .field input:focus, .field select:focus{ border-color:var(--blue-bright); }
+  .field input:disabled{ opacity:.6; }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .toggle-pill-row{ display:flex; gap:8px; }
+  .toggle-pill{ flex:1; padding:10px; text-align:center; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--mist); font-size:13px; cursor:pointer; }
+  .toggle-pill.selected{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); }
+
+  .photo-upload{ display:flex; align-items:center; gap:14px; }
+  .photo-preview{ width:64px; height:64px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--line); object-fit:cover; flex-shrink:0; }
+  .photo-preview-empty{ width:64px; height:64px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-preview-empty svg{ width:24px; height:24px; color:var(--mist-dim); }
+  .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; }
+
+  .file-row{ display:flex; align-items:center; gap:10px; }
+  .file-row .file-name{ flex:1; font-size:12.5px; color:var(--mist-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .btn-save{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; margin-top:6px; }
+  .btn-save:disabled{ opacity:.6; }
+  .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
+  .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+
+  .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
+  .danger-box b{ color:var(--danger); }
+  .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+  <script src="sidebar-inline.js?v=2" data-active="mis-mascotas"></script>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Mis mascotas</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <div class="top-row">
+      <div class="page-header">
+        <h1>Mis mascotas</h1>
+        <p>Registra a tus perros para que el colegio tenga su información completa.</p>
+      </div>
+      <button class="btn-add" id="btnAdd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Añadir mascota
+      </button>
+    </div>
+
+    <div id="petsGrid" class="grid-pets">
+      <div class="empty-note">Cargando…</div>
+    </div>
+  </main>
+
+  <!-- Modal: crear/editar mascota -->
+  <div class="modal-overlay" id="petOverlay">
+    <div class="modal">
+      <h2 id="petModalTitle">Añadir mascota</h2>
+      <p class="modal-lead">Completa los siguientes datos para registrar a tu mascota.</p>
+
+      <div class="section-title">Datos básicos</div>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="fNombre" placeholder="Nombre de tu mascota" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>Fotografía</label>
+        <div class="photo-upload">
+          <div class="photo-preview-empty" id="photoPreviewWrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-8 8"/></svg>
+          </div>
+          <div>
+            <button type="button" class="btn-secondary" id="btnFoto">Elegir foto (galería o cámara)</button>
+            <input type="file" id="fileFoto" accept="image/*" style="display:none" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Fecha de nacimiento</label>
+          <input type="text" id="fFechaNacimiento" placeholder="Selecciona la fecha" readonly autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Edad</label>
+          <input type="text" id="fEdad" placeholder="Se calcula sola" disabled autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Sexo</label>
+        <div class="toggle-pill-row">
+          <div class="toggle-pill" id="sexoMacho" data-valor="macho">Macho</div>
+          <div class="toggle-pill" id="sexoHembra" data-valor="hembra">Hembra</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Raza</label>
+          <select id="fRaza" autocomplete="off">
+            <option value="">Selecciona una raza</option>
+            <option>Labrador Retriever</option>
+            <option>Golden Retriever</option>
+            <option>Pastor Alemán</option>
+            <option>Bulldog Francés</option>
+            <option>Poodle / Caniche</option>
+            <option>Chihuahua</option>
+            <option>Beagle</option>
+            <option>Schnauzer</option>
+            <option>Yorkshire Terrier</option>
+            <option>Boxer</option>
+            <option>Rottweiler</option>
+            <option>Husky Siberiano</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+        <div class="field" id="fRazaOtraWrap" style="display:none;">
+          <label>Especifica la raza</label>
+          <input type="text" id="fRazaOtra" placeholder="Escribe la raza" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Es mestizo?</label>
+        <div class="toggle-pill-row">
+          <div class="toggle-pill" id="mestizoSi" data-valor="si">Sí</div>
+          <div class="toggle-pill" id="mestizoNo" data-valor="no">No</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Color o pelaje</label>
+        <input type="text" id="fColor" placeholder="Ej: Café con blanco" autocomplete="off">
+      </div>
+
+      <div class="section-title">Información sanitaria</div>
+      <div class="field">
+        <label>Carné de vacunación <span style="color:var(--mist-dim); font-weight:400;">(opcional, lo puedes subir después)</span></label>
+        <div class="file-row">
+          <button type="button" class="btn-secondary" id="btnCarne">Subir foto o documento</button>
+          <span class="file-name" id="carneNombre">Ningún archivo</span>
+          <input type="file" id="fileCarne" accept="image/*,.pdf" style="display:none" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="modal-msg" id="petMsg"></div>
+      <button class="btn-save" id="petSaveBtn">Guardar mascota</button>
+      <button class="modal-close" id="petCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: eliminar -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal">
+      <h2>Eliminar mascota</h2>
+      <div class="danger-box"><b>Esta acción es permanente.</b> Se borra toda la ficha de la mascota. No se puede deshacer.</div>
+      <div class="modal-msg" id="deleteMsg"></div>
+      <button class="btn-delete-confirm" id="deleteConfirmBtn">Eliminar definitivamente</button>
+      <button class="modal-close" id="deleteCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initLayout } from './layout.js?v=2';
+    import { supabase } from './supabaseClient.js?v=2';
+    import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=2';
+
+    let perfil = null;
+    let mascotas = [];
+    let editandoId = null;
+    let sexoSeleccionado = null;
+    let mestizoSeleccionado = null;
+    let archivoFoto = null;
+    let archivoCarne = null;
+    let eliminandoId = null;
+
+    (async () => {
+      perfil = await initLayout({ activeKey: 'mis-mascotas', rolesPermitidos: ['cliente'] });
+      if (!perfil) return;
+      await cargarMascotas();
+      suscribirEnVivo();
+    })();
+
+    function suscribirEnVivo(){
+      supabase
+        .channel('mis-mascotas-cambios')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'alumnos', filter: `acudiente_id=eq.${perfil.id}` }, cargarMascotas)
+        .subscribe();
+    }
+
+    async function cargarMascotas(){
+      const grid = document.getElementById('petsGrid');
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('*')
+        .eq('acudiente_id', perfil.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error al cargar mascotas:', error);
+        grid.innerHTML = `<div class="empty-note">No se pudo cargar tu lista de mascotas.</div>`;
+        return;
+      }
+
+      mascotas = data || [];
+      pintarGrid();
+    }
+
+    function pintarGrid(){
+      const grid = document.getElementById('petsGrid');
+      if (mascotas.length === 0) {
+        grid.innerHTML = `<div class="empty-note">Aún no has registrado ninguna mascota. Usa "Añadir mascota" para empezar.</div>`;
+        return;
+      }
+
+      grid.innerHTML = mascotas.map(m => `
+        <div class="pet-card">
+          <div class="pet-photo">
+            ${m.foto_url
+              ? `<img src="${m.foto_url}" alt="${m.nombre}">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>`}
+          </div>
+          <div class="pet-body">
+            <div class="pet-name-row">
+              <div class="pet-name">${m.nombre}</div>
+              ${m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : ''}
+            </div>
+            <div class="pet-meta">
+              <div><b>Raza:</b> ${m.raza || 'Sin definir'}${m.es_mestizo ? ' (mestizo)' : ''}</div>
+              <div><b>Edad:</b> ${calcularEdadTexto(m.fecha_nacimiento) || 'Sin definir'}</div>
+              ${m.color_pelaje ? `<div><b>Color:</b> ${m.color_pelaje}</div>` : ''}
+            </div>
+            ${!m.carne_vacunacion_url ? `
+              <div class="vac-alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+                Falta subir el carné de vacunación
+              </div>` : ''}
+            <div class="pet-actions">
+              <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>
+              <button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', () => abrirModal(btn.dataset.id));
+      });
+      grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', () => abrirEliminar(btn.dataset.id));
+      });
+    }
+
+    // ---------------- Selector de fecha ----------------
+    const fechaInput = document.getElementById('fFechaNacimiento');
+    const datePicker = initDatePicker(fechaInput, {
+      onChange: (iso) => {
+        document.getElementById('fEdad').value = calcularEdadTexto(iso) || '';
+      }
+    });
+
+    // ---------------- Toggles (sexo / mestizo) ----------------
+    function wireToggle(idA, idB, callback){
+      const elA = document.getElementById(idA);
+      const elB = document.getElementById(idB);
+      elA.addEventListener('click', () => { callback(elA.dataset.valor); pintarToggle(elA, elB); });
+      elB.addEventListener('click', () => { callback(elB.dataset.valor); pintarToggle(elB, elA); });
+    }
+    function pintarToggle(activo, inactivo){
+      activo.classList.add('selected');
+      inactivo.classList.remove('selected');
+    }
+    wireToggle('sexoMacho', 'sexoHembra', (v) => { sexoSeleccionado = v; });
+    wireToggle('mestizoSi', 'mestizoNo', (v) => { mestizoSeleccionado = v; });
+
+    // ---------------- Raza "Otra" ----------------
+    document.getElementById('fRaza').addEventListener('change', (e) => {
+      document.getElementById('fRazaOtraWrap').style.display = e.target.value === 'Otra' ? 'block' : 'none';
+    });
+
+    // ---------------- Selección de archivos ----------------
+    document.getElementById('btnFoto').addEventListener('click', () => document.getElementById('fileFoto').click());
+    document.getElementById('fileFoto').addEventListener('change', (e) => {
+      archivoFoto = e.target.files[0] || null;
+      const wrap = document.getElementById('photoPreviewWrap');
+      if (archivoFoto) {
+        wrap.innerHTML = `<img src="${URL.createObjectURL(archivoFoto)}" class="photo-preview" alt="Vista previa">`;
+      }
+    });
+
+    document.getElementById('btnCarne').addEventListener('click', () => document.getElementById('fileCarne').click());
+    document.getElementById('fileCarne').addEventListener('change', (e) => {
+      archivoCarne = e.target.files[0] || null;
+      document.getElementById('carneNombre').textContent = archivoCarne ? archivoCarne.name : 'Ningún archivo';
+    });
+
+    // ---------------- Abrir modal (crear / editar) ----------------
+    const petOverlay = document.getElementById('petOverlay');
+    const petMsg = document.getElementById('petMsg');
+
+    function limpiarFormulario(){
+      document.getElementById('fNombre').value = '';
+      datePicker.clear();
+      document.getElementById('fEdad').value = '';
+      document.getElementById('fRaza').value = '';
+      document.getElementById('fRazaOtra').value = '';
+      document.getElementById('fRazaOtraWrap').style.display = 'none';
+      document.getElementById('fColor').value = '';
+      document.getElementById('photoPreviewWrap').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-8 8"/></svg>`;
+      document.getElementById('carneNombre').textContent = 'Ningún archivo';
+      archivoFoto = null;
+      archivoCarne = null;
+      sexoSeleccionado = null;
+      mestizoSeleccionado = null;
+      document.querySelectorAll('.toggle-pill').forEach(p => p.classList.remove('selected'));
+    }
+
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      editandoId = null;
+      limpiarFormulario();
+      document.getElementById('petModalTitle').textContent = 'Añadir mascota';
+      petMsg.style.display = 'none';
+      petOverlay.classList.add('active');
+    });
+
+    function abrirModal(id){
+      const m = mascotas.find(x => x.id === id);
+      if (!m) return;
+      editandoId = id;
+      limpiarFormulario();
+      document.getElementById('petModalTitle').textContent = 'Editar mascota';
+
+      document.getElementById('fNombre').value = m.nombre || '';
+      if (m.fecha_nacimiento) datePicker.setISO(m.fecha_nacimiento);
+      document.getElementById('fEdad').value = calcularEdadTexto(m.fecha_nacimiento) || '';
+      document.getElementById('fColor').value = m.color_pelaje || '';
+
+      const razasConocidas = ['Labrador Retriever','Golden Retriever','Pastor Alemán','Bulldog Francés','Poodle / Caniche','Chihuahua','Beagle','Schnauzer','Yorkshire Terrier','Boxer','Rottweiler','Husky Siberiano'];
+      if (m.raza && !razasConocidas.includes(m.raza)) {
+        document.getElementById('fRaza').value = 'Otra';
+        document.getElementById('fRazaOtra').value = m.raza;
+        document.getElementById('fRazaOtraWrap').style.display = 'block';
+      } else {
+        document.getElementById('fRaza').value = m.raza || '';
+      }
+
+      if (m.sexo === 'macho') pintarToggle(document.getElementById('sexoMacho'), document.getElementById('sexoHembra'));
+      if (m.sexo === 'hembra') pintarToggle(document.getElementById('sexoHembra'), document.getElementById('sexoMacho'));
+      sexoSeleccionado = m.sexo || null;
+
+      if (m.es_mestizo) pintarToggle(document.getElementById('mestizoSi'), document.getElementById('mestizoNo'));
+      else pintarToggle(document.getElementById('mestizoNo'), document.getElementById('mestizoSi'));
+      mestizoSeleccionado = m.es_mestizo ? 'si' : 'no';
+
+      if (m.foto_url) document.getElementById('photoPreviewWrap').innerHTML = `<img src="${m.foto_url}" class="photo-preview" alt="Foto actual">`;
+      if (m.carne_vacunacion_url) document.getElementById('carneNombre').textContent = 'Ya tiene un archivo subido';
+
+      petMsg.style.display = 'none';
+      petOverlay.classList.add('active');
+    }
+
+    document.getElementById('petCloseBtn').addEventListener('click', () => petOverlay.classList.remove('active'));
+
+    // ---------------- Guardar ----------------
+    document.getElementById('petSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('petSaveBtn');
+      petMsg.style.display = 'none';
+
+      const nombre = document.getElementById('fNombre').value.trim();
+      if (!nombre) {
+        petMsg.textContent = 'El nombre es obligatorio.';
+        petMsg.style.display = 'block';
+        return;
+      }
+
+      const fechaISO = fechaInput.dataset.iso || null;
+      const raza = document.getElementById('fRaza').value === 'Otra'
+        ? (document.getElementById('fRazaOtra').value.trim() || 'Otra')
+        : (document.getElementById('fRaza').value || null);
+      const color = document.getElementById('fColor').value.trim() || null;
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      try {
+        const payload = {
+          nombre,
+          fecha_nacimiento: fechaISO,
+          sexo: sexoSeleccionado,
+          raza,
+          es_mestizo: mestizoSeleccionado === 'si',
+          color_pelaje: color
+        };
+
+        if (!editandoId) {
+          payload.acudiente_id = perfil.id;
+        }
+
+        let idMascota = editandoId;
+
+        if (editandoId) {
+          const { error } = await supabase.from('alumnos').update(payload).eq('id', editandoId);
+          if (error) throw new Error(error.message);
+        } else {
+          const { data, error } = await supabase.from('alumnos').insert(payload).select('id').single();
+          if (error) throw new Error(error.message);
+          idMascota = data.id;
+        }
+
+        if (archivoFoto) {
+          const ruta = `${perfil.id}/${idMascota}/foto-${Date.now()}-${archivoFoto.name}`;
+          const { error: upErr } = await supabase.storage.from('alumnos').upload(ruta, archivoFoto, { upsert: true });
+          if (upErr) throw new Error('No se pudo subir la foto: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('alumnos').getPublicUrl(ruta);
+          await supabase.from('alumnos').update({ foto_url: pub.publicUrl }).eq('id', idMascota);
+        }
+
+        if (archivoCarne) {
+          const ruta = `${perfil.id}/${idMascota}/carne-${Date.now()}-${archivoCarne.name}`;
+          const { error: upErr } = await supabase.storage.from('alumnos').upload(ruta, archivoCarne, { upsert: true });
+          if (upErr) throw new Error('No se pudo subir el carné: ' + upErr.message);
+          const { data: pub } = supabase.storage.from('alumnos').getPublicUrl(ruta);
+          await supabase.from('alumnos').update({ carne_vacunacion_url: pub.publicUrl }).eq('id', idMascota);
+        }
+
+        petOverlay.classList.remove('active');
+        await cargarMascotas();
+      } catch (err) {
+        petMsg.textContent = 'No se pudo guardar: ' + err.message;
+        petMsg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar mascota';
+      }
+    });
+
+    // ---------------- Eliminar ----------------
+    const deleteOverlay = document.getElementById('deleteOverlay');
+    const deleteMsg = document.getElementById('deleteMsg');
+
+    function abrirEliminar(id){
+      eliminandoId = id;
+      deleteMsg.style.display = 'none';
+      deleteOverlay.classList.add('active');
+    }
+    document.getElementById('deleteCloseBtn').addEventListener('click', () => deleteOverlay.classList.remove('active'));
+
+    document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
+      const { error } = await supabase.from('alumnos').delete().eq('id', eliminandoId);
+      if (error) {
+        deleteMsg.textContent = 'No se pudo eliminar: ' + error.message;
+        deleteMsg.style.display = 'block';
+        return;
+      }
+      deleteOverlay.classList.remove('active');
+      await cargarMascotas();
+    });
+  </script>
+</body>
+</html>

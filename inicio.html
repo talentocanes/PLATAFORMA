@@ -129,6 +129,17 @@
       </div>
     </div>
 
+    <!-- Visible solo para Acudientes con mascotas sin carné de vacunación -->
+    <div id="vacunacionAlertSection" style="display:none; margin-bottom:8px;">
+      <div style="display:flex; align-items:flex-start; gap:12px; background:rgba(255,194,102,0.08); border:1px solid rgba(255,194,102,0.3); border-radius:16px; padding:16px 18px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffc266" stroke-width="2" style="width:22px; height:22px; flex-shrink:0; margin-top:1px;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <div>
+          <div style="font-weight:600; font-size:13.5px; margin-bottom:3px;">Falta el carné de vacunación</div>
+          <div style="font-size:12.5px; color:var(--mist-dim); line-height:1.5;" id="vacunacionAlertTexto">Sube el carné de vacunación desde Mis mascotas para completar el registro.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="section-label">Módulos previstos</div>
     <div class="grid">
       <a href="trabajadores.html" class="module">
@@ -243,7 +254,29 @@
         await cargarSolicitudes();
         suscribirSolicitudesEnVivo();
       }
+
+      if (profile.role === 'cliente') {
+        await revisarCarneVacunacion(profile.id);
+      }
     })();
+
+    async function revisarCarneVacunacion(acudienteId){
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('nombre, carne_vacunacion_url')
+        .eq('acudiente_id', acudienteId)
+        .is('carne_vacunacion_url', null);
+
+      if (error || !data || data.length === 0) return;
+
+      const seccion = document.getElementById('vacunacionAlertSection');
+      const texto = document.getElementById('vacunacionAlertTexto');
+      const nombres = data.map(m => m.nombre).join(', ');
+      texto.textContent = data.length === 1
+        ? `A ${nombres} le falta el carné de vacunación. Súbelo desde "Mis mascotas" para completar su registro.`
+        : `A estas mascotas les falta el carné de vacunación: ${nombres}. Súbelo desde "Mis mascotas" para completar su registro.`;
+      seccion.style.display = 'block';
+    }
 
     // ---------------------------------------------------------
     // Tiempo real: cualquier cambio en profiles (nuevo registro,
