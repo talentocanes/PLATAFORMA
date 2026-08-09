@@ -45,6 +45,7 @@
   .badge-activo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
   .badge-activo.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
   .badge-activo.no{ color:var(--mist-dim); background:rgba(111,131,160,0.12); border:1px solid var(--line); }
+  .badge-pendiente{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:.5px; color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 10%, transparent); border:1px solid var(--line-strong); white-space:nowrap; }
 
   .row-actions{ display:flex; gap:6px; white-space:nowrap; }
   .btn-icon{ display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
@@ -411,7 +412,6 @@
       const { data, error } = await supabase
         .from('alumnos')
         .select('*, profiles!alumnos_acudiente_id_fkey(full_name, username)')
-        .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -434,6 +434,8 @@
       }
 
       const ordenada = [...lista].sort((a, b) => {
+        const aPendiente = a.status === 'pending', bPendiente = b.status === 'pending';
+        if (aPendiente !== bPendiente) return aPendiente ? -1 : 1;
         if (a.activo !== b.activo) return a.activo ? -1 : 1;
         return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
       });
@@ -455,7 +457,7 @@
           <td class="${m.fecha_nacimiento ? '' : 'cell-dim'}">${calcularEdadTexto(m.fecha_nacimiento) || 'Sin definir'}</td>
           <td>${acudienteNombre}</td>
           <td><span class="badge-vac ${m.carne_vacunacion_url ? 'si' : 'no'}">${m.carne_vacunacion_url ? 'Sí' : 'Falta'}</span></td>
-          <td><span class="badge-activo ${m.activo ? 'si' : 'no'}">${m.activo ? 'Activo' : 'Inactivo'}</span></td>
+          <td>${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : `<span class="badge-activo ${m.activo ? 'si' : 'no'}">${m.activo ? 'Activo' : 'Inactivo'}</span>`}</td>
           <td>
             <div class="row-actions">
               <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>

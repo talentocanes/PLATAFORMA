@@ -291,7 +291,7 @@
           <div class="pet-body">
             <div class="pet-name-row">
               <div class="pet-name">${m.nombre}</div>
-              ${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente</span>' : (m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : '')}
+              ${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : (m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : '')}
             </div>
             <div class="pet-meta">
               <div><b>Raza:</b> ${m.raza || 'Sin definir'}${m.es_mestizo ? ' (mestizo)' : ''}</div>
