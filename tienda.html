@@ -257,6 +257,14 @@
         </label>
       </div>
 
+      <div class="toggle-row">
+        <span>Diversificar servicio <span style="color:var(--mist-dim); font-weight:400;">(cada plan aparece como una tarjeta aparte)</span></span>
+        <label class="switch">
+          <input type="checkbox" id="pDiversificar">
+          <span class="slider"></span>
+        </label>
+      </div>
+
       <div class="modal-msg" id="planesMsg"></div>
       <button class="btn-save" id="planesSaveBtn">Guardar</button>
       <button class="modal-close" id="planesCloseBtn">Cancelar</button>
@@ -590,13 +598,23 @@
       formOverlay.classList.add('active');
     }
 
-    function abrirFormulario(id){
+    async function abrirFormulario(id){
       const item = items.find(i => i.id === id);
       if (!item) return;
 
       if (item.tipo_item === 'servicio' && item.categoria === 'Planes de colegio') {
-        abrirFormularioPlanesEditar(item);
-        return;
+        // Solo es "agrupado" si todavía tiene planes hijos. Si ya se
+        // diversificó antes, este ítem es independiente y se edita
+        // como cualquier otro servicio, con el formulario normal.
+        const { count } = await supabase
+          .from('tienda_planes')
+          .select('id', { count: 'exact', head: true })
+          .eq('tienda_item_id', id);
+
+        if (count && count > 0) {
+          abrirFormularioPlanesEditar(item);
+          return;
+        }
       }
 
       editandoId = id;
@@ -829,6 +847,7 @@
       document.getElementById('pNombre').value = 'Planes de colegio';
       document.getElementById('pDescripcion').value = '';
       document.getElementById('pActivo').checked = true;
+      document.getElementById('pDiversificar').checked = false;
       planesFotosActuales = [];
       planesArchivosNuevos = [];
       pintarFotosPlanesGrid();
@@ -844,6 +863,7 @@
       document.getElementById('pNombre').value = item.nombre || '';
       document.getElementById('pDescripcion').value = item.descripcion || '';
       document.getElementById('pActivo').checked = !!item.activo;
+      document.getElementById('pDiversificar').checked = false;
       planesFotosActuales = [...(item.fotos || [])];
       planesArchivosNuevos = [];
       pintarFotosPlanesGrid();
@@ -906,33 +926,57 @@
         }
         const fotosFinal = [...planesFotosActuales, ...urlsSubidas];
 
-        const payloadItem = {
-          tipo_item: 'servicio', nombre, categoria: 'Planes de colegio',
-          precio: Math.min(...planesValidos.map(f => parseFloat(f.precio))),
-          precio_max: Math.max(...planesValidos.map(f => parseFloat(f.precio))),
-          descripcion, fotos: fotosFinal, activo
-        };
+        const diversificar = document.getElementById('pDiversificar').checked;
 
-        let itemId = planesEditandoId;
-        if (itemId) {
-          const { error } = await supabase.from('tienda_items').update(payloadItem).eq('id', itemId);
-          if (error) throw new Error(error.message);
-          await supabase.from('tienda_planes').delete().eq('tienda_item_id', itemId);
+        if (diversificar) {
+          // Cada plan pasa a ser su propia tarjeta independiente,
+          // con el mismo precio, descripción e imágenes de origen.
+          const itemsIndividuales = planesValidos.map(f => ({
+            tipo_item: 'servicio',
+            nombre: capitalizarPalabras(f.nombre.trim()),
+            categoria: 'Planes de colegio',
+            precio: parseFloat(f.precio),
+            descripcion, fotos: fotosFinal, activo
+          }));
+
+          const { error: errInsert } = await supabase.from('tienda_items').insert(itemsIndividuales);
+          if (errInsert) throw new Error(errInsert.message);
+
+          // Si se estaba editando un ítem agrupado, se elimina
+          // (sus planes hijos se borran en cascada) solo después
+          // de que las tarjetas nuevas ya se crearon sin error.
+          if (planesEditandoId) {
+            await supabase.from('tienda_items').delete().eq('id', planesEditandoId);
+          }
         } else {
-          const { data, error } = await supabase.from('tienda_items').insert(payloadItem).select('id').single();
-          if (error) throw new Error(error.message);
-          itemId = data.id;
-        }
+          const payloadItem = {
+            tipo_item: 'servicio', nombre, categoria: 'Planes de colegio',
+            precio: Math.min(...planesValidos.map(f => parseFloat(f.precio))),
+            precio_max: Math.max(...planesValidos.map(f => parseFloat(f.precio))),
+            descripcion, fotos: fotosFinal, activo
+          };
 
-        const filasInsert = planesValidos.map((f, idx) => ({
-          tienda_item_id: itemId,
-          nombre: capitalizarPalabras(f.nombre.trim()),
-          precio: parseFloat(f.precio),
-          dias_semana: parseInt(f.dias_semana, 10),
-          orden: idx
-        }));
-        const { error: errPlanes } = await supabase.from('tienda_planes').insert(filasInsert);
-        if (errPlanes) throw new Error(errPlanes.message);
+          let itemId = planesEditandoId;
+          if (itemId) {
+            const { error } = await supabase.from('tienda_items').update(payloadItem).eq('id', itemId);
+            if (error) throw new Error(error.message);
+            await supabase.from('tienda_planes').delete().eq('tienda_item_id', itemId);
+          } else {
+            const { data, error } = await supabase.from('tienda_items').insert(payloadItem).select('id').single();
+            if (error) throw new Error(error.message);
+            itemId = data.id;
+          }
+
+          const filasInsert = planesValidos.map((f, idx) => ({
+            tienda_item_id: itemId,
+            nombre: capitalizarPalabras(f.nombre.trim()),
+            precio: parseFloat(f.precio),
+            dias_semana: parseInt(f.dias_semana, 10),
+            orden: idx
+          }));
+          const { error: errPlanes } = await supabase.from('tienda_planes').insert(filasInsert);
+          if (errPlanes) throw new Error(errPlanes.message);
+        }
 
         planesOverlay.classList.remove('active');
         await cargarItems();
