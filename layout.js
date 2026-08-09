@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=6';
-import { supabase } from './supabaseClient.js?v=6';
-import { cargarConfiguracionNegocio } from './theme.js?v=6';
+import { protegerPagina, cerrarSesion } from './auth.js?v=7';
+import { supabase } from './supabaseClient.js?v=7';
+import { cargarConfiguracionNegocio } from './theme.js?v=7';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -131,12 +131,15 @@ function leerConfigCacheParaEsqueleto(){
 // que siempre están disponibles). Se usa en el panel de
 // "Funciones" dentro de Editar trabajador.
 // ---------------------------------------------------------
-export function obtenerModulosAsignables(){
+export function obtenerModulosAsignables(config){
   return NAV_GROUPS
     .flatMap(group => group.items)
     .filter(item => !CLAVES_SIEMPRE_DISPONIBLES.includes(item.key))
     .filter(item => !item.rolesVisibles || item.rolesVisibles.includes('trabajador'))
-    .map(item => ({ key: item.key, label: item.label }));
+    .map(item => ({
+      key: item.key,
+      label: item.key === 'clientes' ? (config?.etiqueta_cliente_plural || item.label) : item.label
+    }));
 }
 
 function iniciales(nombre){
