@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=8';
-import { supabase } from './supabaseClient.js?v=8';
-import { cargarConfiguracionNegocio } from './theme.js?v=8';
+import { protegerPagina, cerrarSesion } from './auth.js?v=9';
+import { supabase } from './supabaseClient.js?v=9';
+import { cargarConfiguracionNegocio } from './theme.js?v=9';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -40,7 +40,7 @@ const NAV_GROUPS = [
   {
     label: 'Operación',
     items: [
-      { key:'rutas', label:'Rutas', href:null, enabled:false,
+      { key:'rutas', label:'Rutas', href:'rutas.html', enabled:true,
         icon:'<circle cx="6" cy="6.2" r="2"/><circle cx="18" cy="17.8" r="2"/><path d="M6 8.2c0 4.6 4 3.6 6 6.4s2 3.4 6 3.4" stroke-dasharray="2.4 2.4"/>' },
       { key:'servicios', label:'Servicios', href:null, enabled:false,
         icon:'<path d="M6.2 8h11.6l-1 12H7.2L6.2 8Z"/><path d="M9.2 8V6.2a2.8 2.8 0 0 1 5.6 0V8"/>' },
@@ -135,6 +135,7 @@ export function obtenerModulosAsignables(config){
   return NAV_GROUPS
     .flatMap(group => group.items)
     .filter(item => !CLAVES_SIEMPRE_DISPONIBLES.includes(item.key))
+    .filter(item => item.key !== 'rutas') // se maneja aparte: solo se activa al añadir como conductor
     .filter(item => !item.rolesVisibles || item.rolesVisibles.includes('trabajador'))
     .map(item => ({
       key: item.key,
