@@ -25,6 +25,11 @@
   .empty-note{ color:var(--mist-dim); font-size:13px; padding:40px; text-align:center; background:var(--navy-panel); border:1px dashed var(--line); border-radius:var(--radius); }
 
   .items-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+  .item-card.draggable{ cursor:grab; }
+  .item-card.dragging{ opacity:.4; }
+  .item-card.drag-over{ border-color:var(--blue-bright); }
+  .drag-hint{ font-size:11.5px; color:var(--mist-dim); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .drag-hint svg{ width:14px; height:14px; }
   .item-card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:border-color .2s ease; display:flex; flex-direction:column; }
   .item-card:hover{ border-color:var(--line-strong); }
   .item-photo{ width:100%; height:160px; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
@@ -171,6 +176,10 @@
       </div>
     </div>
 
+    <div class="drag-hint" id="dragHint" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+      Arrastra las tarjetas para reordenarlas
+    </div>
     <div id="itemsGrid" class="items-grid">
       <div class="empty-note">Cargando…</div>
     </div>
@@ -427,6 +436,7 @@
       const { data, error } = await supabase
         .from('tienda_items')
         .select('*')
+        .order('orden', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -439,6 +449,56 @@
       pintarGrid();
     }
 
+    // ---------------- Arrastrar y soltar (orden manual) ----------------
+    let dragIdActual = null;
+
+    function conectarArrastre(grid){
+      grid.querySelectorAll('.item-card.draggable').forEach(card => {
+        card.addEventListener('dragstart', () => {
+          dragIdActual = card.dataset.id;
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+          grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+        });
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (card.dataset.id !== dragIdActual) card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          const targetId = card.dataset.id;
+          if (!dragIdActual || dragIdActual === targetId) return;
+
+          const fromIdx = items.findIndex(i => i.id === dragIdActual);
+          const toIdx = items.findIndex(i => i.id === targetId);
+          if (fromIdx === -1 || toIdx === -1) return;
+
+          const [movido] = items.splice(fromIdx, 1);
+          items.splice(toIdx, 0, movido);
+
+          // Evita que el "click" que sigue al soltar abra el detalle
+          card.classList.add('acaba-de-arrastrar');
+          setTimeout(() => card.classList.remove('acaba-de-arrastrar'), 300);
+
+          pintarGrid();
+          await guardarOrden();
+        });
+      });
+    }
+
+    async function guardarOrden(){
+      const actualizaciones = items.map((item, idx) =>
+        supabase.from('tienda_items').update({ orden: idx }).eq('id', item.id)
+      );
+      const resultados = await Promise.all(actualizaciones);
+      const conError = resultados.find(r => r.error);
+      if (conError) console.error('Error al guardar el nuevo orden:', conError.error);
+    }
+
     function pintarGrid(){
       const grid = document.getElementById('itemsGrid');
       let filtrados = items;
@@ -449,13 +509,16 @@
       }
       if (!puedeEditar) filtrados = filtrados.filter(i => i.activo);
 
+      const puedeArrastrar = puedeEditar && filtroActivo === 'todos' && !terminoBusqueda && filtrados.length > 1;
+      document.getElementById('dragHint').style.display = puedeArrastrar ? 'flex' : 'none';
+
       if (filtrados.length === 0) {
         grid.innerHTML = `<div class="empty-note">No hay nada que mostrar todavía.</div>`;
         return;
       }
 
       grid.innerHTML = filtrados.map(i => `
-        <div class="item-card" data-id="${i.id}">
+        <div class="item-card ${puedeArrastrar ? 'draggable' : ''}" data-id="${i.id}" ${puedeArrastrar ? 'draggable="true"' : ''}>
           <div class="item-photo">
             <span class="item-badge ${i.tipo_item}">${i.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
             ${puedeEditar && !i.activo ? '<span class="item-inactivo-badge">Oculto</span>' : ''}
@@ -483,9 +546,11 @@
       grid.querySelectorAll('.item-card').forEach(card => {
         card.addEventListener('click', (e) => {
           if (e.target.closest('[data-action]')) return;
+          if (card.classList.contains('acaba-de-arrastrar')) return;
           abrirDetalle(card.dataset.id);
         });
       });
+      if (puedeArrastrar) conectarArrastre(grid);
       grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', (e) => { e.stopPropagation(); abrirFormulario(btn.dataset.id); });
       });
