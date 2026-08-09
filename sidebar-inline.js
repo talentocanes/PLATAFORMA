@@ -9,7 +9,7 @@
 (function () {
   try {
     var CLAVES_SIEMPRE_DISPONIBLES = ['inicio', 'configuracion'];
-    var CLAVES_CLIENTE = ['inicio', 'servicios', 'cartera', 'configuracion'];
+    var CLAVES_CLIENTE = ['inicio', 'servicios', 'cartera', 'configuracion', 'mis-mascotas'];
 
     var NAV_ITEMS = [
       { key:'inicio', label:'Inicio', href:'inicio.html', enabled:true,
@@ -18,7 +18,9 @@
         icon:'<circle cx="12" cy="8" r="3.2"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/>' },
       { key:'clientes', label:'Acudientes', href:'clientes.html', enabled:true,
         icon:'<circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/><path d="M15.6 11.8l1.6 1.6 3.2-3.4"/>' },
-      { key:'alumnos', label:'Alumnos', href:null, enabled:false,
+      { key:'alumnos', label:'Alumnos', href:'alumnos.html', enabled:true, rolesVisibles:['admin','trabajador'],
+        icon:'<ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/>' },
+      { key:'mis-mascotas', label:'Mis mascotas', href:'mis-mascotas.html', enabled:true, rolesVisibles:['cliente'],
         icon:'<ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/>' },
       { key:'rutas', label:'Rutas', href:null, enabled:false,
         icon:'<circle cx="6" cy="6.2" r="2"/><circle cx="18" cy="17.8" r="2"/><path d="M6 8.2c0 4.6 4 3.6 6 6.4s2 3.4 6 3.4" stroke-dasharray="2.4 2.4"/>' },
@@ -50,7 +52,9 @@
       modulosPermitidos = CLAVES_CLIENTE;
     }
 
-    var items = NAV_ITEMS;
+    var items = NAV_ITEMS.filter(function (it) {
+      return !it.rolesVisibles || it.rolesVisibles.indexOf(perfil.role) !== -1;
+    });
     if (modulosPermitidos) {
       items = items.filter(function (it) {
         return CLAVES_SIEMPRE_DISPONIBLES.indexOf(it.key) !== -1 || modulosPermitidos.indexOf(it.key) !== -1;
@@ -94,7 +98,7 @@
     if (sidebar) {
       sidebar.innerHTML =
         '<div class="brand"><img src="' + logoUrl + '" alt="' + nombreNegocio + '" class="brand-logo">' +
-        '<div class="brand-text"><div class="name">' + nombreNegocio + '</div><div class="sub">Barkley · Panel</div></div></div>' +
+        '<div class="brand-text"><div class="name">' + nombreNegocio + '</div><div class="sub">Barkly · Panel</div></div></div>' +
         '<nav class="nav-groups">' + itemsHtml + '</nav>' +
         '<div class="sidebar-footer"><div class="role-card">' +
         '<div class="avatar-ring"><div class="avatar">' + iniciales(nombreMostrado) + '</div></div>' +

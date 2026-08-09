@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=3';
-import { supabase } from './supabaseClient.js?v=3';
-import { cargarConfiguracionNegocio } from './theme.js?v=3';
+import { protegerPagina, cerrarSesion } from './auth.js?v=4';
+import { supabase } from './supabaseClient.js?v=4';
+import { cargarConfiguracionNegocio } from './theme.js?v=4';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -178,7 +178,7 @@ function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
       <img src="${logoSrc}" alt="${nombreNegocio}" class="brand-logo">
       <div class="brand-text">
         <div class="name">${nombreNegocio}</div>
-        <div class="sub">Barkley · Panel</div>
+        <div class="sub">Barkly · Panel</div>
       </div>
     </div>
 

@@ -83,7 +83,7 @@
   .msg.error{ display:block; background:rgba(255,107,107,0.12); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
   .msg.info{ display:block; background:color-mix(in srgb, var(--blue-bright) 10%, transparent); color:var(--blue-glow); border:1px solid var(--line-strong); }
 </style>
-<script src="theme-inline.js?v=3"></script>
+<script src="theme-inline.js?v=4"></script>
 </head>
 <body>
   <div class="card">
@@ -91,7 +91,7 @@
       <img src="logo.png" alt="Talento Canes" id="brandLogo">
       <div>
         <div class="name" id="brandName">Talento Canes</div>
-        <div class="sub">Barkley · Panel</div>
+        <div class="sub">Barkly · Panel</div>
       </div>
     </div>
 
@@ -123,9 +123,9 @@
   </div>
 
   <script type="module">
-    import { iniciarSesion } from './auth.js?v=3';
-    import { cargarConfiguracionNegocio } from './theme.js?v=3';
-    import { definirRecordarSesion, supabase } from './supabaseClient.js?v=3';
+    import { iniciarSesion } from './auth.js?v=4';
+    import { cargarConfiguracionNegocio } from './theme.js?v=4';
+    import { definirRecordarSesion, supabase } from './supabaseClient.js?v=4';
 
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
