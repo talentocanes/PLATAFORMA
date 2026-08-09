@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=2';
-import { supabase } from './supabaseClient.js?v=2';
-import { cargarConfiguracionNegocio } from './theme.js?v=2';
+import { protegerPagina, cerrarSesion } from './auth.js?v=3';
+import { supabase } from './supabaseClient.js?v=3';
+import { cargarConfiguracionNegocio } from './theme.js?v=3';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -9,7 +9,7 @@ const CLAVES_SIEMPRE_DISPONIBLES = ['inicio', 'configuracion'];
 // Módulos habilitados para el rol Cliente (fijo para todos los
 // clientes, a diferencia de los trabajadores que se configuran
 // individualmente desde "Funciones" en Editar trabajador).
-const CLAVES_CLIENTE = ['inicio', 'servicios', 'cartera', 'configuracion'];
+const CLAVES_CLIENTE = ['inicio', 'servicios', 'cartera', 'configuracion', 'mis-mascotas'];
 
 // ---------------------------------------------------------
 // Definición de las 12 opciones definitivas del menú.
@@ -31,7 +31,9 @@ const NAV_GROUPS = [
         icon:'<circle cx="12" cy="8" r="3.2"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/>' },
       { key:'clientes', label:'Acudientes', href:'clientes.html', enabled:true,
         icon:'<circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/><path d="M15.6 11.8l1.6 1.6 3.2-3.4"/>' },
-      { key:'alumnos', label:'Alumnos', href:null, enabled:false,
+      { key:'alumnos', label:'Alumnos', href:'alumnos.html', enabled:true, rolesVisibles:['admin','trabajador'],
+        icon:'<ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/>' },
+      { key:'mis-mascotas', label:'Mis mascotas', href:'mis-mascotas.html', enabled:true, rolesVisibles:['cliente'],
         icon:'<ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/>' }
     ]
   },
@@ -133,6 +135,7 @@ export function obtenerModulosAsignables(){
   return NAV_GROUPS
     .flatMap(group => group.items)
     .filter(item => !CLAVES_SIEMPRE_DISPONIBLES.includes(item.key))
+    .filter(item => !item.rolesVisibles || item.rolesVisibles.includes('trabajador'))
     .map(item => ({ key: item.key, label: item.label }));
 }
 
@@ -155,7 +158,8 @@ function renderNavItem(item, activeKey, config){
 }
 
 function renderSidebarHTML(activeKey, profile, modulosPermitidos, config){
-  let todosLosItems = NAV_GROUPS.flatMap(group => group.items);
+  let todosLosItems = NAV_GROUPS.flatMap(group => group.items)
+    .filter(item => !item.rolesVisibles || item.rolesVisibles.includes(profile.role));
 
   // Si es trabajador, se filtran por completo los módulos que el
   // admin no le haya habilitado (no se muestran en gris: desaparecen).

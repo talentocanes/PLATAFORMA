@@ -22,10 +22,11 @@
       radial-gradient(1200px 700px at 85% -10%, color-mix(in srgb, var(--blue-bright) 16%, transparent), transparent 60%),
       radial-gradient(900px 600px at -10% 100%, color-mix(in srgb, var(--blue-deep) 22%, transparent), transparent 60%),
       var(--navy-deep);
-    padding:40px 20px;
+    padding:0 20px;
   }
   .card{
-    width:100%; max-width:400px; margin:0 auto;
+    width:100%; max-width:400px;
+    margin-top:2rem; margin-bottom:3rem; margin-left:auto; margin-right:auto;
     background:var(--navy-panel);
     border:1px solid var(--line-strong);
     border-radius:20px;
@@ -60,7 +61,7 @@
   .success .icon{ font-size:34px; margin-bottom:10px; }
   .hidden{ display:none; }
 </style>
-<script src="theme-inline.js?v=2"></script>
+<script src="theme-inline.js?v=3"></script>
 </head>
 <body>
   <div class="card">
@@ -115,15 +116,16 @@
   </div>
 
   <script type="module">
-    import { supabase, usernameToEmail } from './supabaseClient.js?v=2';
-    import { cargarConfiguracionNegocio } from './theme.js?v=2';
+    import { supabase, usernameToEmail } from './supabaseClient.js?v=3';
+    import { cargarConfiguracionNegocio } from './theme.js?v=3';
 
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
     window.scrollTo(0, 0);
 
-    cargarConfiguracionNegocio();
+    let configNegocio = null;
+    const configPromise = cargarConfiguracionNegocio().then(config => { configNegocio = config; return config; });
 
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
@@ -140,7 +142,11 @@
       el.classList.remove('hidden');
     }
 
-    const roleNames = { trabajador: 'Invitación · Trabajador', cliente: 'Invitación · Cliente' };
+    function nombreRol(role){
+      if (role === 'trabajador') return 'Invitación · Trabajador';
+      if (role === 'cliente') return `Invitación · ${configNegocio?.etiqueta_cliente || 'Acudiente'}`;
+      return 'Invitación';
+    }
 
     async function validarInvitacion(){
       if (!token){
@@ -170,7 +176,8 @@
         return;
       }
 
-      roleLabelEl.textContent = roleNames[info.role] || 'Invitación';
+      await configPromise;
+      roleLabelEl.textContent = nombreRol(info.role);
       showOnly(formWrapEl);
     }
 
