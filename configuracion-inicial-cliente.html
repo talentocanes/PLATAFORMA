@@ -160,6 +160,7 @@
     import { protegerPagina } from './auth.js?v=3';
     import { supabase, usernameToEmail } from './supabaseClient.js?v=3';
     import { cargarConfiguracionNegocio } from './theme.js?v=3';
+    import { capitalizarPalabras } from './textutils.js?v=3';
 
     // Evita que el navegador "recuerde" y restaure una posición de
     // scroll de una carga anterior de esta misma página.
@@ -259,7 +260,7 @@
       msg.className = 'msg';
       const btn = document.getElementById('saveBtn');
 
-      const fullName = document.getElementById('fullName').value.trim();
+      const fullName = capitalizarPalabras(document.getElementById('fullName').value.trim());
       const phone = document.getElementById('phone').value.trim();
       const direccion = document.getElementById('direccion').value.trim();
       const correo = document.getElementById('correo').value.trim();

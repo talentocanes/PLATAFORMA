@@ -234,6 +234,7 @@
     import { supabase } from './supabaseClient.js?v=3';
     import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=3';
     import { abrirRecortador } from './photocrop.js?v=3';
+    import { capitalizarPalabras } from './textutils.js?v=3';
 
     let perfil = null;
     let mascotas = [];
@@ -449,7 +450,7 @@
       const btn = document.getElementById('petSaveBtn');
       petMsg.style.display = 'none';
 
-      const nombre = document.getElementById('fNombre').value.trim();
+      const nombre = capitalizarPalabras(document.getElementById('fNombre').value.trim());
       if (!nombre) {
         petMsg.textContent = 'El nombre es obligatorio.';
         petMsg.style.display = 'block';

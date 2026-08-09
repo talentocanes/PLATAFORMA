@@ -308,6 +308,7 @@
     import { supabase } from './supabaseClient.js?v=3';
     import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=3';
     import { abrirRecortador } from './photocrop.js?v=3';
+    import { capitalizarPalabras } from './textutils.js?v=3';
 
     let alumnos = [];
     let acudientes = [];
@@ -609,7 +610,7 @@
       petMsg.style.display = 'none';
 
       const acudienteId = document.getElementById('fAcudiente').value;
-      const nombre = document.getElementById('fNombre').value.trim();
+      const nombre = capitalizarPalabras(document.getElementById('fNombre').value.trim());
 
       if (!acudienteId) {
         petMsg.textContent = 'Debes seleccionar un acudiente.';

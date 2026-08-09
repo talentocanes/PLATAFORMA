@@ -288,6 +288,7 @@
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=3';
     import { supabase, usernameToEmail } from './supabaseClient.js?v=3';
+    import { capitalizarPalabras } from './textutils.js?v=3';
 
     const ROL = 'cliente';
     let filas = [];
@@ -475,7 +476,7 @@
       btn.textContent = 'Guardando…';
       editMsg.style.display = 'none';
 
-      const fullName = document.getElementById('editFullName').value.trim();
+      const fullName = capitalizarPalabras(document.getElementById('editFullName').value.trim());
       const phone = document.getElementById('editPhone').value.trim();
       const activo = document.getElementById('editActivo').checked;
 
@@ -585,7 +586,7 @@
       const btn = document.getElementById('manualSaveBtn');
       manualMsg.style.display = 'none';
 
-      const full_name = document.getElementById('manFullName').value.trim();
+      const full_name = capitalizarPalabras(document.getElementById('manFullName').value.trim());
       const username = document.getElementById('manUsername').value.trim();
       const phone = document.getElementById('manPhone').value.trim();
       const password = document.getElementById('manPassword').value;
