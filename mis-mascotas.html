@@ -17,15 +17,17 @@
   .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
   .btn-add svg{ width:16px; height:16px; }
 
-  .grid-pets{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px; }
-  .pet-card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
-  .pet-photo{ width:100%; height:170px; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .grid-pets{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px; }
+  .pet-card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+  .pet-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .pet-photo{ width:56px; height:56px; border-radius:50%; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
   .pet-photo img{ width:100%; height:100%; object-fit:cover; }
-  .pet-photo svg{ width:48px; height:48px; color:var(--mist-dim); opacity:.5; }
-  .pet-body{ padding:16px; }
-  .pet-name-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .pet-photo svg{ width:24px; height:24px; color:var(--mist-dim); opacity:.5; }
+  .pet-head-info{ flex:1; min-width:0; }
+  .pet-body{ }
+  .pet-name-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:2px; }
   .pet-name{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; }
-  .badge-sexo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; }
+  .badge-sexo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
   .badge-sexo.macho{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); border:1px solid var(--line-strong); }
   .badge-sexo.hembra{ color:#ff9ecb; background:rgba(255,158,203,0.12); border:1px solid rgba(255,158,203,0.3); }
   .pet-meta{ font-size:12.5px; color:var(--mist-dim); line-height:1.7; margin-top:8px; }
@@ -127,6 +129,7 @@
       <div class="field">
         <label>Nombre</label>
         <input type="text" id="fNombre" placeholder="Nombre de tu mascota" autocomplete="off">
+        <div id="fNombreNota" style="display:none; font-size:11.5px; color:var(--mist-dim); margin-top:6px;">Solo el colegio puede cambiar el nombre una vez aprobada la mascota.</div>
       </div>
 
       <div class="field">
@@ -283,16 +286,20 @@
 
       grid.innerHTML = mascotas.map(m => `
         <div class="pet-card">
-          <div class="pet-photo">
-            ${m.foto_url
-              ? `<img src="${m.foto_url}" alt="${m.nombre}">`
-              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>`}
+          <div class="pet-head">
+            <div class="pet-photo">
+              ${m.foto_url
+                ? `<img src="${m.foto_url}" alt="${m.nombre}">`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>`}
+            </div>
+            <div class="pet-head-info">
+              <div class="pet-name-row">
+                <div class="pet-name">${m.nombre}</div>
+                ${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : (m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : '')}
+              </div>
+            </div>
           </div>
           <div class="pet-body">
-            <div class="pet-name-row">
-              <div class="pet-name">${m.nombre}</div>
-              ${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : (m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : '')}
-            </div>
             <div class="pet-meta">
               <div><b>Raza:</b> ${m.raza || 'Sin definir'}${m.es_mestizo ? ' (mestizo)' : ''}</div>
               <div><b>Edad:</b> ${calcularEdadTexto(m.fecha_nacimiento) || 'Sin definir'}</div>
@@ -305,7 +312,7 @@
               </div>` : ''}
             <div class="pet-actions">
               <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>
-              <button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>
+              ${m.status === 'pending' ? `<button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>` : ''}
             </div>
           </div>
         </div>
@@ -371,6 +378,8 @@
 
     function limpiarFormulario(){
       document.getElementById('fNombre').value = '';
+      document.getElementById('fNombre').disabled = false;
+      document.getElementById('fNombreNota').style.display = 'none';
       datePicker.clear();
       document.getElementById('fEdad').value = '';
       document.getElementById('fRaza').value = '';
@@ -402,6 +411,10 @@
       document.getElementById('petModalTitle').textContent = 'Editar mascota';
 
       document.getElementById('fNombre').value = m.nombre || '';
+      const nombreInput = document.getElementById('fNombre');
+      nombreInput.disabled = m.status === 'approved';
+      nombreInput.title = m.status === 'approved' ? 'Solo el colegio puede cambiar el nombre una vez aprobado.' : '';
+      document.getElementById('fNombreNota').style.display = m.status === 'approved' ? 'block' : 'none';
       if (m.fecha_nacimiento) datePicker.setISO(m.fecha_nacimiento);
       document.getElementById('fEdad').value = calcularEdadTexto(m.fecha_nacimiento) || '';
       document.getElementById('fColor').value = m.color_pelaje || '';
