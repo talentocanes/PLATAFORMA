@@ -86,6 +86,10 @@
 
   .photos-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:8px; margin-bottom:10px; }
   .photo-thumb{ position:relative; width:100%; aspect-ratio:1; border-radius:10px; overflow:hidden; background:var(--navy-panel-2); border:1px solid var(--line); }
+  .photo-thumb.draggable{ cursor:grab; }
+  .photo-thumb.dragging{ opacity:.4; }
+  .photo-thumb.drag-over{ border-color:var(--blue-bright); }
+  .cover-badge{ position:absolute; bottom:4px; left:4px; z-index:1; font-family:'JetBrains Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:.4px; padding:2px 6px; border-radius:6px; background:rgba(5,10,20,0.8); color:var(--blue-glow); border:1px solid var(--line-strong); }
   .photo-thumb img{ width:100%; height:100%; object-fit:cover; }
   .photo-thumb .remove-photo{ position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; background:rgba(5,10,20,0.8); border:none; color:var(--white); display:flex; align-items:center; justify-content:center; cursor:pointer; }
   .photo-thumb .remove-photo svg{ width:11px; height:11px; }
@@ -397,8 +401,8 @@
     let puedeEditar = false;
     let tipoActual = 'producto'; // el que se está creando/editando en el formulario
     let editandoId = null;
-    let fotosActuales = []; // URLs ya subidas (al editar) + previews nuevas pendientes
-    let archivosNuevos = []; // Files pendientes de subir
+    let fotosCombinadas = []; // { fid, tipo:'url'|'file', valor } en el orden final; [0] = portada
+    let siguienteFotoId = 1;
     let eliminandoId = null;
     let filtroActivo = 'todos';
     let terminoBusqueda = '';
@@ -641,8 +645,7 @@
       document.getElementById('fStock').value = '';
       document.getElementById('fDescripcion').value = '';
       document.getElementById('fActivo').checked = true;
-      fotosActuales = [];
-      archivosNuevos = [];
+      fotosCombinadas = [];
       pintarFotosGrid();
     }
 
@@ -705,7 +708,7 @@
       document.getElementById('fDescripcion').value = item.descripcion || '';
       document.getElementById('fActivo').checked = !!item.activo;
 
-      fotosActuales = [...(item.fotos || [])];
+      fotosCombinadas = (item.fotos || []).map(u => ({ fid: siguienteFotoId++, tipo: 'url', valor: u }));
       pintarFotosGrid();
 
       formMsg.style.display = 'none';
@@ -715,34 +718,74 @@
     document.getElementById('formCloseBtn').addEventListener('click', () => formOverlay.classList.remove('active'));
 
     // ---------------- Fotos ----------------
-    function pintarFotosGrid(){
-      const grid = document.getElementById('photosGrid');
-      const urlsPreview = archivosNuevos.map(f => URL.createObjectURL(f));
-      const todas = [...fotosActuales.map(u => ({ url: u, esNueva: false })), ...urlsPreview.map((u, idx) => ({ url: u, esNueva: true, idx }))];
+    // Reutilizable para cualquier grupo de fotos (formulario general
+    // y el de Planes de colegio): dibuja las miniaturas en el orden
+    // del arreglo (arr[0] = portada) y permite arrastrar para
+    // reordenar. onCambio se llama después de cualquier cambio.
+    function pintarFotosGenerico(gridId, arr, onCambio){
+      const grid = document.getElementById(gridId);
+      const arrastrable = arr.length > 1;
 
-      grid.innerHTML = todas.map((f, i) => `
-        <div class="photo-thumb">
-          <img src="${f.url}" alt="Foto ${i + 1}">
-          <button type="button" class="remove-photo" data-index="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      grid.innerHTML = arr.map((f, i) => {
+        const src = f.tipo === 'url' ? f.valor : URL.createObjectURL(f.valor);
+        return `
+        <div class="photo-thumb ${arrastrable ? 'draggable' : ''}" data-fid="${f.fid}" ${arrastrable ? 'draggable="true"' : ''}>
+          ${i === 0 ? '<span class="cover-badge">Portada</span>' : ''}
+          <img src="${src}" alt="Foto ${i + 1}">
+          <button type="button" class="remove-photo" data-fid="${f.fid}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
-      `).join('');
+      `;}).join('');
 
       grid.querySelectorAll('.remove-photo').forEach(btn => {
         btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.index, 10);
-          if (idx < fotosActuales.length) {
-            fotosActuales.splice(idx, 1);
-          } else {
-            archivosNuevos.splice(idx - fotosActuales.length, 1);
-          }
-          pintarFotosGrid();
+          const fid = parseInt(btn.dataset.fid, 10);
+          const idx = arr.findIndex(f => f.fid === fid);
+          if (idx !== -1) arr.splice(idx, 1);
+          onCambio();
         });
       });
+
+      if (arrastrable) {
+        let dragFid = null;
+        grid.querySelectorAll('.photo-thumb.draggable').forEach(thumb => {
+          thumb.addEventListener('dragstart', () => {
+            dragFid = parseInt(thumb.dataset.fid, 10);
+            thumb.classList.add('dragging');
+          });
+          thumb.addEventListener('dragend', () => {
+            thumb.classList.remove('dragging');
+            grid.querySelectorAll('.drag-over').forEach(t => t.classList.remove('drag-over'));
+          });
+          thumb.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (parseInt(thumb.dataset.fid, 10) !== dragFid) thumb.classList.add('drag-over');
+          });
+          thumb.addEventListener('dragleave', () => thumb.classList.remove('drag-over'));
+          thumb.addEventListener('drop', (e) => {
+            e.preventDefault();
+            thumb.classList.remove('drag-over');
+            const targetFid = parseInt(thumb.dataset.fid, 10);
+            if (dragFid === null || dragFid === targetFid) return;
+            const fromIdx = arr.findIndex(f => f.fid === dragFid);
+            const toIdx = arr.findIndex(f => f.fid === targetFid);
+            if (fromIdx === -1 || toIdx === -1) return;
+            const [movido] = arr.splice(fromIdx, 1);
+            arr.splice(toIdx, 0, movido);
+            onCambio();
+          });
+        });
+      }
+    }
+
+    function pintarFotosGrid(){
+      pintarFotosGenerico('photosGrid', fotosCombinadas, pintarFotosGrid);
     }
 
     document.getElementById('btnFotos').addEventListener('click', () => document.getElementById('fileFotos').click());
     document.getElementById('fileFotos').addEventListener('change', (e) => {
-      archivosNuevos.push(...Array.from(e.target.files));
+      Array.from(e.target.files).forEach(archivo => {
+        fotosCombinadas.push({ fid: siguienteFotoId++, tipo: 'file', valor: archivo });
+      });
       pintarFotosGrid();
       e.target.value = '';
     });
@@ -769,17 +812,20 @@
       btn.textContent = 'Guardando…';
 
       try {
-        // Subir fotos nuevas
-        const urlsSubidas = [];
-        for (const archivo of archivosNuevos) {
-          const ruta = `${tipoActual}/${Date.now()}-${Math.random().toString(36).slice(2)}-${archivo.name}`;
-          const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, archivo);
-          if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
-          const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
-          urlsSubidas.push(pub.publicUrl);
+        // Sube cada foto nueva y arma el arreglo final EN EL ORDEN
+        // definido en fotosCombinadas (arr[0] queda como portada).
+        const fotosFinal = [];
+        for (const f of fotosCombinadas) {
+          if (f.tipo === 'url') {
+            fotosFinal.push(f.valor);
+          } else {
+            const ruta = `${tipoActual}/${Date.now()}-${Math.random().toString(36).slice(2)}-${f.valor.name}`;
+            const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, f.valor);
+            if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
+            const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
+            fotosFinal.push(pub.publicUrl);
+          }
         }
-
-        const fotosFinal = [...fotosActuales, ...urlsSubidas];
 
         const payload = {
           tipo_item: tipoActual, nombre, categoria, precio, stock, descripcion, fotos: fotosFinal, activo
@@ -811,8 +857,7 @@
 
     let planesEditandoId = null;
     let filasPlanes = [];
-    let planesFotosActuales = [];
-    let planesArchivosNuevos = [];
+    let planesFotosCombinadas = [];
     let siguienteFilaId = 1;
 
     function nuevaFilaPlan(nombre, precio, dias){
@@ -878,30 +923,14 @@
     });
 
     function pintarFotosPlanesGrid(){
-      const grid = document.getElementById('pPhotosGrid');
-      const urlsPreview = planesArchivosNuevos.map(f => URL.createObjectURL(f));
-      const todas = [...planesFotosActuales.map(u => ({ url: u })), ...urlsPreview.map(u => ({ url: u }))];
-
-      grid.innerHTML = todas.map((f, i) => `
-        <div class="photo-thumb">
-          <img src="${f.url}" alt="Foto ${i + 1}">
-          <button type="button" class="remove-photo" data-index="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </div>
-      `).join('');
-
-      grid.querySelectorAll('.remove-photo').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.index, 10);
-          if (idx < planesFotosActuales.length) planesFotosActuales.splice(idx, 1);
-          else planesArchivosNuevos.splice(idx - planesFotosActuales.length, 1);
-          pintarFotosPlanesGrid();
-        });
-      });
+      pintarFotosGenerico('pPhotosGrid', planesFotosCombinadas, pintarFotosPlanesGrid);
     }
 
     document.getElementById('pBtnFotos').addEventListener('click', () => document.getElementById('pFileFotos').click());
     document.getElementById('pFileFotos').addEventListener('change', (e) => {
-      planesArchivosNuevos.push(...Array.from(e.target.files));
+      Array.from(e.target.files).forEach(archivo => {
+        planesFotosCombinadas.push({ fid: siguienteFotoId++, tipo: 'file', valor: archivo });
+      });
       pintarFotosPlanesGrid();
       e.target.value = '';
     });
@@ -913,8 +942,7 @@
       document.getElementById('pDescripcion').value = '';
       document.getElementById('pActivo').checked = true;
       document.getElementById('pDiversificar').checked = false;
-      planesFotosActuales = [];
-      planesArchivosNuevos = [];
+      planesFotosCombinadas = [];
       pintarFotosPlanesGrid();
       filasPlanes = planesPorDefecto();
       pintarFilasPlanes();
@@ -929,8 +957,7 @@
       document.getElementById('pDescripcion').value = item.descripcion || '';
       document.getElementById('pActivo').checked = !!item.activo;
       document.getElementById('pDiversificar').checked = false;
-      planesFotosActuales = [...(item.fotos || [])];
-      planesArchivosNuevos = [];
+      planesFotosCombinadas = (item.fotos || []).map(u => ({ fid: siguienteFotoId++, tipo: 'url', valor: u }));
       pintarFotosPlanesGrid();
 
       const { data, error } = await supabase
@@ -981,15 +1008,18 @@
       btn.textContent = 'Guardando…';
 
       try {
-        const urlsSubidas = [];
-        for (const archivo of planesArchivosNuevos) {
-          const ruta = `servicio/${Date.now()}-${Math.random().toString(36).slice(2)}-${archivo.name}`;
-          const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, archivo);
-          if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
-          const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
-          urlsSubidas.push(pub.publicUrl);
+        const fotosFinal = [];
+        for (const f of planesFotosCombinadas) {
+          if (f.tipo === 'url') {
+            fotosFinal.push(f.valor);
+          } else {
+            const ruta = `servicio/${Date.now()}-${Math.random().toString(36).slice(2)}-${f.valor.name}`;
+            const { error: upErr } = await supabase.storage.from('tienda').upload(ruta, f.valor);
+            if (upErr) throw new Error('No se pudo subir una imagen: ' + upErr.message);
+            const { data: pub } = supabase.storage.from('tienda').getPublicUrl(ruta);
+            fotosFinal.push(pub.publicUrl);
+          }
         }
-        const fotosFinal = [...planesFotosActuales, ...urlsSubidas];
 
         const diversificar = document.getElementById('pDiversificar').checked;
 
