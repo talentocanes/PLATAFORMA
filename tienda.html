@@ -256,7 +256,7 @@
       <div class="field">
         <label>Planes</label>
         <div class="plan-labels">
-          <span>Nombre del plan</span><span>Precio ($)</span><span>Días / semana</span><span></span>
+          <span>Nombre del plan</span><span>Precio ($)</span><span id="planesLabelTercero">Días / semana</span><span></span>
         </div>
         <div id="planesLista"></div>
         <button type="button" class="btn-add-plan" id="btnAddPlan">+ Añadir plan</button>
@@ -608,8 +608,8 @@
       el.addEventListener('click', () => {
         tipoServicioOverlay.classList.remove('active');
         const tipoServicio = el.dataset.tiposervicio;
-        if (tipoServicio === 'Planes de colegio') {
-          abrirFormularioPlanesNuevo();
+        if (tipoServicio === 'Planes de colegio' || tipoServicio === 'Plan por Tickets') {
+          abrirFormularioPlanesNuevo(tipoServicio);
         } else {
           abrirFormularioNuevo('servicio', tipoServicio);
         }
@@ -670,7 +670,8 @@
       const item = items.find(i => i.id === id);
       if (!item) return;
 
-      if (item.tipo_item === 'servicio' && item.categoria === 'Planes de colegio') {
+      const CATEGORIAS_AGRUPABLES = ['Planes de colegio', 'Plan por Tickets'];
+      if (item.tipo_item === 'servicio' && CATEGORIAS_AGRUPABLES.includes(item.categoria)) {
         // Solo es "agrupado" si todavía tiene planes hijos. Si ya se
         // diversificó antes, este ítem es independiente y se edita
         // como cualquier otro servicio, con el formulario normal.
@@ -850,7 +851,7 @@
       }
     });
 
-    // ---------------- Planes de colegio ----------------
+    // ---------------- Planes de colegio / Plan por tickets ----------------
     const planesOverlay = document.getElementById('planesOverlay');
     const planesMsg = document.getElementById('planesMsg');
     const DIAS_OPCIONES = [1, 2, 3, 4, 5, 6, 7];
@@ -859,12 +860,22 @@
     let filasPlanes = [];
     let planesFotosCombinadas = [];
     let siguienteFilaId = 1;
+    let modoPlanes = 'Planes de colegio'; // o 'Plan por Tickets'
 
-    function nuevaFilaPlan(nombre, precio, dias){
-      return { filaId: siguienteFilaId++, id: null, nombre: nombre || '', precio: precio ?? '', dias_semana: dias ?? '' };
+    function campoTercero(){
+      return modoPlanes === 'Plan por Tickets' ? 'cantidad_tickets' : 'dias_semana';
+    }
+
+    function nuevaFilaPlan(nombre, precio, tercero){
+      const fila = { filaId: siguienteFilaId++, id: null, nombre: nombre || '', precio: precio ?? '' };
+      fila[campoTercero()] = tercero ?? '';
+      return fila;
     }
 
     function planesPorDefecto(){
+      if (modoPlanes === 'Plan por Tickets') {
+        return [ nuevaFilaPlan('Plan 20 Tickets', '', 20) ];
+      }
       return [
         nuevaFilaPlan('Plan 1 día a la semana', '', 1),
         nuevaFilaPlan('Plan 2 días a la semana', '', 2),
@@ -876,14 +887,19 @@
 
     function pintarFilasPlanes(){
       const cont = document.getElementById('planesLista');
+      const campo = campoTercero();
+      const esTickets = modoPlanes === 'Plan por Tickets';
+
       cont.innerHTML = filasPlanes.map(f => `
         <div class="plan-row" data-fila="${f.filaId}">
-          <input type="text" placeholder="Nombre del plan" data-campo="nombre" value="${f.nombre.replace(/"/g,'&quot;')}">
+          <input type="text" placeholder="Nombre del plan" data-campo="nombre" value="${(f.nombre || '').replace(/"/g,'&quot;')}">
           <input type="text" inputmode="numeric" placeholder="Ej: 400.000" data-campo="precio" value="${formatearMiles(f.precio)}">
-          <select data-campo="dias_semana">
-            <option value="">Días</option>
-            ${DIAS_OPCIONES.map(d => `<option value="${d}" ${String(f.dias_semana) === String(d) ? 'selected' : ''}>${d} ${d === 1 ? 'día' : 'días'}</option>`).join('')}
-          </select>
+          ${esTickets
+            ? `<input type="number" min="1" step="1" placeholder="Ej: 20" data-campo="${campo}" value="${f[campo] ?? ''}">`
+            : `<select data-campo="${campo}">
+                <option value="">Días</option>
+                ${DIAS_OPCIONES.map(d => `<option value="${d}" ${String(f[campo]) === String(d) ? 'selected' : ''}>${d} ${d === 1 ? 'día' : 'días'}</option>`).join('')}
+              </select>`}
           <button type="button" class="remove-plan" data-fila-quitar="${f.filaId}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
@@ -935,10 +951,12 @@
       e.target.value = '';
     });
 
-    function abrirFormularioPlanesNuevo(){
+    function abrirFormularioPlanesNuevo(modo){
       planesEditandoId = null;
-      document.getElementById('planesFormTitle').textContent = 'Crear planes de colegio';
-      document.getElementById('pNombre').value = 'Planes de colegio';
+      modoPlanes = modo || 'Planes de colegio';
+      document.getElementById('planesFormTitle').textContent = modoPlanes === 'Plan por Tickets' ? 'Crear plan por tickets' : 'Crear planes de colegio';
+      document.getElementById('planesLabelTercero').textContent = modoPlanes === 'Plan por Tickets' ? 'Cantidad de tickets' : 'Días / Semana';
+      document.getElementById('pNombre').value = modoPlanes;
       document.getElementById('pDescripcion').value = '';
       document.getElementById('pActivo').checked = true;
       document.getElementById('pDiversificar').checked = false;
@@ -952,7 +970,9 @@
 
     async function abrirFormularioPlanesEditar(item){
       planesEditandoId = item.id;
-      document.getElementById('planesFormTitle').textContent = 'Editar planes de colegio';
+      modoPlanes = item.categoria === 'Plan por Tickets' ? 'Plan por Tickets' : 'Planes de colegio';
+      document.getElementById('planesFormTitle').textContent = modoPlanes === 'Plan por Tickets' ? 'Editar plan por tickets' : 'Editar planes de colegio';
+      document.getElementById('planesLabelTercero').textContent = modoPlanes === 'Plan por Tickets' ? 'Cantidad de tickets' : 'Días / Semana';
       document.getElementById('pNombre').value = item.nombre || '';
       document.getElementById('pDescripcion').value = item.descripcion || '';
       document.getElementById('pActivo').checked = !!item.activo;
@@ -966,9 +986,14 @@
         .eq('tienda_item_id', item.id)
         .order('orden', { ascending: true });
 
+      const campo = campoTercero();
       filasPlanes = (error || !data || data.length === 0)
         ? planesPorDefecto()
-        : data.map(p => ({ filaId: siguienteFilaId++, id: p.id, nombre: p.nombre, precio: p.precio, dias_semana: p.dias_semana ?? '' }));
+        : data.map(p => {
+            const fila = { filaId: siguienteFilaId++, id: p.id, nombre: p.nombre, precio: p.precio };
+            fila[campo] = p[campo] ?? '';
+            return fila;
+          });
 
       pintarFilasPlanes();
       planesMsg.style.display = 'none';
@@ -980,8 +1005,10 @@
     document.getElementById('planesSaveBtn').addEventListener('click', async () => {
       const btn = document.getElementById('planesSaveBtn');
       planesMsg.style.display = 'none';
+      const campo = campoTercero();
+      const esTickets = modoPlanes === 'Plan por Tickets';
 
-      const nombre = capitalizarPalabras(document.getElementById('pNombre').value.trim()) || 'Planes de colegio';
+      const nombre = capitalizarPalabras(document.getElementById('pNombre').value.trim()) || modoPlanes;
       const descripcion = document.getElementById('pDescripcion').value.trim() || null;
       const activo = document.getElementById('pActivo').checked;
 
@@ -997,8 +1024,10 @@
           planesMsg.style.display = 'block';
           return;
         }
-        if (!f.dias_semana) {
-          planesMsg.textContent = `Selecciona los días a la semana para "${f.nombre}".`;
+        if (!f[campo]) {
+          planesMsg.textContent = esTickets
+            ? `Ingresa la cantidad de tickets para "${f.nombre}".`
+            : `Selecciona los días a la semana para "${f.nombre}".`;
           planesMsg.style.display = 'block';
           return;
         }
@@ -1029,7 +1058,7 @@
           const itemsIndividuales = planesValidos.map(f => ({
             tipo_item: 'servicio',
             nombre: capitalizarPalabras(f.nombre.trim()),
-            categoria: 'Planes de colegio',
+            categoria: modoPlanes,
             precio: parseFloat(f.precio),
             descripcion, fotos: fotosFinal, activo
           }));
@@ -1045,7 +1074,7 @@
           }
         } else {
           const payloadItem = {
-            tipo_item: 'servicio', nombre, categoria: 'Planes de colegio',
+            tipo_item: 'servicio', nombre, categoria: modoPlanes,
             precio: Math.min(...planesValidos.map(f => parseFloat(f.precio))),
             precio_max: Math.max(...planesValidos.map(f => parseFloat(f.precio))),
             descripcion, fotos: fotosFinal, activo
@@ -1062,13 +1091,16 @@
             itemId = data.id;
           }
 
-          const filasInsert = planesValidos.map((f, idx) => ({
-            tienda_item_id: itemId,
-            nombre: capitalizarPalabras(f.nombre.trim()),
-            precio: parseFloat(f.precio),
-            dias_semana: parseInt(f.dias_semana, 10),
-            orden: idx
-          }));
+          const filasInsert = planesValidos.map((f, idx) => {
+            const fila = {
+              tienda_item_id: itemId,
+              nombre: capitalizarPalabras(f.nombre.trim()),
+              precio: parseFloat(f.precio),
+              orden: idx
+            };
+            fila[campo] = parseInt(f[campo], 10);
+            return fila;
+          });
           const { error: errPlanes } = await supabase.from('tienda_planes').insert(filasInsert);
           if (errPlanes) throw new Error(errPlanes.message);
         }
@@ -1120,11 +1152,11 @@
       document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
       document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
 
-      const esPlanesColegio = item.tipo_item === 'servicio' && item.categoria === 'Planes de colegio';
+      const esPlanAgrupado = item.tipo_item === 'servicio' && ['Planes de colegio', 'Plan por Tickets'].includes(item.categoria);
       const plansBlock = document.getElementById('detailPlansBlock');
       const priceEl = document.getElementById('detailPrice');
 
-      if (esPlanesColegio) {
+      if (esPlanAgrupado) {
         const { data: planes, error } = await supabase
           .from('tienda_planes')
           .select('*')
