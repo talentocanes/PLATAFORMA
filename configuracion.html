@@ -92,8 +92,9 @@
       <p>Datos del negocio y personalización visual de la plataforma.</p>
     </div>
 
-    <div class="subtabs">
-      <div class="subtab active">Personalización</div>
+    <div class="subtabs" id="subtabs">
+      <div class="subtab active" data-tab="personalizacion">Personalización</div>
+      <div class="subtab" data-tab="mi-cuenta" id="tabMiCuenta" style="display:none;">Mi cuenta</div>
     </div>
 
     <!-- Vista de administrador: formulario editable -->
@@ -205,14 +206,69 @@
         <p style="color:var(--mist-dim); font-size:13px;">Solo el administrador puede personalizar estos datos.</p>
       </div>
     </div>
+
+    <!-- Vista "Mi cuenta": el propio trabajador o acudiente edita su información -->
+    <div id="miCuentaView" style="display:none;">
+      <div class="card">
+        <h2>Mi cuenta</h2>
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="mcUsername" disabled autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="mcFullName" autocomplete="off">
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" id="mcPhone" placeholder="3001234567" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" id="mcCorreo" placeholder="tucorreo@ejemplo.com" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Solo para acudientes -->
+        <div id="mcAcudienteExtra" style="display:none;">
+          <div class="grid-2">
+            <div class="field">
+              <label>Tipo de persona</label>
+              <select id="mcTipoPersona" autocomplete="off">
+                <option value="natural">Persona natural</option>
+                <option value="juridica">Persona jurídica</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tipo de identificación</label>
+              <select id="mcTipoIdentificacion" autocomplete="off"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Número de identificación</label>
+            <input type="text" id="mcNumeroIdentificacion" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Dirección</label>
+            <input type="text" id="mcDireccion" placeholder="Dirección para recogida/entrega" autocomplete="off">
+          </div>
+        </div>
+
+        <button class="btn-save" id="mcGuardarBtn">Guardar cambios</button>
+        <div class="save-msg" id="mcMsg"></div>
+      </div>
+    </div>
   </main>
 
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=6';
-    import { supabase } from './supabaseClient.js?v=6';
+    import { supabase, usernameToEmail } from './supabaseClient.js?v=6';
     import { PALETAS, aplicarPaleta } from './theme.js?v=6';
+    import { capitalizarPalabras } from './textutils.js?v=6';
 
     let esAdmin = false;
+    let perfilActual = null;
     let config = null;
     let paletaSeleccionada = 'azul-original';
     let archivoLogo = null;
@@ -222,6 +278,7 @@
       const profile = await initLayout({ activeKey: 'configuracion' });
       if (!profile) return;
 
+      perfilActual = profile;
       esAdmin = profile.role === 'admin';
       config = obtenerConfiguracionActual();
       paletaSeleccionada = config?.paleta || 'azul-original';
@@ -233,8 +290,113 @@
       } else {
         document.getElementById('readonlyView').style.display = 'block';
         rellenarSoloLectura();
+        document.getElementById('tabMiCuenta').style.display = 'block';
+        await prepararMiCuenta();
       }
+
+      document.querySelectorAll('.subtab').forEach(tab => {
+        tab.addEventListener('click', () => cambiarSubtab(tab.dataset.tab));
+      });
     })();
+
+    function cambiarSubtab(tabKey){
+      document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabKey));
+      const vistaPersonalizacion = esAdmin ? document.getElementById('adminView') : document.getElementById('readonlyView');
+      vistaPersonalizacion.style.display = tabKey === 'personalizacion' ? 'block' : 'none';
+      document.getElementById('miCuentaView').style.display = tabKey === 'mi-cuenta' ? 'block' : 'none';
+    }
+
+    // ---------------- Mi cuenta (trabajador / acudiente) ----------------
+    const OPCIONES_ID_MC = {
+      natural: [ { v:'CC', l:'Cédula de ciudadanía' }, { v:'CE', l:'Cédula de extranjería' }, { v:'TI', l:'Tarjeta de identidad' } ],
+      juridica: [ { v:'NIT', l:'NIT' } ]
+    };
+
+    function actualizarOpcionesIdMC(){
+      const tipo = document.getElementById('mcTipoPersona').value;
+      const select = document.getElementById('mcTipoIdentificacion');
+      select.innerHTML = OPCIONES_ID_MC[tipo].map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+    }
+
+    async function prepararMiCuenta(){
+      document.getElementById('mcUsername').value = perfilActual.username;
+      document.getElementById('mcFullName').value = perfilActual.full_name || '';
+      document.getElementById('mcPhone').value = perfilActual.phone || '';
+
+      if (perfilActual.role === 'trabajador') {
+        const { data } = await supabase
+          .from('trabajador_detalle')
+          .select('correo')
+          .eq('id', perfilActual.id)
+          .single();
+        document.getElementById('mcCorreo').value = data?.correo || '';
+      }
+
+      if (perfilActual.role === 'cliente') {
+        document.getElementById('mcAcudienteExtra').style.display = 'block';
+        document.getElementById('mcTipoPersona').addEventListener('change', actualizarOpcionesIdMC);
+        actualizarOpcionesIdMC();
+
+        const { data } = await supabase
+          .from('cliente_detalle')
+          .select('correo, direccion, tipo_persona, tipo_identificacion, numero_identificacion')
+          .eq('id', perfilActual.id)
+          .single();
+
+        if (data) {
+          document.getElementById('mcCorreo').value = data.correo || '';
+          document.getElementById('mcDireccion').value = data.direccion || '';
+          if (data.tipo_persona) {
+            document.getElementById('mcTipoPersona').value = data.tipo_persona;
+            actualizarOpcionesIdMC();
+          }
+          if (data.tipo_identificacion) document.getElementById('mcTipoIdentificacion').value = data.tipo_identificacion;
+          document.getElementById('mcNumeroIdentificacion').value = data.numero_identificacion || '';
+        }
+      }
+    }
+
+    document.getElementById('mcGuardarBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('mcGuardarBtn');
+      const msg = document.getElementById('mcMsg');
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      msg.className = 'save-msg';
+
+      const fullName = capitalizarPalabras(document.getElementById('mcFullName').value.trim());
+      const phone = document.getElementById('mcPhone').value.trim();
+      const correo = document.getElementById('mcCorreo').value.trim();
+
+      try {
+        if (perfilActual.role === 'trabajador') {
+          const { error } = await supabase.rpc('actualizar_mi_cuenta_trabajador', {
+            p_full_name: fullName, p_phone: phone, p_correo: correo
+          });
+          if (error) throw new Error(error.message);
+        } else if (perfilActual.role === 'cliente') {
+          const direccion = document.getElementById('mcDireccion').value.trim();
+          const tipoPersona = document.getElementById('mcTipoPersona').value;
+          const tipoIdentificacion = document.getElementById('mcTipoIdentificacion').value;
+          const numeroIdentificacion = document.getElementById('mcNumeroIdentificacion').value.trim();
+
+          const { error } = await supabase.rpc('completar_perfil_cliente', {
+            p_full_name: fullName, p_phone: phone, p_direccion: direccion, p_correo: correo,
+            p_tipo_persona: tipoPersona, p_tipo_identificacion: tipoIdentificacion,
+            p_numero_identificacion: numeroIdentificacion
+          });
+          if (error) throw new Error(error.message);
+        }
+
+        msg.textContent = 'Cambios guardados correctamente.';
+        msg.classList.add('ok');
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.classList.add('error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar cambios';
+      }
+    });
 
     function rellenarFormulario(){
       if (!config) return;
