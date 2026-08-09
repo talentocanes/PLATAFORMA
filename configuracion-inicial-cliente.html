@@ -100,7 +100,7 @@
       </div>
 
       <div class="section-title">Contacto</div>
-      <div class="grid-3">
+      <div class="grid-2">
         <div class="field">
           <label>Teléfono</label>
           <input type="text" id="phone" placeholder="3001234567" autocomplete="off">
@@ -109,9 +109,21 @@
           <label>Correo electrónico</label>
           <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" autocomplete="off">
         </div>
+      </div>
+
+      <div class="section-title">Ubicación</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Departamento</label>
+          <select id="departamento" autocomplete="off"></select>
+        </div>
+        <div class="field">
+          <label>Ciudad / Municipio</label>
+          <select id="ciudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+        </div>
         <div class="field">
           <label>Dirección</label>
-          <input type="text" id="direccion" placeholder="Dirección para recogida/entrega" autocomplete="off">
+          <input type="text" id="direccion" placeholder="Calle, carrera, número..." autocomplete="off">
         </div>
       </div>
 
@@ -161,6 +173,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=6';
     import { cargarConfiguracionNegocio } from './theme.js?v=6';
     import { capitalizarPalabras } from './textutils.js?v=6';
+    import { poblarDepartamentos, poblarCiudades } from './colombia.js?v=6';
 
     // Evita que el navegador "recuerde" y restaure una posición de
     // scroll de una carga anterior de esta misma página.
@@ -237,6 +250,13 @@
       document.getElementById('phone').value = profile.phone || '';
       document.getElementById('direccion').value = detalle?.direccion || '';
       document.getElementById('correo').value = detalle?.correo || '';
+
+      poblarDepartamentos(document.getElementById('departamento'), detalle?.departamento || '');
+      if (detalle?.departamento) poblarCiudades(document.getElementById('ciudad'), detalle.departamento, detalle?.ciudad || '');
+      document.getElementById('departamento').addEventListener('change', (e) => {
+        poblarCiudades(document.getElementById('ciudad'), e.target.value);
+      });
+
       if (detalle?.tipo_persona) {
         document.getElementById('tipoPersona').value = detalle.tipo_persona;
         actualizarSegunTipoPersona();
@@ -262,6 +282,8 @@
 
       const fullName = capitalizarPalabras(document.getElementById('fullName').value.trim());
       const phone = document.getElementById('phone').value.trim();
+      const departamento = document.getElementById('departamento').value;
+      const ciudad = document.getElementById('ciudad').value;
       const direccion = document.getElementById('direccion').value.trim();
       const correo = document.getElementById('correo').value.trim();
       const tipoPersona = document.getElementById('tipoPersona').value;
@@ -308,7 +330,9 @@
           p_correo: correo,
           p_tipo_persona: tipoPersona,
           p_tipo_identificacion: tipoIdentificacion,
-          p_numero_identificacion: numeroIdentificacion
+          p_numero_identificacion: numeroIdentificacion,
+          p_departamento: departamento || null,
+          p_ciudad: ciudad || null
         });
         if (rpcErr) throw new Error(rpcErr.message);
 

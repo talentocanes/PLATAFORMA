@@ -35,7 +35,7 @@
   .field textarea{ min-height:80px; resize:vertical; }
   .field input:focus, .field textarea:focus{ border-color:var(--blue-bright); }
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .grid-3{ display:grid; grid-template-columns:auto 1fr; gap:0; }
+  .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
   .phone-row{ display:flex; gap:8px; }
   .phone-row select{ padding:10px 8px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; }
   .phone-row input{ flex:1; }
@@ -44,7 +44,7 @@
   .file-row .file-name{ flex:1; font-size:12.5px; color:var(--mist-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .file-row input[type="file"]{ display:none; }
 
-  @media (max-width: 700px){ .grid-2{ grid-template-columns:1fr; } }
+  @media (max-width: 700px){ .grid-2{ grid-template-columns:1fr; } .grid-3{ grid-template-columns:1fr; } }
 
   /* Selector de paletas */
   .palette-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
@@ -138,18 +138,22 @@
             </div>
           </div>
           <div class="field">
-            <label>Ciudad</label>
-            <input type="text" id="fCiudad" placeholder="Popayán" autocomplete="off">
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Dirección</label>
-            <input type="text" id="fDireccion" placeholder="Dirección física" autocomplete="off">
-          </div>
-          <div class="field">
             <label>Correo electrónico</label>
             <input type="email" id="fCorreo" placeholder="contacto@talentocanes.online" autocomplete="off">
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label>Departamento</label>
+            <select id="fDepartamento" autocomplete="off"></select>
+          </div>
+          <div class="field">
+            <label>Ciudad / Municipio</label>
+            <select id="fCiudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+          </div>
+          <div class="field">
+            <label>Dirección</label>
+            <input type="text" id="fDireccion" placeholder="Calle, carrera, número..." autocomplete="off">
           </div>
         </div>
         <div class="grid-2">
@@ -249,9 +253,19 @@
             <label>Número de identificación</label>
             <input type="text" id="mcNumeroIdentificacion" autocomplete="off">
           </div>
-          <div class="field">
-            <label>Dirección</label>
-            <input type="text" id="mcDireccion" placeholder="Dirección para recogida/entrega" autocomplete="off">
+          <div class="grid-3">
+            <div class="field">
+              <label>Departamento</label>
+              <select id="mcDepartamento" autocomplete="off"></select>
+            </div>
+            <div class="field">
+              <label>Ciudad / Municipio</label>
+              <select id="mcCiudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+            </div>
+            <div class="field">
+              <label>Dirección</label>
+              <input type="text" id="mcDireccion" placeholder="Calle, carrera, número..." autocomplete="off">
+            </div>
           </div>
         </div>
 
@@ -266,6 +280,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=6';
     import { PALETAS, aplicarPaleta } from './theme.js?v=6';
     import { capitalizarPalabras } from './textutils.js?v=6';
+    import { poblarDepartamentos, poblarCiudades } from './colombia.js?v=6';
 
     let esAdmin = false;
     let perfilActual = null;
@@ -339,7 +354,7 @@
 
         const { data } = await supabase
           .from('cliente_detalle')
-          .select('correo, direccion, tipo_persona, tipo_identificacion, numero_identificacion')
+          .select('correo, direccion, tipo_persona, tipo_identificacion, numero_identificacion, departamento, ciudad')
           .eq('id', perfilActual.id)
           .single();
 
@@ -352,7 +367,16 @@
           }
           if (data.tipo_identificacion) document.getElementById('mcTipoIdentificacion').value = data.tipo_identificacion;
           document.getElementById('mcNumeroIdentificacion').value = data.numero_identificacion || '';
+
+          poblarDepartamentos(document.getElementById('mcDepartamento'), data.departamento || '');
+          if (data.departamento) poblarCiudades(document.getElementById('mcCiudad'), data.departamento, data.ciudad || '');
+        } else {
+          poblarDepartamentos(document.getElementById('mcDepartamento'), '');
         }
+
+        document.getElementById('mcDepartamento').addEventListener('change', (e) => {
+          poblarCiudades(document.getElementById('mcCiudad'), e.target.value);
+        });
       }
     }
 
@@ -378,11 +402,14 @@
           const tipoPersona = document.getElementById('mcTipoPersona').value;
           const tipoIdentificacion = document.getElementById('mcTipoIdentificacion').value;
           const numeroIdentificacion = document.getElementById('mcNumeroIdentificacion').value.trim();
+          const departamento = document.getElementById('mcDepartamento').value;
+          const ciudad = document.getElementById('mcCiudad').value;
 
           const { error } = await supabase.rpc('completar_perfil_cliente', {
             p_full_name: fullName, p_phone: phone, p_direccion: direccion, p_correo: correo,
             p_tipo_persona: tipoPersona, p_tipo_identificacion: tipoIdentificacion,
-            p_numero_identificacion: numeroIdentificacion
+            p_numero_identificacion: numeroIdentificacion,
+            p_departamento: departamento || null, p_ciudad: ciudad || null
           });
           if (error) throw new Error(error.message);
         }
@@ -405,20 +432,26 @@
       document.getElementById('fDescripcion').value = config.descripcion || '';
       document.getElementById('fCodigoPais').value = config.codigo_pais || '+57';
       document.getElementById('fTelefono').value = config.telefono || '';
-      document.getElementById('fCiudad').value = config.ciudad || '';
       document.getElementById('fDireccion').value = config.direccion || '';
       document.getElementById('fCorreo').value = config.correo || '';
       document.getElementById('fPaginaWeb').value = config.pagina_web || '';
       document.getElementById('fEtiquetaCliente').value = config.etiqueta_cliente || 'Acudiente';
       document.getElementById('fEtiquetaClientePlural').value = config.etiqueta_cliente_plural || 'Acudientes';
       document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
+
+      poblarDepartamentos(document.getElementById('fDepartamento'), config.departamento || '');
+      if (config.departamento) poblarCiudades(document.getElementById('fCiudad'), config.departamento, config.ciudad || '');
+      document.getElementById('fDepartamento').addEventListener('change', (e) => {
+        poblarCiudades(document.getElementById('fCiudad'), e.target.value);
+      });
     }
 
     function rellenarSoloLectura(){
       if (!config) return;
       document.getElementById('roNombre').textContent = config.nombre_negocio || 'Talento Canes';
       document.getElementById('roDescripcion').textContent = config.descripcion || 'Sin descripción registrada.';
-      const contacto = [config.telefono ? `${config.codigo_pais || ''} ${config.telefono}` : null, config.correo, config.direccion ? `${config.direccion}${config.ciudad ? ', ' + config.ciudad : ''}` : null]
+      const ubicacion = [config.direccion, config.ciudad, config.departamento].filter(Boolean).join(', ');
+      const contacto = [config.telefono ? `${config.codigo_pais || ''} ${config.telefono}` : null, config.correo, ubicacion || null]
         .filter(Boolean).join(' · ');
       document.getElementById('roContacto').textContent = contacto || '—';
       document.getElementById('roWeb').textContent = config.pagina_web || '—';
@@ -483,7 +516,8 @@
           descripcion: document.getElementById('fDescripcion').value.trim(),
           codigo_pais: document.getElementById('fCodigoPais').value,
           telefono: document.getElementById('fTelefono').value.trim(),
-          ciudad: document.getElementById('fCiudad').value.trim(),
+          departamento: document.getElementById('fDepartamento').value || null,
+          ciudad: document.getElementById('fCiudad').value || null,
           direccion: document.getElementById('fDireccion').value.trim(),
           correo: document.getElementById('fCorreo').value.trim(),
           pagina_web: document.getElementById('fPaginaWeb').value.trim(),
