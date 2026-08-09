@@ -30,8 +30,8 @@
   .cell-dim{ color:var(--mist-dim); }
 
   .pet-thumb-row{ display:flex; align-items:center; gap:10px; }
-  .pet-thumb{ width:34px; height:34px; border-radius:9px; object-fit:cover; background:var(--navy-panel-2); flex-shrink:0; }
-  .pet-thumb-empty{ width:34px; height:34px; border-radius:9px; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .pet-thumb{ width:34px; height:34px; border-radius:50%; object-fit:cover; background:var(--navy-panel-2); flex-shrink:0; }
+  .pet-thumb-empty{ width:34px; height:34px; border-radius:50%; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .pet-thumb-empty svg{ width:16px; height:16px; color:var(--mist-dim); }
 
   .badge-sexo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
@@ -50,6 +50,16 @@
   .btn-icon{ display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
   .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
   .btn-icon.danger:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+
+  .pending-section{ margin-bottom:24px; }
+  .pending-list{ display:flex; flex-direction:column; gap:10px; }
+  .pending-card{ display:flex; align-items:center; gap:14px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:14px; padding:12px 16px; flex-wrap:wrap; }
+  .pending-card .info{ flex:1; min-width:180px; display:flex; align-items:center; gap:12px; }
+  .pending-card .info .name{ font-weight:600; font-size:14px; }
+  .pending-card .info .meta{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mist-dim); margin-top:2px; }
+  .pending-actions{ display:flex; gap:8px; }
+  .btn-approve{ border:none; border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
+  .btn-deny{ border:1px solid rgba(255,107,107,0.35); border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer; background:transparent; color:var(--danger); }
 
   /* Modal */
   .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.75); z-index:200; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
@@ -73,8 +83,8 @@
   .toggle-pill.selected{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); }
 
   .photo-upload{ display:flex; align-items:center; gap:14px; }
-  .photo-preview{ width:64px; height:64px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--line); object-fit:cover; flex-shrink:0; }
-  .photo-preview-empty{ width:64px; height:64px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-preview{ width:64px; height:64px; border-radius:50%; background:var(--navy-panel-2); border:1px solid var(--line); object-fit:cover; flex-shrink:0; }
+  .photo-preview-empty{ width:64px; height:64px; border-radius:50%; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .photo-preview-empty svg{ width:24px; height:24px; color:var(--mist-dim); }
   .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; }
 
@@ -128,6 +138,17 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         Añadir alumno
       </button>
+    </div>
+
+    <div class="pending-section" id="pendingSection" style="display:none;">
+      <div class="section-title" style="display:flex; align-items:center; gap:8px; color:var(--mist-dim); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:12px;">
+        Por aceptar
+        <span style="display:inline-flex; align-items:center; gap:5px; font-size:9.5px; color:#7bd88f; text-transform:none; letter-spacing:0.3px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#7bd88f; box-shadow:0 0 6px #7bd88f;"></span>
+          En vivo
+        </span>
+      </div>
+      <div class="pending-list" id="pendingList"></div>
     </div>
 
     <div class="toolbar">
@@ -285,6 +306,7 @@
     import { initLayout } from './layout.js?v=3';
     import { supabase } from './supabaseClient.js?v=3';
     import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=3';
+    import { abrirRecortador } from './photocrop.js?v=3';
 
     let alumnos = [];
     let acudientes = [];
@@ -300,14 +322,70 @@
       if (!profile) return;
       await cargarAcudientes();
       await cargarAlumnos();
+      await cargarPendientes();
       suscribirEnVivo();
     })();
 
     function suscribirEnVivo(){
       supabase
         .channel('alumnos-cambios')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'alumnos' }, cargarAlumnos)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'alumnos' }, () => {
+          cargarAlumnos();
+          cargarPendientes();
+        })
         .subscribe();
+    }
+
+    async function cargarPendientes(){
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('id, nombre, raza, created_at, profiles!alumnos_acudiente_id_fkey(full_name, username)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+
+      const section = document.getElementById('pendingSection');
+      const list = document.getElementById('pendingList');
+
+      if (error || !data || data.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      list.innerHTML = data.map(m => `
+        <div class="pending-card">
+          <div class="info">
+            <div>
+              <div class="name">${m.nombre}</div>
+              <div class="meta">${m.raza || 'Raza sin definir'} · Registrado por ${m.profiles?.full_name || m.profiles?.username || 'un acudiente'}</div>
+            </div>
+          </div>
+          <div class="pending-actions">
+            <button class="btn-approve" data-action="approve" data-id="${m.id}">Aceptar</button>
+            <button class="btn-deny" data-action="deny" data-id="${m.id}">Denegar</button>
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('[data-action="approve"]').forEach(btn => {
+        btn.addEventListener('click', () => resolverPendiente(btn.dataset.id, 'approve'));
+      });
+      list.querySelectorAll('[data-action="deny"]').forEach(btn => {
+        btn.addEventListener('click', () => resolverPendiente(btn.dataset.id, 'deny'));
+      });
+    }
+
+    async function resolverPendiente(id, accion){
+      if (accion === 'approve') {
+        const { error } = await supabase.from('alumnos').update({ status: 'approved' }).eq('id', id);
+        if (error) alert('No se pudo aceptar: ' + error.message);
+      } else {
+        if (!confirm('¿Denegar este alumno? Se eliminará por completo y no quedará registro.')) return;
+        const { error } = await supabase.from('alumnos').delete().eq('id', id);
+        if (error) alert('No se pudo denegar: ' + error.message);
+      }
+      await cargarPendientes();
+      await cargarAlumnos();
     }
 
     async function cargarAcudientes(){
@@ -333,6 +411,7 @@
       const { data, error } = await supabase
         .from('alumnos')
         .select('*, profiles!alumnos_acudiente_id_fkey(full_name, username)')
+        .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -433,10 +512,13 @@
     // ---------------- Archivos ----------------
     document.getElementById('btnFoto').addEventListener('click', () => document.getElementById('fileFoto').click());
     document.getElementById('fileFoto').addEventListener('change', (e) => {
-      archivoFoto = e.target.files[0] || null;
-      if (archivoFoto) {
-        document.getElementById('photoPreviewWrap').innerHTML = `<img src="${URL.createObjectURL(archivoFoto)}" class="photo-preview" alt="Vista previa">`;
-      }
+      const original = e.target.files[0];
+      if (!original) return;
+      abrirRecortador(original, (blobRecortado) => {
+        archivoFoto = new File([blobRecortado], 'foto.jpg', { type: 'image/jpeg' });
+        document.getElementById('photoPreviewWrap').innerHTML = `<img src="${URL.createObjectURL(blobRecortado)}" class="photo-preview" alt="Vista previa">`;
+      });
+      e.target.value = '';
     });
     document.getElementById('btnCarne').addEventListener('click', () => document.getElementById('fileCarne').click());
     document.getElementById('fileCarne').addEventListener('change', (e) => {
