@@ -411,6 +411,8 @@
       const profile = await initLayout({ activeKey: 'servicios' });
       if (!profile) return;
 
+      alert('DIAGNÓSTICO TEMPORAL\n\nTu ID de sesión es:\n' + profile.id + '\n\nTu rol es: ' + profile.role);
+
       if (profile.role === 'admin') {
         puedeEditar = true;
       } else if (profile.role === 'trabajador') {
