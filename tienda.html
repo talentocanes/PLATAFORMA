@@ -25,6 +25,13 @@
   .empty-note{ color:var(--mist-dim); font-size:13px; padding:40px; text-align:center; background:var(--navy-panel); border:1px dashed var(--line); border-radius:var(--radius); }
 
   .items-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:28px 20px; }
+  @media (max-width:680px){
+    .items-grid{ grid-template-columns:1fr 1fr; gap:20px 12px; }
+    .item-price{ font-size:13.5px; }
+    .item-name{ font-size:12px; }
+    .item-cat{ font-size:10.5px; }
+    .item-actions{ flex-direction:column; gap:5px; }
+  }
   .item-card.draggable{ cursor:grab; }
   .item-card.dragging{ opacity:.4; }
   .item-card.drag-over .item-photo{ box-shadow:0 0 0 2px var(--blue-bright); }
