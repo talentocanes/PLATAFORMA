@@ -67,6 +67,7 @@
   .modal .modal-lead{ color:var(--mist-dim); font-size:12.5px; margin-bottom:18px; }
 
   .tipo-choice-row{ display:flex; gap:12px; margin-bottom:6px; }
+  .tipo-choice-grid{ display:grid; grid-template-columns:1fr 1fr; }
   .tipo-choice{ flex:1; padding:22px 14px; border-radius:14px; border:1px solid var(--line); background:var(--navy-panel-2); text-align:center; cursor:pointer; }
   .tipo-choice:hover{ border-color:var(--line-strong); }
   .tipo-choice svg{ width:26px; height:26px; margin-bottom:8px; color:var(--blue-glow); }
@@ -148,6 +149,25 @@
   .detail-plan-pill.active{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 14%, transparent); font-weight:600; }
   .detail-desc-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:8px; }
   .detail-desc{ font-size:13.5px; line-height:1.75; color:var(--mist); white-space:pre-wrap; }
+
+  .hotel-calendar{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px; }
+  .hotel-cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .hotel-cal-head .m{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; text-transform:capitalize; }
+  .hotel-cal-nav{ display:flex; gap:4px; }
+  .hotel-cal-nav button{ width:26px; height:26px; border-radius:8px; border:1px solid var(--line); background:var(--ink); color:var(--mist); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .hotel-cal-nav button:hover{ border-color:var(--line-strong); color:var(--white); }
+  .hotel-cal-nav button:disabled{ opacity:.3; cursor:default; }
+  .hotel-cal-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:3px; }
+  .hotel-cal-dow{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--mist-dim); text-align:center; padding-bottom:4px; }
+  .hotel-cal-day{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px; color:var(--mist); cursor:pointer; border:none; background:none; }
+  .hotel-cal-day:hover:not(.disabled){ background:color-mix(in srgb, var(--blue-bright) 12%, transparent); color:var(--white); }
+  .hotel-cal-day.disabled{ opacity:.25; pointer-events:none; }
+  .hotel-cal-day.in-range{ background:color-mix(in srgb, var(--blue-bright) 16%, transparent); border-radius:0; }
+  .hotel-cal-day.range-start{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; border-radius:8px 0 0 8px; }
+  .hotel-cal-day.range-end{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; border-radius:0 8px 8px 0; }
+  .hotel-cal-day.range-start.range-end{ border-radius:8px; }
+  .hotel-total-box{ padding:12px 14px; border-radius:12px; background:var(--navy-panel-2); border:1px solid var(--line); font-size:12.5px; color:var(--mist); line-height:1.6; }
+  .hotel-total-box b{ color:var(--white); font-family:'Space Grotesk',sans-serif; font-size:15px; }
 </style>
 </head>
 <body>
@@ -220,10 +240,10 @@
 
   <!-- Modal: elegir tipo de servicio -->
   <div class="modal-overlay" id="tipoServicioOverlay">
-    <div class="modal modal-sm">
+    <div class="modal modal-sm" style="max-width:480px;">
       <h2>¿Qué tipo de servicio?</h2>
       <p class="modal-lead">Elige una opción para continuar.</p>
-      <div class="tipo-choice-row">
+      <div class="tipo-choice-row tipo-choice-grid">
         <div class="tipo-choice" data-tiposervicio="Planes de colegio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
           <div class="t">Planes de colegio</div>
@@ -231,6 +251,10 @@
         <div class="tipo-choice" data-tiposervicio="Plan por Tickets">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8.5a2.5 2.5 0 0 0 0 5V17a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3.5Z"/><path d="M11 5v14" stroke-dasharray="2.4 2.4"/></svg>
           <div class="t">Plan por Tickets</div>
+        </div>
+        <div class="tipo-choice" data-tiposervicio="Hotel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V7a2 2 0 0 1 2-2h6v16"/><path d="M11 21V9h8a2 2 0 0 1 2 2v10"/><path d="M7 9h.01M7 13h.01"/><path d="M3 21h18"/></svg>
+          <div class="t">Hotel</div>
         </div>
         <div class="tipo-choice" data-tiposervicio="Otros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
@@ -318,7 +342,7 @@
 
       <div class="grid-2">
         <div class="field">
-          <label>Precio ($)</label>
+          <label id="fPrecioLabel">Precio ($)</label>
           <input type="text" inputmode="numeric" id="fPrecio" placeholder="Ej: 400.000" autocomplete="off">
         </div>
         <div class="field" id="fStockWrap" style="display:none;">
@@ -378,6 +402,11 @@
             <div class="detail-plans-label">Elige un plan</div>
             <div class="detail-plans-row" id="detailPlansRow"></div>
           </div>
+          <div id="detailHotelBlock" style="display:none;">
+            <div class="detail-plans-label">Elige tus fechas</div>
+            <div class="hotel-calendar" id="hotelCalendar"></div>
+            <div class="hotel-total-box" id="hotelTotalBox"></div>
+          </div>
           <div class="detail-price" id="detailPrice">—</div>
           <div class="detail-stock" id="detailStock"></div>
           <div class="detail-desc-label">Descripción</div>
@@ -406,7 +435,7 @@
     function quitarFormatoMiles(valor){
       return String(valor || '').replace(/\D/g, '');
     }
-    const TIPOS_SERVICIO = ['Planes de colegio', 'Plan por Tickets', 'Otros'];
+    const TIPOS_SERVICIO = ['Planes de colegio', 'Plan por Tickets', 'Hotel', 'Otros'];
 
     let items = [];
     let puedeEditar = false;
@@ -639,8 +668,15 @@
         opciones.map(o => `<option value="${o}">${o}</option>`).join('');
     }
 
+    function actualizarEtiquetaPrecio(){
+      const esHotel = tipoActual === 'servicio' && document.getElementById('fCategoria').value === 'Hotel';
+      document.getElementById('fPrecioLabel').textContent = esHotel ? 'Valor por noche ($)' : 'Precio ($)';
+      document.getElementById('fPrecio').placeholder = esHotel ? 'Ej: 60.000' : 'Ej: 400.000';
+    }
+
     document.getElementById('fCategoria').addEventListener('change', (e) => {
       document.getElementById('fCategoriaOtraWrap').style.display = e.target.value === 'Otros' ? 'block' : 'none';
+      actualizarEtiquetaPrecio();
     });
 
     document.getElementById('fPrecio').addEventListener('input', (e) => {
@@ -653,6 +689,7 @@
       document.getElementById('fCategoriaOtra').value = '';
       document.getElementById('fCategoriaOtraWrap').style.display = 'none';
       document.getElementById('fPrecio').value = '';
+      document.getElementById('fPrecioLabel').textContent = 'Precio ($)';
       document.getElementById('fStock').value = '';
       document.getElementById('fDescripcion').value = '';
       document.getElementById('fActivo').checked = true;
@@ -672,6 +709,7 @@
         document.getElementById('fCategoria').value = tipoServicioPreseleccionado;
         if (tipoServicioPreseleccionado === 'Otros') document.getElementById('fCategoriaOtraWrap').style.display = 'block';
       }
+      actualizarEtiquetaPrecio();
 
       formMsg.style.display = 'none';
       formOverlay.classList.add('active');
@@ -719,6 +757,7 @@
       document.getElementById('fStock').value = item.stock ?? '';
       document.getElementById('fDescripcion').value = item.descripcion || '';
       document.getElementById('fActivo').checked = !!item.activo;
+      actualizarEtiquetaPrecio();
 
       fotosCombinadas = (item.fotos || []).map(u => ({ fid: siguienteFotoId++, tipo: 'url', valor: u }));
       pintarFotosGrid();
@@ -1152,6 +1191,99 @@
     // ---------------- Detalle (vista estilo producto) ----------------
     const detailOverlay = document.getElementById('detailOverlay');
 
+    // ---------------- Calendario de Hotel ----------------
+    const MESES_CAL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const DOW_CAL = ['L','M','X','J','V','S','D'];
+
+    function renderCalendarioHotel(valorNoche){
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      let mesVista = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      let checkIn = null;
+      let checkOut = null;
+
+      function mismodia(a, b){ return a && b && a.getTime() === b.getTime(); }
+
+      function pintar(){
+        const cal = document.getElementById('hotelCalendar');
+        const primerDia = new Date(mesVista.getFullYear(), mesVista.getMonth(), 1);
+        const offset = (primerDia.getDay() + 6) % 7;
+        const diasEnMes = new Date(mesVista.getFullYear(), mesVista.getMonth() + 1, 0).getDate();
+        const esMesActual = mesVista.getFullYear() === hoy.getFullYear() && mesVista.getMonth() === hoy.getMonth();
+
+        let html = `
+          <div class="hotel-cal-head">
+            <div class="m">${MESES_CAL[mesVista.getMonth()]} ${mesVista.getFullYear()}</div>
+            <div class="hotel-cal-nav">
+              <button type="button" data-nav="prev" ${esMesActual ? 'disabled' : ''}>‹</button>
+              <button type="button" data-nav="next">›</button>
+            </div>
+          </div>
+          <div class="hotel-cal-grid">
+            ${DOW_CAL.map(d => `<div class="hotel-cal-dow">${d}</div>`).join('')}
+        `;
+
+        for (let i = 0; i < offset; i++) html += `<div></div>`;
+
+        for (let d = 1; d <= diasEnMes; d++) {
+          const fecha = new Date(mesVista.getFullYear(), mesVista.getMonth(), d);
+          const pasado = fecha < hoy;
+          let clases = 'hotel-cal-day';
+          if (pasado) clases += ' disabled';
+          if (mismodia(fecha, checkIn)) clases += ' range-start';
+          if (mismodia(fecha, checkOut)) clases += ' range-end';
+          if (checkIn && checkOut && fecha > checkIn && fecha < checkOut) clases += ' in-range';
+          html += `<button type="button" class="${clases}" data-fecha="${fecha.getTime()}">${d}</button>`;
+        }
+        html += '</div>';
+        cal.innerHTML = html;
+
+        cal.querySelector('[data-nav="prev"]').addEventListener('click', () => {
+          mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() - 1, 1);
+          pintar();
+        });
+        cal.querySelector('[data-nav="next"]').addEventListener('click', () => {
+          mesVista = new Date(mesVista.getFullYear(), mesVista.getMonth() + 1, 1);
+          pintar();
+        });
+        cal.querySelectorAll('.hotel-cal-day:not(.disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const fecha = new Date(parseInt(btn.dataset.fecha, 10));
+            if (!checkIn || (checkIn && checkOut)) {
+              checkIn = fecha; checkOut = null;
+            } else if (fecha > checkIn) {
+              checkOut = fecha;
+            } else {
+              checkIn = fecha; checkOut = null;
+            }
+            pintar();
+            pintarTotal();
+          });
+        });
+      }
+
+      function pintarTotal(){
+        const box = document.getElementById('hotelTotalBox');
+        if (!checkIn) {
+          box.innerHTML = 'Elige la fecha de entrada.';
+          return;
+        }
+        if (!checkOut) {
+          box.innerHTML = `Entrada: <b>${checkIn.getDate()} de ${MESES_CAL[checkIn.getMonth()]}</b><br>Ahora elige la fecha de salida.`;
+          return;
+        }
+        const noches = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        const total = noches * valorNoche;
+        box.innerHTML = `
+          ${checkIn.getDate()} de ${MESES_CAL[checkIn.getMonth()]} → ${checkOut.getDate()} de ${MESES_CAL[checkOut.getMonth()]}
+          (${noches} ${noches === 1 ? 'noche' : 'noches'})<br>
+          Total: <b>$ ${total.toLocaleString('es-CO')}</b>
+        `;
+      }
+
+      pintar();
+      pintarTotal();
+    }
+
     async function abrirDetalle(id){
       const item = items.find(i => i.id === id);
       if (!item) return;
@@ -1164,8 +1296,13 @@
       document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
 
       const esPlanAgrupado = item.tipo_item === 'servicio' && ['Planes de colegio', 'Plan por Tickets'].includes(item.categoria);
+      const esHotel = item.tipo_item === 'servicio' && item.categoria === 'Hotel';
       const plansBlock = document.getElementById('detailPlansBlock');
+      const hotelBlock = document.getElementById('detailHotelBlock');
       const priceEl = document.getElementById('detailPrice');
+
+      plansBlock.style.display = 'none';
+      hotelBlock.style.display = 'none';
 
       if (esPlanAgrupado) {
         const { data: planes, error } = await supabase
@@ -1197,11 +1334,13 @@
 
           pintarPrecioPlan();
         } else {
-          plansBlock.style.display = 'none';
           priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
         }
+      } else if (esHotel) {
+        hotelBlock.style.display = 'block';
+        priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO') + ' / noche';
+        renderCalendarioHotel(item.precio);
       } else {
-        plansBlock.style.display = 'none';
         priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
       }
 
