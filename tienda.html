@@ -36,6 +36,27 @@
   .item-card.dragging{ opacity:.4; }
   .item-card.drag-over .item-photo{ box-shadow:0 0 0 2px var(--blue-bright); }
   .drag-hint{ font-size:11.5px; color:var(--mist-dim); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+
+  .pending-compras-section{ margin-bottom:24px; }
+  .pending-compras-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .section-title-live{ display:flex; align-items:center; gap:9px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.2px; text-transform:uppercase; color:var(--mist-dim); }
+  .live-dot{ display:inline-flex; align-items:center; gap:5px; font-size:9.5px; color:#7bd88f; text-transform:none; letter-spacing:.3px; }
+  .live-dot .dot{ width:6px; height:6px; border-radius:50%; background:#7bd88f; box-shadow:0 0 6px #7bd88f; }
+  .pending-compras-list{ display:flex; flex-direction:column; gap:10px; }
+  .compra-card{ display:flex; align-items:center; gap:16px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:14px; padding:14px 16px; flex-wrap:wrap; }
+  .compra-card .info{ flex:1; min-width:220px; }
+  .compra-card .info .row1{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px; }
+  .compra-card .info .item-nombre{ font-weight:700; font-size:14px; }
+  .compra-card .info .tipo-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; padding:2px 7px; border-radius:20px; letter-spacing:.4px; }
+  .compra-card .info .tipo-tag.producto{ color:var(--blue-glow); border:1px solid var(--line-strong); }
+  .compra-card .info .tipo-tag.servicio{ color:#7bd88f; border:1px solid rgba(123,216,143,0.3); }
+  .compra-card .info .meta{ font-size:12px; color:var(--mist-dim); line-height:1.6; }
+  .compra-card .precio{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--white); white-space:nowrap; }
+  .compra-actions{ display:flex; gap:8px; }
+  .btn-aprobar{ border:none; border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); white-space:nowrap; }
+  .btn-denegar{ border:1px solid rgba(255,107,107,0.35); border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; background:transparent; color:var(--danger); white-space:nowrap; }
+  .compra-card.denegada{ opacity:.75; }
+  .compra-card .denegada-tag{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 10px; border-radius:20px; background:rgba(255,107,107,0.12); color:var(--danger); border:1px solid rgba(255,107,107,0.3); white-space:nowrap; }
   .drag-hint svg{ width:14px; height:14px; }
   .item-card{ background:none; border:none; cursor:pointer; display:flex; flex-direction:column; }
   .item-photo{ width:100%; aspect-ratio:1; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; border-radius:16px; transition:box-shadow .2s ease; }
@@ -226,6 +247,25 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         Crear
       </button>
+    </div>
+
+    <div class="pending-compras-section" id="pendingComprasSection" style="display:none;">
+      <div class="pending-compras-head">
+        <div class="section-title-live">
+          Solicitudes de compra
+          <span class="live-dot"><span class="dot"></span>En vivo</span>
+        </div>
+        <button type="button" class="btn-secondary" id="btnVerDenegadas" style="display:none;">Ver denegadas</button>
+      </div>
+      <div class="pending-compras-list" id="pendingComprasList"></div>
+    </div>
+
+    <div class="pending-compras-section" id="denegadasSection" style="display:none;">
+      <div class="pending-compras-head">
+        <div class="section-title-live">Denegadas</div>
+        <button type="button" class="btn-secondary" id="btnOcultarDenegadas">Ocultar</button>
+      </div>
+      <div class="pending-compras-list" id="denegadasList"></div>
     </div>
 
     <div class="toolbar">
@@ -527,7 +567,15 @@
         misMascotas = data || [];
       }
 
-      if (puedeEditar) document.getElementById('btnAdd').style.display = 'flex';
+      if (puedeEditar) {
+        document.getElementById('btnAdd').style.display = 'flex';
+        document.getElementById('pendingComprasSection').style.display = 'block';
+        if (perfilActual.role === 'admin') {
+          document.getElementById('btnVerDenegadas').style.display = 'inline-flex';
+        }
+        await cargarSolicitudesCompra();
+        suscribirComprasEnVivo();
+      }
 
       await cargarItems();
       suscribirEnVivo();
@@ -539,6 +587,122 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tienda_items' }, cargarItems)
         .subscribe();
     }
+
+    function suscribirComprasEnVivo(){
+      supabase
+        .channel('compras-cambios')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => {
+          cargarSolicitudesCompra();
+          if (document.getElementById('denegadasSection').style.display !== 'none') cargarDenegadas();
+        })
+        .subscribe();
+    }
+
+    function formatearInfoCompra(c){
+      const partes = [];
+      if (c.nombre_alumno) partes.push(`Para: ${c.nombre_alumno}`);
+      if (c.cantidad && c.cantidad > 1) partes.push(`Cantidad: ${c.cantidad}`);
+      if (c.fecha_checkin && c.fecha_checkout) partes.push(`${c.fecha_checkin} → ${c.fecha_checkout} (${c.noches} días)`);
+      partes.push(`Solicitado por: ${c.nombre_cliente || 'Acudiente'}`);
+      return partes.join(' · ');
+    }
+
+    async function cargarSolicitudesCompra(){
+      const cont = document.getElementById('pendingComprasList');
+      const { data, error } = await supabase
+        .from('compras')
+        .select('*')
+        .eq('estado_aprobacion', 'pendiente')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error al cargar solicitudes de compra:', error);
+        cont.innerHTML = `<div class="empty-note">No se pudieron cargar las solicitudes.</div>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        cont.innerHTML = `<div class="empty-note">No hay solicitudes de compra pendientes.</div>`;
+        return;
+      }
+
+      cont.innerHTML = data.map(c => `
+        <div class="compra-card">
+          <div class="info">
+            <div class="row1">
+              <span class="item-nombre">${c.nombre_item}</span>
+              <span class="tipo-tag ${c.tipo_item}">${c.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
+            </div>
+            <div class="meta">${formatearInfoCompra(c)}</div>
+          </div>
+          <div class="precio">$ ${Number(c.precio_total).toLocaleString('es-CO')}</div>
+          <div class="compra-actions">
+            <button class="btn-aprobar" data-action="aprobar" data-id="${c.id}">Aceptar</button>
+            <button class="btn-denegar" data-action="denegar" data-id="${c.id}">Denegar</button>
+          </div>
+        </div>
+      `).join('');
+
+      cont.querySelectorAll('[data-action="aprobar"]').forEach(btn => {
+        btn.addEventListener('click', () => resolverCompra(btn.dataset.id, 'aprobado'));
+      });
+      cont.querySelectorAll('[data-action="denegar"]').forEach(btn => {
+        btn.addEventListener('click', () => resolverCompra(btn.dataset.id, 'denegado'));
+      });
+    }
+
+    async function resolverCompra(id, estado){
+      if (estado === 'denegado' && !confirm('¿Denegar esta solicitud de compra?')) return;
+
+      const { error } = await supabase.from('compras').update({ estado_aprobacion: estado }).eq('id', id);
+      if (error) {
+        alert('No se pudo actualizar: ' + error.message);
+        return;
+      }
+      await cargarSolicitudesCompra();
+    }
+
+    async function cargarDenegadas(){
+      const cont = document.getElementById('denegadasList');
+      const { data, error } = await supabase
+        .from('compras')
+        .select('*')
+        .eq('estado_aprobacion', 'denegado')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        cont.innerHTML = `<div class="empty-note">No se pudieron cargar las denegadas.</div>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        cont.innerHTML = `<div class="empty-note">No hay solicitudes denegadas.</div>`;
+        return;
+      }
+
+      cont.innerHTML = data.map(c => `
+        <div class="compra-card denegada">
+          <div class="info">
+            <div class="row1">
+              <span class="item-nombre">${c.nombre_item}</span>
+              <span class="tipo-tag ${c.tipo_item}">${c.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
+            </div>
+            <div class="meta">${formatearInfoCompra(c)}</div>
+          </div>
+          <div class="precio">$ ${Number(c.precio_total).toLocaleString('es-CO')}</div>
+          <span class="denegada-tag">Denegada</span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('btnVerDenegadas').addEventListener('click', async () => {
+      document.getElementById('denegadasSection').style.display = 'block';
+      document.getElementById('btnVerDenegadas').style.display = 'none';
+      await cargarDenegadas();
+    });
+    document.getElementById('btnOcultarDenegadas').addEventListener('click', () => {
+      document.getElementById('denegadasSection').style.display = 'none';
+      document.getElementById('btnVerDenegadas').style.display = 'inline-flex';
+    });
 
     async function cargarItems(){
       const grid = document.getElementById('itemsGrid');
@@ -1592,6 +1756,7 @@
 
       const base = {
         cliente_id: perfilActual.id,
+        nombre_cliente: perfilActual.full_name || perfilActual.username,
         tienda_item_id: item.id,
         tipo_item: item.tipo_item,
         categoria_item: item.categoria || null
@@ -1634,7 +1799,8 @@
         // mismo momento, pero como solicitudes independientes (igual
         // que "diversificar" en la Tienda).
         filas = [...mascotasSeleccionadas].map(alumnoId => ({
-          ...base, ...datosItem, alumno_id: alumnoId
+          ...base, ...datosItem, alumno_id: alumnoId,
+          nombre_alumno: misMascotas.find(m => m.id === alumnoId)?.nombre || null
         }));
       } else {
         const cantidad = parseInt(document.getElementById('detailCantidad').value, 10) || 1;
