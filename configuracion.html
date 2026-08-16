@@ -44,6 +44,17 @@
   .file-row .file-name{ flex:1; font-size:12.5px; color:var(--mist-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .file-row input[type="file"]{ display:none; }
 
+  .plan-labels{ display:grid; gap:8px; margin-bottom:6px; font-size:10.5px; color:var(--mist-dim); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.4px; }
+  @media (max-width:560px){ .plan-labels{ display:none; } }
+  .plan-row{ display:grid; grid-template-columns:1fr 1.6fr 32px; gap:8px; align-items:center; margin-bottom:8px; }
+  @media (max-width:560px){ .plan-row{ grid-template-columns:1fr; } }
+  .plan-row input{ width:100%; padding:9px 10px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; outline:none; }
+  .plan-row input:focus{ border-color:var(--blue-bright); }
+  .plan-row .remove-plan{ width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .plan-row .remove-plan:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+  .plan-row .remove-plan svg{ width:14px; height:14px; }
+  .btn-add-plan{ padding:9px 14px; border-radius:9px; border:1px dashed var(--line-strong); background:none; color:var(--blue-glow); font-size:12.5px; font-weight:600; cursor:pointer; width:100%; margin-top:4px; }
+
   @media (max-width: 700px){ .grid-2{ grid-template-columns:1fr; } .grid-3{ grid-template-columns:1fr; } }
 
   /* Selector de paletas */
@@ -189,25 +200,12 @@
 
       <div class="card">
         <h2>Información de pagos</h2>
-        <p style="color:var(--mist-dim); font-size:12.5px; margin:-12px 0 16px;">Se le muestra al Acudiente al momento de pagar, para que sepa a dónde transferir. Deja en blanco lo que no ofrezcas.</p>
-        <div class="grid-2">
-          <div class="field">
-            <label>Nequi</label>
-            <input type="text" id="fPagoNequi" placeholder="Número de celular" autocomplete="off">
-          </div>
-          <div class="field">
-            <label>Bre-B</label>
-            <input type="text" id="fPagoBreB" placeholder="Llave o número" autocomplete="off">
-          </div>
+        <p style="color:var(--mist-dim); font-size:12.5px; margin:-12px 0 16px;">Se le muestra al Acudiente al momento de pagar, para que sepa a dónde transferir. Añade tantos como ofrezcas.</p>
+        <div class="plan-labels" style="grid-template-columns:1fr 1.6fr 32px;">
+          <span>Método</span><span>Datos para transferir</span><span></span>
         </div>
-        <div class="field">
-          <label>Cuenta bancaria</label>
-          <textarea id="fPagoCuentaBancaria" placeholder="Ej: Bancolombia, ahorros, número de cuenta, a nombre de..."></textarea>
-        </div>
-        <div class="field">
-          <label>Otros métodos</label>
-          <textarea id="fPagoOtros" placeholder="Cualquier otro método de pago que quieras informar"></textarea>
-        </div>
+        <div id="metodosPagoLista"></div>
+        <button type="button" class="btn-add-plan" id="btnAddMetodoPago">+ Añadir método de pago</button>
       </div>
 
       <div class="card">
@@ -310,6 +308,43 @@
     let config = null;
     let paletaSeleccionada = 'azul-original';
     let archivoLogo = null;
+    let metodosPago = [];
+    let siguienteMetodoId = 1;
+
+    function pintarMetodosPago(){
+      const cont = document.getElementById('metodosPagoLista');
+      cont.innerHTML = metodosPago.map(m => `
+        <div class="plan-row" data-fila="${m.filaId}">
+          <input type="text" placeholder="Ej: Bancolombia" data-campo="nombre" value="${(m.nombre || '').replace(/"/g,'&quot;')}">
+          <input type="text" placeholder="Ej: Ahorros 123-456789-00, a nombre de..." data-campo="detalle" value="${(m.detalle || '').replace(/"/g,'&quot;')}">
+          <button type="button" class="remove-plan" data-fila-quitar="${m.filaId}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join('');
+
+      cont.querySelectorAll('.plan-row').forEach(row => {
+        const filaId = parseInt(row.dataset.fila, 10);
+        row.querySelectorAll('[data-campo]').forEach(input => {
+          input.addEventListener('input', () => {
+            const fila = metodosPago.find(m => m.filaId === filaId);
+            if (fila) fila[input.dataset.campo] = input.value;
+          });
+        });
+      });
+      cont.querySelectorAll('[data-fila-quitar]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const filaId = parseInt(btn.dataset.filaQuitar, 10);
+          metodosPago = metodosPago.filter(m => m.filaId !== filaId);
+          pintarMetodosPago();
+        });
+      });
+    }
+
+    document.getElementById('btnAddMetodoPago').addEventListener('click', () => {
+      metodosPago.push({ filaId: siguienteMetodoId++, nombre: '', detalle: '' });
+      pintarMetodosPago();
+    });
     let archivoContrato = null;
 
     (async () => {
@@ -460,10 +495,8 @@
       document.getElementById('fPaginaWeb').value = config.pagina_web || '';
       document.getElementById('fEtiquetaCliente').value = config.etiqueta_cliente || 'Acudiente';
       document.getElementById('fEtiquetaClientePlural').value = config.etiqueta_cliente_plural || 'Acudientes';
-      document.getElementById('fPagoNequi').value = config.pago_nequi || '';
-      document.getElementById('fPagoBreB').value = config.pago_bre_b || '';
-      document.getElementById('fPagoCuentaBancaria').value = config.pago_cuenta_bancaria || '';
-      document.getElementById('fPagoOtros').value = config.pago_otros || '';
+      metodosPago = (config.metodos_pago || []).map(m => ({ filaId: siguienteMetodoId++, nombre: m.nombre || '', detalle: m.detalle || '' }));
+      pintarMetodosPago();
       document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
 
       poblarDepartamentos(document.getElementById('fDepartamento'), config.departamento || '');
@@ -550,10 +583,9 @@
           pagina_web: document.getElementById('fPaginaWeb').value.trim(),
           etiqueta_cliente: document.getElementById('fEtiquetaCliente').value.trim() || 'Acudiente',
           etiqueta_cliente_plural: document.getElementById('fEtiquetaClientePlural').value.trim() || 'Acudientes',
-          pago_nequi: document.getElementById('fPagoNequi').value.trim() || null,
-          pago_bre_b: document.getElementById('fPagoBreB').value.trim() || null,
-          pago_cuenta_bancaria: document.getElementById('fPagoCuentaBancaria').value.trim() || null,
-          pago_otros: document.getElementById('fPagoOtros').value.trim() || null,
+          metodos_pago: metodosPago
+            .filter(m => m.nombre.trim() !== '' || m.detalle.trim() !== '')
+            .map(m => ({ nombre: m.nombre.trim(), detalle: m.detalle.trim() })),
           paleta: paletaSeleccionada
         };
 
