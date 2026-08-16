@@ -186,7 +186,7 @@
       if (c.cantidad && c.cantidad > 1) partes.push(`Cantidad: ${c.cantidad}`);
       if (c.fecha_checkin && c.fecha_checkout) partes.push(`${c.fecha_checkin} → ${c.fecha_checkout} (${c.noches} días)`);
       const fecha = new Date(c.created_at);
-      partes.push(`Pedido: ${fecha.toLocaleDateString('es-CO')}`);
+      partes.push(`Pedido: ${fecha.toLocaleDateString('es-CO')} ${fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`);
       return partes.join(' · ');
     }
 
