@@ -188,6 +188,29 @@
       </div>
 
       <div class="card">
+        <h2>Información de pagos</h2>
+        <p style="color:var(--mist-dim); font-size:12.5px; margin:-12px 0 16px;">Se le muestra al Acudiente al momento de pagar, para que sepa a dónde transferir. Deja en blanco lo que no ofrezcas.</p>
+        <div class="grid-2">
+          <div class="field">
+            <label>Nequi</label>
+            <input type="text" id="fPagoNequi" placeholder="Número de celular" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Bre-B</label>
+            <input type="text" id="fPagoBreB" placeholder="Llave o número" autocomplete="off">
+          </div>
+        </div>
+        <div class="field">
+          <label>Cuenta bancaria</label>
+          <textarea id="fPagoCuentaBancaria" placeholder="Ej: Bancolombia, ahorros, número de cuenta, a nombre de..."></textarea>
+        </div>
+        <div class="field">
+          <label>Otros métodos</label>
+          <textarea id="fPagoOtros" placeholder="Cualquier otro método de pago que quieras informar"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>Estilo (selecciona la paleta que más combine con tu marca)</h2>
         <div class="palette-grid" id="paletteGrid"></div>
       </div>
@@ -437,6 +460,10 @@
       document.getElementById('fPaginaWeb').value = config.pagina_web || '';
       document.getElementById('fEtiquetaCliente').value = config.etiqueta_cliente || 'Acudiente';
       document.getElementById('fEtiquetaClientePlural').value = config.etiqueta_cliente_plural || 'Acudientes';
+      document.getElementById('fPagoNequi').value = config.pago_nequi || '';
+      document.getElementById('fPagoBreB').value = config.pago_bre_b || '';
+      document.getElementById('fPagoCuentaBancaria').value = config.pago_cuenta_bancaria || '';
+      document.getElementById('fPagoOtros').value = config.pago_otros || '';
       document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
 
       poblarDepartamentos(document.getElementById('fDepartamento'), config.departamento || '');
@@ -523,6 +550,10 @@
           pagina_web: document.getElementById('fPaginaWeb').value.trim(),
           etiqueta_cliente: document.getElementById('fEtiquetaCliente').value.trim() || 'Acudiente',
           etiqueta_cliente_plural: document.getElementById('fEtiquetaClientePlural').value.trim() || 'Acudientes',
+          pago_nequi: document.getElementById('fPagoNequi').value.trim() || null,
+          pago_bre_b: document.getElementById('fPagoBreB').value.trim() || null,
+          pago_cuenta_bancaria: document.getElementById('fPagoCuentaBancaria').value.trim() || null,
+          pago_otros: document.getElementById('fPagoOtros').value.trim() || null,
           paleta: paletaSeleccionada
         };
 
