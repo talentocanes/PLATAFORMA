@@ -141,6 +141,9 @@
   .btn-comprar:hover{ filter:brightness(1.08); }
   .btn-comprar:disabled{ opacity:.6; cursor:default; filter:none; }
   .btn-comprar svg{ width:17px; height:17px; }
+
+  .compra-total-box{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding:11px 14px; border-radius:11px; background:var(--ink); border:1px solid var(--line-strong); font-size:12.5px; color:var(--mist); }
+  .compra-total-box b{ font-family:'Space Grotesk',sans-serif; font-size:16px; color:var(--white); }
   .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
   .danger-box b{ color:var(--danger); }
   .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
@@ -447,6 +450,10 @@
                 <input type="number" id="detailCantidad" min="1" step="1" value="1">
                 <button type="button" class="cantidad-btn" data-paso="1">+</button>
               </div>
+            </div>
+            <div class="compra-total-box" id="compraTotalBox" style="display:none;">
+              <span>Total a pagar</span>
+              <b id="compraTotalValor">$ 0</b>
             </div>
             <button type="button" class="btn-comprar" id="detailComprarBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -1331,12 +1338,16 @@
           box.innerHTML = 'Elige la fecha de entrada.';
           seleccionCompra.fecha_checkin = null;
           seleccionCompra.fecha_checkout = null;
+          seleccionCompra.precio_total = 0;
+          actualizarTotalCompra();
           return;
         }
         if (!checkOut) {
           box.innerHTML = `Entrada: <b>${checkIn.getDate()} de ${MESES_CAL[checkIn.getMonth()]}</b><br>Ahora elige la fecha de salida.`;
           seleccionCompra.fecha_checkin = null;
           seleccionCompra.fecha_checkout = null;
+          seleccionCompra.precio_total = 0;
+          actualizarTotalCompra();
           return;
         }
         const noches = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
@@ -1350,6 +1361,7 @@
         seleccionCompra.fecha_checkout = aFechaISO(checkOut);
         seleccionCompra.noches = noches;
         seleccionCompra.precio_total = total;
+        actualizarTotalCompra();
       }
 
       pintar();
@@ -1400,6 +1412,7 @@
               precio_unitario: planes[planActivo].precio,
               precio_total: planes[planActivo].precio
             };
+            actualizarTotalCompra();
           }
 
           document.getElementById('detailPlansRow').innerHTML = planes.map((p, i) => `
@@ -1492,6 +1505,38 @@
         mascotaWrap.style.display = 'none';
         cantidadWrap.style.display = 'block';
       }
+
+      actualizarTotalCompra();
+    }
+
+    // Recalcula el total según cuántas mascotas están elegidas
+    // (servicio) o la cantidad (producto), y lo muestra en vivo.
+    function actualizarTotalCompra(){
+      const item = itemDetalleActual;
+      const box = document.getElementById('compraTotalBox');
+      const valorEl = document.getElementById('compraTotalValor');
+      if (!item || !perfilActual || perfilActual.role !== 'cliente') {
+        box.style.display = 'none';
+        return;
+      }
+
+      let total = 0;
+      let mostrar = false;
+
+      if (item.tipo_item === 'servicio') {
+        const precioUnitario = item.categoria === 'Hotel'
+          ? (seleccionCompra.precio_total || 0)
+          : (seleccionCompra.precio_unitario || 0);
+        total = precioUnitario * mascotasSeleccionadas.size;
+        mostrar = mascotasSeleccionadas.size > 0 && precioUnitario > 0;
+      } else {
+        const cantidad = parseInt(document.getElementById('detailCantidad').value, 10) || 1;
+        total = item.precio * cantidad;
+        mostrar = true;
+      }
+
+      box.style.display = mostrar ? 'flex' : 'none';
+      valorEl.textContent = '$ ' + total.toLocaleString('es-CO');
     }
 
     function pintarMascotaPills(){
@@ -1516,6 +1561,7 @@
             mascotasSeleccionadas.add(id);
             pill.classList.add('selected');
           }
+          actualizarTotalCompra();
         });
       });
     }
@@ -1526,7 +1572,13 @@
         const paso = parseInt(btn.dataset.paso, 10);
         const nuevo = Math.max(1, (parseInt(input.value, 10) || 1) + paso);
         input.value = nuevo;
+        actualizarTotalCompra();
       });
+    });
+    document.getElementById('detailCantidad').addEventListener('input', () => {
+      const input = document.getElementById('detailCantidad');
+      if (parseInt(input.value, 10) < 1 || !input.value) input.value = 1;
+      actualizarTotalCompra();
     });
 
     document.getElementById('detailComprarBtn').addEventListener('click', async () => {
