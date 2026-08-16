@@ -116,6 +116,7 @@
   .btn-save:disabled{ opacity:.6; }
   .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
   .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+  .compra-ok{ margin-top:12px; padding:12px 14px; border-radius:12px; background:rgba(123,216,143,0.1); border:1px solid rgba(123,216,143,0.3); color:#7bd88f; font-size:12.5px; line-height:1.5; }
   .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
   .danger-box b{ color:var(--danger); }
   .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
@@ -409,6 +410,21 @@
           </div>
           <div class="detail-price" id="detailPrice">—</div>
           <div class="detail-stock" id="detailStock"></div>
+
+          <div id="detailCompraBlock" style="display:none;">
+            <div class="field" id="detailMascotaWrap" style="display:none;">
+              <label>¿Para cuál de tus mascotas?</label>
+              <select id="detailMascotaSelect"></select>
+            </div>
+            <div class="field" id="detailCantidadWrap" style="display:none;">
+              <label>Cantidad</label>
+              <input type="number" id="detailCantidad" min="1" step="1" value="1">
+            </div>
+            <button type="button" class="btn-save" id="detailComprarBtn">Comprar</button>
+            <div class="modal-msg" id="detailCompraMsg"></div>
+            <div class="compra-ok" id="detailCompraOk" style="display:none;"></div>
+          </div>
+
           <div class="detail-desc-label">Descripción</div>
           <div class="detail-desc" id="detailDesc"></div>
         </div>
@@ -446,10 +462,13 @@
     let eliminandoId = null;
     let filtroActivo = 'todos';
     let terminoBusqueda = '';
+    let perfilActual = null;
+    let misMascotas = [];
 
     (async () => {
       const profile = await initLayout({ activeKey: 'servicios' });
       if (!profile) return;
+      perfilActual = profile;
 
       if (profile.role === 'admin') {
         puedeEditar = true;
@@ -460,6 +479,14 @@
           .eq('id', profile.id)
           .single();
         puedeEditar = !!data?.modulos_edicion?.includes('servicios');
+      } else if (profile.role === 'cliente') {
+        const { data } = await supabase
+          .from('alumnos')
+          .select('id, nombre')
+          .eq('acudiente_id', profile.id)
+          .eq('status', 'approved')
+          .order('nombre', { ascending: true });
+        misMascotas = data || [];
       }
 
       if (puedeEditar) document.getElementById('btnAdd').style.display = 'flex';
@@ -1193,6 +1220,12 @@
 
     // ---------------- Calendario de Hotel ----------------
     const MESES_CAL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    function aFechaISO(fecha){
+      const y = fecha.getFullYear();
+      const m = String(fecha.getMonth() + 1).padStart(2, '0');
+      const d = String(fecha.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
     const DOW_CAL = ['L','M','X','J','V','S','D'];
 
     function renderCalendarioHotel(valorNoche){
@@ -1265,10 +1298,14 @@
         const box = document.getElementById('hotelTotalBox');
         if (!checkIn) {
           box.innerHTML = 'Elige la fecha de entrada.';
+          seleccionCompra.fecha_checkin = null;
+          seleccionCompra.fecha_checkout = null;
           return;
         }
         if (!checkOut) {
           box.innerHTML = `Entrada: <b>${checkIn.getDate()} de ${MESES_CAL[checkIn.getMonth()]}</b><br>Ahora elige la fecha de salida.`;
+          seleccionCompra.fecha_checkin = null;
+          seleccionCompra.fecha_checkout = null;
           return;
         }
         const noches = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
@@ -1278,15 +1315,24 @@
           (${noches} ${noches === 1 ? 'noche' : 'noches'})<br>
           Total: <b>$ ${total.toLocaleString('es-CO')}</b>
         `;
+        seleccionCompra.fecha_checkin = aFechaISO(checkIn);
+        seleccionCompra.fecha_checkout = aFechaISO(checkOut);
+        seleccionCompra.noches = noches;
+        seleccionCompra.precio_total = total;
       }
 
       pintar();
       pintarTotal();
     }
 
+    let seleccionCompra = {}; // lo que se va a comprar según el tipo de ítem
+    let itemDetalleActual = null;
+
     async function abrirDetalle(id){
       const item = items.find(i => i.id === id);
       if (!item) return;
+      itemDetalleActual = item;
+      seleccionCompra = {};
 
       document.getElementById('detailEyebrow').className = `detail-eyebrow ${item.tipo_item}`;
       document.getElementById('detailEyebrow').textContent = item.tipo_item === 'producto' ? 'Producto' : 'Servicio';
@@ -1317,6 +1363,12 @@
 
           function pintarPrecioPlan(){
             priceEl.textContent = '$ ' + Number(planes[planActivo].precio).toLocaleString('es-CO');
+            seleccionCompra = {
+              tienda_plan_id: planes[planActivo].id,
+              nombre_item: planes[planActivo].nombre,
+              precio_unitario: planes[planActivo].precio,
+              precio_total: planes[planActivo].precio
+            };
           }
 
           document.getElementById('detailPlansRow').innerHTML = planes.map((p, i) => `
@@ -1335,6 +1387,7 @@
           pintarPrecioPlan();
         } else {
           priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
+          seleccionCompra = { nombre_item: item.nombre, precio_unitario: item.precio, precio_total: item.precio };
         }
       } else if (esHotel) {
         hotelBlock.style.display = 'block';
@@ -1342,7 +1395,10 @@
         renderCalendarioHotel(item.precio);
       } else {
         priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
+        seleccionCompra = { nombre_item: item.nombre, precio_unitario: item.precio, precio_total: item.precio };
       }
+
+      prepararBloqueCompra(item);
 
       const fotos = item.fotos && item.fotos.length ? item.fotos : [null];
       let activa = 0;
@@ -1372,6 +1428,117 @@
       pintarPrincipal();
       detailOverlay.classList.add('active');
     }
+
+    // ---------------- Bloque de compra ----------------
+    function prepararBloqueCompra(item){
+      const bloque = document.getElementById('detailCompraBlock');
+      const mascotaWrap = document.getElementById('detailMascotaWrap');
+      const cantidadWrap = document.getElementById('detailCantidadWrap');
+      const msg = document.getElementById('detailCompraMsg');
+      const ok = document.getElementById('detailCompraOk');
+      msg.style.display = 'none';
+      ok.style.display = 'none';
+      document.getElementById('detailComprarBtn').style.display = 'block';
+      document.getElementById('detailComprarBtn').disabled = false;
+      document.getElementById('detailComprarBtn').textContent = 'Comprar';
+      document.getElementById('detailCantidad').value = 1;
+
+      // Solo los Acudientes pueden comprar
+      if (!perfilActual || perfilActual.role !== 'cliente') {
+        bloque.style.display = 'none';
+        return;
+      }
+      bloque.style.display = 'block';
+
+      if (item.tipo_item === 'servicio') {
+        mascotaWrap.style.display = 'block';
+        cantidadWrap.style.display = 'none';
+        if (misMascotas.length === 0) {
+          document.getElementById('detailMascotaSelect').innerHTML = '<option value="">No tienes mascotas registradas</option>';
+        } else {
+          document.getElementById('detailMascotaSelect').innerHTML =
+            '<option value="">Selecciona una mascota</option>' +
+            misMascotas.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+        }
+      } else {
+        mascotaWrap.style.display = 'none';
+        cantidadWrap.style.display = 'block';
+      }
+    }
+
+    document.getElementById('detailComprarBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('detailComprarBtn');
+      const msg = document.getElementById('detailCompraMsg');
+      const ok = document.getElementById('detailCompraOk');
+      msg.style.display = 'none';
+
+      const item = itemDetalleActual;
+      if (!item) return;
+
+      let payload = {
+        cliente_id: perfilActual.id,
+        tienda_item_id: item.id,
+        tipo_item: item.tipo_item,
+        categoria_item: item.categoria || null
+      };
+
+      if (item.tipo_item === 'servicio') {
+        const alumnoId = document.getElementById('detailMascotaSelect').value;
+        if (!alumnoId) {
+          msg.textContent = 'Selecciona para cuál de tus mascotas es.';
+          msg.style.display = 'block';
+          return;
+        }
+        payload.alumno_id = alumnoId;
+
+        if (item.categoria === 'Hotel') {
+          if (!seleccionCompra.fecha_checkin || !seleccionCompra.fecha_checkout) {
+            msg.textContent = 'Elige la fecha de entrada y de salida.';
+            msg.style.display = 'block';
+            return;
+          }
+          payload.nombre_item = item.nombre;
+          payload.precio_unitario = item.precio;
+          payload.precio_total = seleccionCompra.precio_total;
+          payload.fecha_checkin = seleccionCompra.fecha_checkin;
+          payload.fecha_checkout = seleccionCompra.fecha_checkout;
+          payload.noches = seleccionCompra.noches;
+        } else {
+          payload.nombre_item = seleccionCompra.nombre_item || item.nombre;
+          payload.tienda_plan_id = seleccionCompra.tienda_plan_id || null;
+          payload.precio_unitario = seleccionCompra.precio_unitario;
+          payload.precio_total = seleccionCompra.precio_total;
+        }
+      } else {
+        const cantidad = parseInt(document.getElementById('detailCantidad').value, 10) || 1;
+        if (cantidad < 1) {
+          msg.textContent = 'La cantidad debe ser al menos 1.';
+          msg.style.display = 'block';
+          return;
+        }
+        payload.nombre_item = item.nombre;
+        payload.cantidad = cantidad;
+        payload.precio_unitario = item.precio;
+        payload.precio_total = item.precio * cantidad;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+
+      const { error } = await supabase.from('compras').insert(payload);
+
+      if (error) {
+        msg.textContent = 'No se pudo enviar la solicitud: ' + error.message;
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Comprar';
+        return;
+      }
+
+      btn.style.display = 'none';
+      ok.style.display = 'block';
+      ok.textContent = '¡Listo! Tu solicitud quedó registrada y en Cartera, en espera de que el colegio la apruebe.';
+    });
 
     document.getElementById('detailCloseBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
   </script>
