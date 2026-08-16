@@ -13,6 +13,11 @@
   .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
   .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
   .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
+
+  .btn-notif{ position:relative; display:flex; align-items:center; gap:8px; padding:11px 16px; border:1px solid var(--line-strong); border-radius:11px; background:var(--navy-panel); color:var(--mist); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; text-decoration:none; }
+  .btn-notif:hover{ border-color:var(--blue-bright); color:var(--white); }
+  .btn-notif svg{ width:16px; height:16px; }
+  .notif-badge{ background:var(--danger); color:var(--white); font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; min-width:18px; height:18px; border-radius:20px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
   .btn-add svg{ width:16px; height:16px; }
 
   .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
@@ -243,29 +248,17 @@
         <h1>Tienda</h1>
         <p>Productos y servicios disponibles.</p>
       </div>
-      <button class="btn-add" id="btnAdd" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Crear
-      </button>
-    </div>
-
-    <div class="pending-compras-section" id="pendingComprasSection" style="display:none;">
-      <div class="pending-compras-head">
-        <div class="section-title-live">
-          Solicitudes de compra
-          <span class="live-dot"><span class="dot"></span>En vivo</span>
-        </div>
-        <button type="button" class="btn-secondary" id="btnVerDenegadas" style="display:none;">Ver denegadas</button>
+      <div style="display:flex; gap:10px;">
+        <a href="tienda-solicitudes.html" class="btn-notif" id="btnNotifTienda" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          Notificaciones de Tienda
+          <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+        </a>
+        <button class="btn-add" id="btnAdd" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Crear
+        </button>
       </div>
-      <div class="pending-compras-list" id="pendingComprasList"></div>
-    </div>
-
-    <div class="pending-compras-section" id="denegadasSection" style="display:none;">
-      <div class="pending-compras-head">
-        <div class="section-title-live">Denegadas</div>
-        <button type="button" class="btn-secondary" id="btnOcultarDenegadas">Ocultar</button>
-      </div>
-      <div class="pending-compras-list" id="denegadasList"></div>
     </div>
 
     <div class="toolbar">
@@ -569,11 +562,8 @@
 
       if (puedeEditar) {
         document.getElementById('btnAdd').style.display = 'flex';
-        document.getElementById('pendingComprasSection').style.display = 'block';
-        if (perfilActual.role === 'admin') {
-          document.getElementById('btnVerDenegadas').style.display = 'inline-flex';
-        }
-        await cargarSolicitudesCompra();
+        document.getElementById('btnNotifTienda').style.display = 'flex';
+        await actualizarContadorSolicitudes();
         suscribirComprasEnVivo();
       }
 
@@ -591,118 +581,24 @@
     function suscribirComprasEnVivo(){
       supabase
         .channel('compras-cambios')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, () => {
-          cargarSolicitudesCompra();
-          if (document.getElementById('denegadasSection').style.display !== 'none') cargarDenegadas();
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'compras' }, actualizarContadorSolicitudes)
         .subscribe();
     }
 
-    function formatearInfoCompra(c){
-      const partes = [];
-      if (c.nombre_alumno) partes.push(`Para: ${c.nombre_alumno}`);
-      if (c.cantidad && c.cantidad > 1) partes.push(`Cantidad: ${c.cantidad}`);
-      if (c.fecha_checkin && c.fecha_checkout) partes.push(`${c.fecha_checkin} → ${c.fecha_checkout} (${c.noches} días)`);
-      partes.push(`Solicitado por: ${c.nombre_cliente || 'Acudiente'}`);
-      return partes.join(' · ');
-    }
-
-    async function cargarSolicitudesCompra(){
-      const cont = document.getElementById('pendingComprasList');
-      const { data, error } = await supabase
+    async function actualizarContadorSolicitudes(){
+      const { count, error } = await supabase
         .from('compras')
-        .select('*')
-        .eq('estado_aprobacion', 'pendiente')
-        .order('created_at', { ascending: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('estado_aprobacion', 'pendiente');
 
-      if (error) {
-        console.error('Error al cargar solicitudes de compra:', error);
-        cont.innerHTML = `<div class="empty-note">No se pudieron cargar las solicitudes.</div>`;
+      const badge = document.getElementById('notifBadge');
+      if (error || !count) {
+        badge.style.display = 'none';
         return;
       }
-
-      if (!data || data.length === 0) {
-        cont.innerHTML = `<div class="empty-note">No hay solicitudes de compra pendientes.</div>`;
-        return;
-      }
-
-      cont.innerHTML = data.map(c => `
-        <div class="compra-card">
-          <div class="info">
-            <div class="row1">
-              <span class="item-nombre">${c.nombre_item}</span>
-              <span class="tipo-tag ${c.tipo_item}">${c.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
-            </div>
-            <div class="meta">${formatearInfoCompra(c)}</div>
-          </div>
-          <div class="precio">$ ${Number(c.precio_total).toLocaleString('es-CO')}</div>
-          <div class="compra-actions">
-            <button class="btn-aprobar" data-action="aprobar" data-id="${c.id}">Aceptar</button>
-            <button class="btn-denegar" data-action="denegar" data-id="${c.id}">Denegar</button>
-          </div>
-        </div>
-      `).join('');
-
-      cont.querySelectorAll('[data-action="aprobar"]').forEach(btn => {
-        btn.addEventListener('click', () => resolverCompra(btn.dataset.id, 'aprobado'));
-      });
-      cont.querySelectorAll('[data-action="denegar"]').forEach(btn => {
-        btn.addEventListener('click', () => resolverCompra(btn.dataset.id, 'denegado'));
-      });
+      badge.textContent = count;
+      badge.style.display = 'flex';
     }
-
-    async function resolverCompra(id, estado){
-      if (estado === 'denegado' && !confirm('¿Denegar esta solicitud de compra?')) return;
-
-      const { error } = await supabase.from('compras').update({ estado_aprobacion: estado }).eq('id', id);
-      if (error) {
-        alert('No se pudo actualizar: ' + error.message);
-        return;
-      }
-      await cargarSolicitudesCompra();
-    }
-
-    async function cargarDenegadas(){
-      const cont = document.getElementById('denegadasList');
-      const { data, error } = await supabase
-        .from('compras')
-        .select('*')
-        .eq('estado_aprobacion', 'denegado')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        cont.innerHTML = `<div class="empty-note">No se pudieron cargar las denegadas.</div>`;
-        return;
-      }
-      if (!data || data.length === 0) {
-        cont.innerHTML = `<div class="empty-note">No hay solicitudes denegadas.</div>`;
-        return;
-      }
-
-      cont.innerHTML = data.map(c => `
-        <div class="compra-card denegada">
-          <div class="info">
-            <div class="row1">
-              <span class="item-nombre">${c.nombre_item}</span>
-              <span class="tipo-tag ${c.tipo_item}">${c.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
-            </div>
-            <div class="meta">${formatearInfoCompra(c)}</div>
-          </div>
-          <div class="precio">$ ${Number(c.precio_total).toLocaleString('es-CO')}</div>
-          <span class="denegada-tag">Denegada</span>
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('btnVerDenegadas').addEventListener('click', async () => {
-      document.getElementById('denegadasSection').style.display = 'block';
-      document.getElementById('btnVerDenegadas').style.display = 'none';
-      await cargarDenegadas();
-    });
-    document.getElementById('btnOcultarDenegadas').addEventListener('click', () => {
-      document.getElementById('denegadasSection').style.display = 'none';
-      document.getElementById('btnVerDenegadas').style.display = 'inline-flex';
-    });
 
     async function cargarItems(){
       const grid = document.getElementById('itemsGrid');
