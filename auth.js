@@ -1,4 +1,4 @@
-import { supabase, usernameToEmail } from './supabaseClient.js?v=11';
+import { supabase, usernameToEmail } from './supabaseClient.js?v=12';
 
 // ---------------------------------------------------------
 // Iniciar sesión con usuario y contraseña

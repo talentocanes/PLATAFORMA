@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=11';
-import { supabase } from './supabaseClient.js?v=11';
-import { cargarConfiguracionNegocio } from './theme.js?v=11';
+import { protegerPagina, cerrarSesion } from './auth.js?v=12';
+import { supabase } from './supabaseClient.js?v=12';
+import { cargarConfiguracionNegocio } from './theme.js?v=12';
 
 // Claves que SIEMPRE están disponibles para cualquier trabajador,
 // sin importar sus permisos asignados.
@@ -51,7 +51,7 @@ const NAV_GROUPS = [
   {
     label: 'Gestión',
     items: [
-      { key:'cartera', label:'Cartera', href:null, enabled:false,
+      { key:'cartera', label:'Cartera', href:'cartera.html', enabled:true,
         icon:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>' },
       { key:'inventario', label:'Inventario', href:null, enabled:false,
         icon:'<path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>' },

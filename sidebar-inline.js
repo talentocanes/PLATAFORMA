@@ -28,7 +28,7 @@
         icon:'<path d="M6.2 8h11.6l-1 12H7.2L6.2 8Z"/><path d="M9.2 8V6.2a2.8 2.8 0 0 1 5.6 0V8"/>' },
       { key:'entrenamiento', label:'Entrenamiento', href:null, enabled:false,
         icon:'<circle cx="12" cy="12" r="8.3"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1"/>' },
-      { key:'cartera', label:'Cartera', href:null, enabled:false,
+      { key:'cartera', label:'Cartera', href:'cartera.html', enabled:true,
         icon:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>' },
       { key:'inventario', label:'Inventario', href:null, enabled:false,
         icon:'<path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>' },

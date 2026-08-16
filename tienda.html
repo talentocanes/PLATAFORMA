@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js?v=11"></script>
+<script src="theme-inline.js?v=12"></script>
 <style>
   .page-header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
   .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
@@ -228,7 +228,7 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar"></aside>
-  <script src="sidebar-inline.js?v=11" data-active="servicios"></script>
+  <script src="sidebar-inline.js?v=12" data-active="servicios"></script>
 
   <main>
     <div class="topbar">
@@ -505,9 +505,9 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=11';
-    import { supabase } from './supabaseClient.js?v=11';
-    import { capitalizarPalabras } from './textutils.js?v=11';
+    import { initLayout } from './layout.js?v=12';
+    import { supabase } from './supabaseClient.js?v=12';
+    import { capitalizarPalabras } from './textutils.js?v=12';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
