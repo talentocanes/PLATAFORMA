@@ -294,4 +294,10 @@ main{
   .search{ display:none; }
   .clock{ min-width:auto; padding:8px 10px; }
   .crumbs{ display:none; }
+
+  /* iOS hace zoom automático al enfocar un campo con letra menor a
+     16px, y no lo deshace solo (hay que pellizcar para volver).
+     Forzamos 16px en todos los campos de formulario en móvil para
+     evitarlo, sin cambiar el tamaño en escritorio. */
+  input, select, textarea{ font-size:16px !important; }
 }
