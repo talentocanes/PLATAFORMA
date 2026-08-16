@@ -6,6 +6,7 @@
 <title>Talento Canes · Iniciar sesión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="theme-inline.js?v=12"></script>
 <style>
   :root{
     --navy-deep:#050d1a; --navy-panel:#0b1a30; --blue-deep:#0d47a1;
@@ -14,20 +15,19 @@
     --line:rgba(255,255,255,0.08); --line-strong:color-mix(in srgb, var(--blue-glow) 25%, transparent);
     --danger:#ff6b6b;
   }
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; font-family:'Inter',sans-serif; }
+  *{ box-sizing:border-box; margin:0; padding:0; touch-action:manipulation; }
+  html{ font-family:'Inter',sans-serif; }
   body{
-    display:flex; align-items:center; justify-content:center;
     min-height:100vh; color:var(--white);
     background:
       radial-gradient(1200px 700px at 85% -10%, color-mix(in srgb, var(--blue-bright) 16%, transparent), transparent 60%),
       radial-gradient(900px 600px at -10% 100%, color-mix(in srgb, var(--blue-deep) 22%, transparent), transparent 60%),
       var(--navy-deep);
-    padding:20px;
-    transition: background-color .3s ease;
+    padding:0 20px;
   }
   .card{
     width:100%; max-width:380px;
+    margin-top:2rem; margin-bottom:3rem; margin-left:auto; margin-right:auto;
     background:var(--navy-panel);
     border:1px solid var(--line-strong);
     border-radius:20px;
@@ -65,6 +65,12 @@
   .toggle-password.showing .eye{ display:none; }
   .toggle-password.showing .eye-off{ display:block; }
 
+  .remember-row{ display:flex; align-items:center; gap:9px; margin-bottom:20px; }
+  .remember-row input[type="checkbox"]{
+    width:17px; height:17px; accent-color:var(--blue-bright); cursor:pointer; flex-shrink:0;
+  }
+  .remember-row label{ margin-bottom:0; font-size:12.5px; color:var(--mist); cursor:pointer; }
+
   button{
     width:100%; margin-top:6px; padding:12px; border:none; border-radius:10px;
     background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright));
@@ -90,14 +96,14 @@
       <img src="logo.png" alt="Talento Canes" id="brandLogo">
       <div>
         <div class="name" id="brandName">Talento Canes</div>
-        <div class="sub">SGITC · Panel</div>
+        <div class="sub">Barkly · Panel</div>
       </div>
     </div>
 
     <h1>Iniciar sesión</h1>
     <p class="lead">Ingresa con tu usuario y contraseña para acceder al panel.</p>
 
-    <form id="loginForm">
+    <form id="loginForm" autocomplete="off">
       <div class="field">
         <label for="username">Usuario o correo</label>
         <input id="username" type="text" autocomplete="username" required>
@@ -112,14 +118,26 @@
           </button>
         </div>
       </div>
+
+      <div class="remember-row">
+        <input type="checkbox" id="rememberCheckbox" checked>
+        <label for="rememberCheckbox">Mantener sesión iniciada</label>
+      </div>
+
       <button type="submit" id="submitBtn">Entrar</button>
       <div class="msg" id="msg"></div>
     </form>
   </div>
 
   <script type="module">
-    import { iniciarSesion } from './auth.js';
-    import { cargarConfiguracionNegocio } from './theme.js';
+    import { iniciarSesion } from './auth.js?v=12';
+    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=12';
+    import { cargarConfiguracionNegocio } from './theme.js?v=12';
+
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
 
     cargarConfiguracionNegocio().then(config => {
       if (!config) return;
@@ -127,9 +145,19 @@
       if (config.logo_url) document.getElementById('brandLogo').src = config.logo_url;
     });
 
+    // Si ya hay una sesión activa, no muestres el formulario: entra
+    // directo al panel.
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        window.location.href = 'inicio.html';
+      }
+    })();
+
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
     const msg = document.getElementById('msg');
+    const rememberCheckbox = document.getElementById('rememberCheckbox');
 
     const passwordInput = document.getElementById('password');
     const toggleBtn = document.getElementById('togglePassword');
@@ -153,6 +181,10 @@
 
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+
+      // Se define ANTES de iniciar sesión, para que ese mismo login
+      // ya use el almacén correcto (localStorage o sessionStorage).
+      definirRecordarSesion(rememberCheckbox.checked);
 
       try {
         await iniciarSesion(username, password);
