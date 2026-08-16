@@ -1350,16 +1350,16 @@
           actualizarTotalCompra();
           return;
         }
-        const noches = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-        const total = noches * valorNoche;
+        const dias = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24)) + 1;
+        const total = dias * valorNoche;
         box.innerHTML = `
           ${checkIn.getDate()} de ${MESES_CAL[checkIn.getMonth()]} → ${checkOut.getDate()} de ${MESES_CAL[checkOut.getMonth()]}
-          (${noches} ${noches === 1 ? 'noche' : 'noches'})<br>
+          (${dias} ${dias === 1 ? 'día' : 'días'})<br>
           Total: <b>$ ${total.toLocaleString('es-CO')}</b>
         `;
         seleccionCompra.fecha_checkin = aFechaISO(checkIn);
         seleccionCompra.fecha_checkout = aFechaISO(checkOut);
-        seleccionCompra.noches = noches;
+        seleccionCompra.noches = dias;
         seleccionCompra.precio_total = total;
         actualizarTotalCompra();
       }
