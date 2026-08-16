@@ -324,7 +324,12 @@
               <button class="btn-aprobar" data-action="aprobar" data-id="${c.id}">Aceptar</button>
               <button class="btn-denegar" data-action="denegar" data-id="${c.id}">Denegar</button>
             </div>
-          ` : `<span class="denegada-tag">Denegada</span>`}
+          ` : `
+            <div class="solicitud-actions">
+              <span class="denegada-tag">Denegada</span>
+              <button class="btn-denegar" data-action="eliminar" data-id="${c.id}">Eliminar definitivamente</button>
+            </div>
+          `}
         </div>
       `).join('');
 
@@ -334,6 +339,28 @@
       cont.querySelectorAll('[data-action="denegar"]').forEach(btn => {
         btn.addEventListener('click', () => resolverCompra(btn.dataset.id, 'denegado'));
       });
+      cont.querySelectorAll('[data-action="eliminar"]').forEach(btn => {
+        btn.addEventListener('click', () => eliminarCompra(btn.dataset.id));
+      });
+    }
+
+    async function eliminarCompra(id){
+      if (!confirm('¿Eliminar esta solicitud denegada para siempre? No se puede deshacer.')) return;
+
+      const { error } = await supabase.from('compras').delete().eq('id', id);
+      if (error) {
+        alert('No se pudo eliminar: ' + error.message);
+        return;
+      }
+
+      await cargarDenegadas();
+
+      const restantes = denegadas.filter(c => c.cliente_id === clienteModalActual);
+      if (restantes.length === 0) {
+        detalleOverlay.classList.remove('active');
+      } else {
+        pintarDetalleLista(restantes, 'denegadas');
+      }
     }
 
     async function resolverCompra(id, estado){
