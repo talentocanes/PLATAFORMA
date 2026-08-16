@@ -117,6 +117,30 @@
   .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
   .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
   .compra-ok{ margin-top:12px; padding:12px 14px; border-radius:12px; background:rgba(123,216,143,0.1); border:1px solid rgba(123,216,143,0.3); color:#7bd88f; font-size:12.5px; line-height:1.5; }
+
+  .compra-block{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:18px; }
+  .compra-label{ font-size:12.5px; color:var(--mist); font-weight:600; margin-bottom:10px; }
+  .compra-label-hint{ font-weight:400; color:var(--mist-dim); font-size:11px; }
+  .mascota-pills{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+  .mascota-pill{ display:flex; align-items:center; gap:7px; padding:8px 13px 8px 9px; border-radius:20px; border:1px solid var(--line); background:var(--ink); color:var(--mist); font-size:12.5px; font-weight:500; cursor:pointer; transition:border-color .15s ease, background .15s ease, color .15s ease; }
+  .mascota-pill:hover{ border-color:var(--line-strong); }
+  .mascota-pill .check{ width:16px; height:16px; border-radius:50%; border:1.5px solid var(--line-strong); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
+  .mascota-pill .check svg{ width:10px; height:10px; color:var(--white); opacity:0; transition:opacity .1s ease; }
+  .mascota-pill.selected{ border-color:var(--blue-bright); background:color-mix(in srgb, var(--blue-bright) 14%, transparent); color:var(--white); }
+  .mascota-pill.selected .check{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); border-color:transparent; }
+  .mascota-pill.selected .check svg{ opacity:1; }
+  .mascota-pill.disabled{ opacity:.5; cursor:default; pointer-events:none; }
+
+  .cantidad-stepper{ display:flex; align-items:center; gap:0; width:fit-content; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .cantidad-stepper input{ width:52px; text-align:center; border:none; background:var(--ink); color:var(--white); font-size:13.5px; padding:9px 0; outline:none; appearance:textfield; -moz-appearance:textfield; }
+  .cantidad-stepper input::-webkit-outer-spin-button, .cantidad-stepper input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .cantidad-btn{ width:34px; height:36px; border:none; background:var(--navy-panel-2); color:var(--mist); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .cantidad-btn:hover{ background:var(--ink); color:var(--white); }
+
+  .btn-comprar{ width:100%; display:flex; align-items:center; justify-content:center; gap:9px; padding:13px; border:none; border-radius:12px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:700; font-size:14.5px; cursor:pointer; margin-top:14px; box-shadow:0 8px 20px -8px color-mix(in srgb, var(--blue-bright) 60%, transparent); }
+  .btn-comprar:hover{ filter:brightness(1.08); }
+  .btn-comprar:disabled{ opacity:.6; cursor:default; filter:none; }
+  .btn-comprar svg{ width:17px; height:17px; }
   .danger-box{ background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12.5px; line-height:1.6; color:var(--mist); }
   .danger-box b{ color:var(--danger); }
   .btn-delete-confirm{ width:100%; padding:12px; border:none; border-radius:10px; background:var(--danger); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
@@ -411,16 +435,23 @@
           <div class="detail-price" id="detailPrice">—</div>
           <div class="detail-stock" id="detailStock"></div>
 
-          <div id="detailCompraBlock" style="display:none;">
-            <div class="field" id="detailMascotaWrap" style="display:none;">
-              <label>¿Para cuál de tus mascotas?</label>
-              <select id="detailMascotaSelect"></select>
+          <div id="detailCompraBlock" class="compra-block" style="display:none;">
+            <div id="detailMascotaWrap" style="display:none;">
+              <div class="compra-label">¿Para cuáles de tus mascotas? <span class="compra-label-hint">Puedes elegir varias</span></div>
+              <div class="mascota-pills" id="detailMascotaPills"></div>
             </div>
             <div class="field" id="detailCantidadWrap" style="display:none;">
               <label>Cantidad</label>
-              <input type="number" id="detailCantidad" min="1" step="1" value="1">
+              <div class="cantidad-stepper">
+                <button type="button" class="cantidad-btn" data-paso="-1">−</button>
+                <input type="number" id="detailCantidad" min="1" step="1" value="1">
+                <button type="button" class="cantidad-btn" data-paso="1">+</button>
+              </div>
             </div>
-            <button type="button" class="btn-save" id="detailComprarBtn">Comprar</button>
+            <button type="button" class="btn-comprar" id="detailComprarBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              Comprar
+            </button>
             <div class="modal-msg" id="detailCompraMsg"></div>
             <div class="compra-ok" id="detailCompraOk" style="display:none;"></div>
           </div>
@@ -1430,6 +1461,8 @@
     }
 
     // ---------------- Bloque de compra ----------------
+    let mascotasSeleccionadas = new Set();
+
     function prepararBloqueCompra(item){
       const bloque = document.getElementById('detailCompraBlock');
       const mascotaWrap = document.getElementById('detailMascotaWrap');
@@ -1438,10 +1471,11 @@
       const ok = document.getElementById('detailCompraOk');
       msg.style.display = 'none';
       ok.style.display = 'none';
-      document.getElementById('detailComprarBtn').style.display = 'block';
+      document.getElementById('detailComprarBtn').style.display = 'flex';
       document.getElementById('detailComprarBtn').disabled = false;
-      document.getElementById('detailComprarBtn').textContent = 'Comprar';
+      document.getElementById('detailComprarBtn').lastChild.textContent = 'Comprar';
       document.getElementById('detailCantidad').value = 1;
+      mascotasSeleccionadas = new Set();
 
       // Solo los Acudientes pueden comprar
       if (!perfilActual || perfilActual.role !== 'cliente') {
@@ -1453,18 +1487,47 @@
       if (item.tipo_item === 'servicio') {
         mascotaWrap.style.display = 'block';
         cantidadWrap.style.display = 'none';
-        if (misMascotas.length === 0) {
-          document.getElementById('detailMascotaSelect').innerHTML = '<option value="">No tienes mascotas registradas</option>';
-        } else {
-          document.getElementById('detailMascotaSelect').innerHTML =
-            '<option value="">Selecciona una mascota</option>' +
-            misMascotas.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-        }
+        pintarMascotaPills();
       } else {
         mascotaWrap.style.display = 'none';
         cantidadWrap.style.display = 'block';
       }
     }
+
+    function pintarMascotaPills(){
+      const cont = document.getElementById('detailMascotaPills');
+      if (misMascotas.length === 0) {
+        cont.innerHTML = `<div style="font-size:12.5px; color:var(--mist-dim);">No tienes mascotas registradas.</div>`;
+        return;
+      }
+      cont.innerHTML = misMascotas.map(m => `
+        <div class="mascota-pill" data-id="${m.id}">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          ${m.nombre}
+        </div>
+      `).join('');
+      cont.querySelectorAll('.mascota-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const id = pill.dataset.id;
+          if (mascotasSeleccionadas.has(id)) {
+            mascotasSeleccionadas.delete(id);
+            pill.classList.remove('selected');
+          } else {
+            mascotasSeleccionadas.add(id);
+            pill.classList.add('selected');
+          }
+        });
+      });
+    }
+
+    document.querySelectorAll('.cantidad-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('detailCantidad');
+        const paso = parseInt(btn.dataset.paso, 10);
+        const nuevo = Math.max(1, (parseInt(input.value, 10) || 1) + paso);
+        input.value = nuevo;
+      });
+    });
 
     document.getElementById('detailComprarBtn').addEventListener('click', async () => {
       const btn = document.getElementById('detailComprarBtn');
@@ -1475,40 +1538,52 @@
       const item = itemDetalleActual;
       if (!item) return;
 
-      let payload = {
+      const base = {
         cliente_id: perfilActual.id,
         tienda_item_id: item.id,
         tipo_item: item.tipo_item,
         categoria_item: item.categoria || null
       };
 
+      let filas = [];
+
       if (item.tipo_item === 'servicio') {
-        const alumnoId = document.getElementById('detailMascotaSelect').value;
-        if (!alumnoId) {
-          msg.textContent = 'Selecciona para cuál de tus mascotas es.';
+        if (mascotasSeleccionadas.size === 0) {
+          msg.textContent = 'Selecciona al menos una mascota.';
           msg.style.display = 'block';
           return;
         }
-        payload.alumno_id = alumnoId;
 
+        let datosItem;
         if (item.categoria === 'Hotel') {
           if (!seleccionCompra.fecha_checkin || !seleccionCompra.fecha_checkout) {
             msg.textContent = 'Elige la fecha de entrada y de salida.';
             msg.style.display = 'block';
             return;
           }
-          payload.nombre_item = item.nombre;
-          payload.precio_unitario = item.precio;
-          payload.precio_total = seleccionCompra.precio_total;
-          payload.fecha_checkin = seleccionCompra.fecha_checkin;
-          payload.fecha_checkout = seleccionCompra.fecha_checkout;
-          payload.noches = seleccionCompra.noches;
+          datosItem = {
+            nombre_item: item.nombre,
+            precio_unitario: item.precio,
+            precio_total: seleccionCompra.precio_total,
+            fecha_checkin: seleccionCompra.fecha_checkin,
+            fecha_checkout: seleccionCompra.fecha_checkout,
+            noches: seleccionCompra.noches
+          };
         } else {
-          payload.nombre_item = seleccionCompra.nombre_item || item.nombre;
-          payload.tienda_plan_id = seleccionCompra.tienda_plan_id || null;
-          payload.precio_unitario = seleccionCompra.precio_unitario;
-          payload.precio_total = seleccionCompra.precio_total;
+          datosItem = {
+            nombre_item: seleccionCompra.nombre_item || item.nombre,
+            tienda_plan_id: seleccionCompra.tienda_plan_id || null,
+            precio_unitario: seleccionCompra.precio_unitario,
+            precio_total: seleccionCompra.precio_total
+          };
         }
+
+        // Una fila por cada mascota elegida — mismo ítem, mismo precio,
+        // mismo momento, pero como solicitudes independientes (igual
+        // que "diversificar" en la Tienda).
+        filas = [...mascotasSeleccionadas].map(alumnoId => ({
+          ...base, ...datosItem, alumno_id: alumnoId
+        }));
       } else {
         const cantidad = parseInt(document.getElementById('detailCantidad').value, 10) || 1;
         if (cantidad < 1) {
@@ -1516,28 +1591,33 @@
           msg.style.display = 'block';
           return;
         }
-        payload.nombre_item = item.nombre;
-        payload.cantidad = cantidad;
-        payload.precio_unitario = item.precio;
-        payload.precio_total = item.precio * cantidad;
+        filas = [{
+          ...base,
+          nombre_item: item.nombre,
+          cantidad,
+          precio_unitario: item.precio,
+          precio_total: item.precio * cantidad
+        }];
       }
 
       btn.disabled = true;
-      btn.textContent = 'Enviando…';
+      btn.lastChild.textContent = 'Enviando…';
 
-      const { error } = await supabase.from('compras').insert(payload);
+      const { error } = await supabase.from('compras').insert(filas);
 
       if (error) {
         msg.textContent = 'No se pudo enviar la solicitud: ' + error.message;
         msg.style.display = 'block';
         btn.disabled = false;
-        btn.textContent = 'Comprar';
+        btn.lastChild.textContent = 'Comprar';
         return;
       }
 
       btn.style.display = 'none';
       ok.style.display = 'block';
-      ok.textContent = '¡Listo! Tu solicitud quedó registrada y en Cartera, en espera de que el colegio la apruebe.';
+      ok.textContent = filas.length > 1
+        ? `¡Listo! Se registraron ${filas.length} solicitudes (una por mascota) en Cartera, en espera de que el colegio las apruebe.`
+        : '¡Listo! Tu solicitud quedó registrada en Cartera, en espera de que el colegio la apruebe.';
     });
 
     document.getElementById('detailCloseBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
