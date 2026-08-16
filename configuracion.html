@@ -156,11 +156,11 @@
         <div class="grid-3">
           <div class="field">
             <label>Departamento</label>
-            <select id="fDepartamento" autocomplete="off"></select>
+            <input type="text" id="fDepartamento" placeholder="Escribe o elige un departamento" autocomplete="off">
           </div>
           <div class="field">
             <label>Ciudad / Municipio</label>
-            <select id="fCiudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+            <input type="text" id="fCiudad" placeholder="Selecciona primero un departamento" autocomplete="off">
           </div>
           <div class="field">
             <label>Dirección</label>
@@ -277,11 +277,11 @@
           <div class="grid-3">
             <div class="field">
               <label>Departamento</label>
-              <select id="mcDepartamento" autocomplete="off"></select>
+              <input type="text" id="mcDepartamento" placeholder="Escribe o elige un departamento" autocomplete="off">
             </div>
             <div class="field">
               <label>Ciudad / Municipio</label>
-              <select id="mcCiudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+              <input type="text" id="mcCiudad" placeholder="Selecciona primero un departamento" autocomplete="off">
             </div>
             <div class="field">
               <label>Dirección</label>
@@ -301,7 +301,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=12';
     import { PALETAS, aplicarPaleta } from './theme.js?v=12';
     import { capitalizarPalabras } from './textutils.js?v=12';
-    import { poblarDepartamentos, poblarCiudades } from './colombia.js?v=12';
+    import { initSelectorUbicacion } from './colombia.js?v=12';
 
     let esAdmin = false;
     let perfilActual = null;
@@ -426,15 +426,11 @@
           if (data.tipo_identificacion) document.getElementById('mcTipoIdentificacion').value = data.tipo_identificacion;
           document.getElementById('mcNumeroIdentificacion').value = data.numero_identificacion || '';
 
-          poblarDepartamentos(document.getElementById('mcDepartamento'), data.departamento || '');
-          if (data.departamento) poblarCiudades(document.getElementById('mcCiudad'), data.departamento, data.ciudad || '');
+          const selectorMc = initSelectorUbicacion(document.getElementById('mcDepartamento'), document.getElementById('mcCiudad'));
+          selectorMc.setValores(data.departamento || '', data.ciudad || '');
         } else {
-          poblarDepartamentos(document.getElementById('mcDepartamento'), '');
+          initSelectorUbicacion(document.getElementById('mcDepartamento'), document.getElementById('mcCiudad'));
         }
-
-        document.getElementById('mcDepartamento').addEventListener('change', (e) => {
-          poblarCiudades(document.getElementById('mcCiudad'), e.target.value);
-        });
       }
     }
 
@@ -499,11 +495,8 @@
       pintarMetodosPago();
       document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
 
-      poblarDepartamentos(document.getElementById('fDepartamento'), config.departamento || '');
-      if (config.departamento) poblarCiudades(document.getElementById('fCiudad'), config.departamento, config.ciudad || '');
-      document.getElementById('fDepartamento').addEventListener('change', (e) => {
-        poblarCiudades(document.getElementById('fCiudad'), e.target.value);
-      });
+      const selectorNegocio = initSelectorUbicacion(document.getElementById('fDepartamento'), document.getElementById('fCiudad'));
+      selectorNegocio.setValores(config.departamento || '', config.ciudad || '');
     }
 
     function rellenarSoloLectura(){

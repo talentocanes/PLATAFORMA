@@ -119,11 +119,11 @@
       <div class="grid-3">
         <div class="field">
           <label>Departamento</label>
-          <select id="departamento" autocomplete="off"></select>
+          <input type="text" id="departamento" placeholder="Escribe o elige un departamento" autocomplete="off">
         </div>
         <div class="field">
           <label>Ciudad / Municipio</label>
-          <select id="ciudad" autocomplete="off"><option value="">Selecciona primero un departamento</option></select>
+          <input type="text" id="ciudad" placeholder="Selecciona primero un departamento" autocomplete="off">
         </div>
         <div class="field">
           <label>Dirección</label>
@@ -177,7 +177,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js?v=12';
     import { cargarConfiguracionNegocio } from './theme.js?v=12';
     import { capitalizarPalabras } from './textutils.js?v=12';
-    import { poblarDepartamentos, poblarCiudades } from './colombia.js?v=12';
+    import { initSelectorUbicacion } from './colombia.js?v=12';
 
     // Evita que el navegador "recuerde" y restaure una posición de
     // scroll de una carga anterior de esta misma página.
@@ -255,11 +255,8 @@
       document.getElementById('direccion').value = detalle?.direccion || '';
       document.getElementById('correo').value = detalle?.correo || '';
 
-      poblarDepartamentos(document.getElementById('departamento'), detalle?.departamento || '');
-      if (detalle?.departamento) poblarCiudades(document.getElementById('ciudad'), detalle.departamento, detalle?.ciudad || '');
-      document.getElementById('departamento').addEventListener('change', (e) => {
-        poblarCiudades(document.getElementById('ciudad'), e.target.value);
-      });
+      const selectorUbicacion = initSelectorUbicacion(document.getElementById('departamento'), document.getElementById('ciudad'));
+      selectorUbicacion.setValores(detalle?.departamento || '', detalle?.ciudad || '');
 
       if (detalle?.tipo_persona) {
         document.getElementById('tipoPersona').value = detalle.tipo_persona;
