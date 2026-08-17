@@ -216,7 +216,7 @@
 
       <div class="field" id="montoPagarWrap">
         <label>Monto a pagar</label>
-        <input type="number" id="montoPagar" min="1" step="1" placeholder="Ej: 100000">
+        <input type="text" inputmode="numeric" id="montoPagar" placeholder="Ej: 100.000">
         <div class="hint" id="montoPagarHint"></div>
       </div>
 
@@ -276,7 +276,7 @@
       <div class="abono-manual-box" id="abonoManualBox">
         <div class="titulo">Registrar un abono manual (pago fuera de la plataforma)</div>
         <div class="abono-manual-row">
-          <input type="number" id="montoAbonoManual" min="1" step="1" placeholder="Monto del abono">
+          <input type="text" inputmode="numeric" id="montoAbonoManual" placeholder="Ej: 100.000">
           <button type="button" class="btn-registrar-abono" id="btnRegistrarAbonoManual">Registrar</button>
         </div>
         <div class="modal-msg" id="abonoManualMsg"></div>
@@ -291,6 +291,17 @@
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=12';
     import { supabase } from './supabaseClient.js?v=12';
+
+    // Convierte "440000" -> "440.000", ignorando cualquier caracter
+    // que no sea dígito.
+    function formatearMiles(valor){
+      const soloDigitos = String(valor || '').replace(/\D/g, '');
+      if (!soloDigitos) return '';
+      return Number(soloDigitos).toLocaleString('es-CO');
+    }
+    function quitarFormatoMiles(valor){
+      return String(valor || '').replace(/\D/g, '');
+    }
 
     let perfilActual = null;
     let puedeEditar = false;
@@ -499,7 +510,7 @@
       if (modo === 'total') {
         document.getElementById('pagarTitulo').textContent = 'Pagar total';
         document.getElementById('pagarLead').textContent = `Vas a pagar el total de tu deuda: $ ${deudaActualCliente.toLocaleString('es-CO')}.`;
-        montoInput.value = deudaActualCliente;
+        montoInput.value = formatearMiles(deudaActualCliente);
         montoInput.setAttribute('readonly', 'readonly');
         hint.textContent = '';
       } else {
@@ -532,8 +543,11 @@
     document.getElementById('btnAbonar').addEventListener('click', () => abrirModalPagar('abonar'));
 
     document.getElementById('montoPagar').addEventListener('input', (e) => {
+      const crudo = quitarFormatoMiles(e.target.value);
+      e.target.value = formatearMiles(crudo);
+
       const msg = document.getElementById('pagarMsg');
-      const valor = parseFloat(e.target.value);
+      const valor = parseFloat(crudo);
       if (valor > deudaActualCliente) {
         msg.textContent = `No puedes abonar más de tu deuda total: $ ${deudaActualCliente.toLocaleString('es-CO')}.`;
         msg.style.display = 'block';
@@ -560,7 +574,7 @@
       const msg = document.getElementById('pagarMsg');
       msg.style.display = 'none';
 
-      const monto = parseFloat(document.getElementById('montoPagar').value);
+      const monto = parseFloat(quitarFormatoMiles(document.getElementById('montoPagar').value));
 
       if (!monto || monto <= 0) {
         msg.textContent = 'Ingresa un monto válido.';
@@ -798,10 +812,14 @@
       await cargarCompraAdmin();
     });
 
+    document.getElementById('montoAbonoManual').addEventListener('input', (e) => {
+      e.target.value = formatearMiles(e.target.value);
+    });
+
     document.getElementById('btnRegistrarAbonoManual').addEventListener('click', async () => {
       const msg = document.getElementById('abonoManualMsg');
       msg.style.display = 'none';
-      const monto = parseFloat(document.getElementById('montoAbonoManual').value);
+      const monto = parseFloat(quitarFormatoMiles(document.getElementById('montoAbonoManual').value));
 
       if (!monto || monto <= 0) {
         msg.textContent = 'Ingresa un monto válido.';
