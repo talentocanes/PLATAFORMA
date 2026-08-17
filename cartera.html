@@ -8,17 +8,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
 <script src="theme-inline.js?v=12"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   .page-header{ margin-bottom:22px; }
   .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
   .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
 
-  .resumen-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:24px; }
+  .resumen-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:14px; }
   .resumen-card{ background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:16px; padding:16px 18px; }
   .resumen-card .label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:6px; }
   .resumen-card .valor{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; }
   .resumen-card.deuda .valor{ color:#ffc266; }
   .resumen-card.pagado .valor{ color:#7bd88f; }
+
+  .acciones-pago-row{ display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+  .btn-pagar-total{ flex:1; min-width:160px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border:none; border-radius:12px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:700; font-size:13.5px; cursor:pointer; }
+  .btn-abonar{ flex:1; min-width:160px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border:1px solid var(--line-strong); border-radius:12px; background:var(--navy-panel); color:var(--blue-glow); font-weight:700; font-size:13.5px; cursor:pointer; }
+  .btn-pagar-total:disabled, .btn-abonar:disabled{ opacity:.5; cursor:default; }
+  .btn-descargar-excel{ display:flex; align-items:center; gap:8px; padding:11px 16px; border:1px solid var(--line-strong); border-radius:11px; background:var(--navy-panel); color:#7bd88f; font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+  .btn-descargar-excel svg{ width:15px; height:15px; }
 
   .toolbar-tabs{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
   .tab-pill{ padding:9px 16px; border-radius:20px; border:1px solid var(--line); background:var(--navy-panel); color:var(--mist); font-size:13px; cursor:pointer; display:flex; align-items:center; gap:7px; }
@@ -37,8 +45,10 @@
   .tipo-tag.mascota{ color:var(--mist); border:1px solid var(--line); }
   .estado-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; padding:2px 7px; border-radius:20px; letter-spacing:.4px; }
   .estado-tag.pendiente{ color:var(--blue-glow); border:1px solid var(--line-strong); background:color-mix(in srgb, var(--blue-bright) 10%, transparent); }
+  .estado-tag.parcial{ color:#ffc266; border:1px solid rgba(255,194,102,0.35); background:rgba(255,194,102,0.1); }
   .estado-tag.pagado{ color:#7bd88f; border:1px solid rgba(123,216,143,0.3); background:rgba(123,216,143,0.1); }
   .estado-tag.denegada{ color:var(--danger); border:1px solid rgba(255,107,107,0.3); background:rgba(255,107,107,0.1); }
+  .compra-card .saldo{ font-size:11px; color:#ffc266; margin-top:2px; }
   .compra-card .meta{ font-size:12px; color:var(--mist-dim); line-height:1.6; }
   .compra-card .precio{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; white-space:nowrap; }
   .compra-card .acciones{ display:flex; gap:8px; }
@@ -86,6 +96,20 @@
   .solicitud-row .precio{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; }
   .solicitud-row .tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
   .solicitud-row .meta{ font-size:11.5px; color:var(--mist-dim); margin-bottom:10px; }
+
+  .modal-acciones-top{ display:flex; gap:10px; margin-bottom:18px; }
+  .btn-marcar-total{ flex:1; border:none; border-radius:10px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
+  .abono-manual-box{ background:var(--navy-panel-2); border:1px dashed var(--line-strong); border-radius:12px; padding:14px; margin-top:6px; }
+  .abono-manual-box .titulo{ font-size:12.5px; font-weight:600; color:var(--mist); margin-bottom:10px; }
+  .abono-manual-row{ display:flex; gap:8px; }
+  .abono-manual-row input{ flex:1; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; outline:none; }
+  .btn-registrar-abono{ border:none; border-radius:9px; padding:9px 14px; font-size:12.5px; font-weight:600; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); white-space:nowrap; }
+
+  .abono-row{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:13px; padding:13px 15px; margin-bottom:10px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .abono-row .monto{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#7bd88f; }
+  .abono-row .info{ flex:1; min-width:160px; }
+  .abono-row .fecha{ font-size:12px; color:var(--mist-dim); }
+  .abono-row .nombre{ font-size:13px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -125,11 +149,23 @@
         </div>
       </div>
 
+      <div class="acciones-pago-row">
+        <button type="button" class="btn-pagar-total" id="btnPagarTotal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 6 9 17l-5-5"/></svg>
+          Pagar total
+        </button>
+        <button type="button" class="btn-abonar" id="btnAbonar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg>
+          Abonar
+        </button>
+      </div>
+
       <div class="toolbar-tabs">
         <div class="tab-pill active" data-tab="por-pagar">Por pagar <span class="count" id="countPorPagar">0</span></div>
         <div class="tab-pill" data-tab="pendiente-aprobacion">Pendiente de aprobación <span class="count" id="countPendApr">0</span></div>
         <div class="tab-pill" data-tab="pagadas">Pagadas <span class="count" id="countPagadas">0</span></div>
         <div class="tab-pill" data-tab="denegadas-cliente">Denegadas <span class="count" id="countDenegadasCliente">0</span></div>
+        <div class="tab-pill" data-tab="pagos-cliente">Mis pagos <span class="count" id="countPagosCliente">0</span></div>
       </div>
 
       <div id="listaCliente"><div class="empty-note">Cargando…</div></div>
@@ -151,6 +187,10 @@
       <div class="toolbar-tabs">
         <div class="tab-pill active" data-tab="admin-por-cobrar">Por cobrar <span class="count" id="countAdminPorCobrar">0</span></div>
         <div class="tab-pill" data-tab="admin-pagados">Pagos recibidos <span class="count" id="countAdminPagados">0</span></div>
+        <button type="button" class="btn-descargar-excel" id="btnDescargarExcel" style="margin-left:auto;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/></svg>
+          Descargar Excel (deudas)
+        </button>
       </div>
 
       <div id="clientesGridAdmin"><div class="empty-note">Cargando…</div></div>
@@ -160,10 +200,15 @@
   <!-- Modal: pagar (Acudiente) -->
   <div class="modal-overlay" id="pagarOverlay">
     <div class="modal">
-      <h2>Pagar</h2>
+      <h2 id="pagarTitulo">Pagar</h2>
       <p class="lead" id="pagarLead">Transfiere a alguno de estos medios y sube tu comprobante.</p>
 
       <div class="metodos-pago-list" id="metodosPagoList"></div>
+
+      <div class="field" id="montoPagarWrap">
+        <label>Monto a pagar</label>
+        <input type="number" id="montoPagar" min="1" step="1" placeholder="Ej: 100000">
+      </div>
 
       <div class="field">
         <label>Comprobante de pago</label>
@@ -195,7 +240,22 @@
     <div class="modal modal-lg">
       <h2 id="detalleAdminTitulo">Cliente</h2>
       <p class="lead" id="detalleAdminLead">Detalle de sus compras.</p>
+
+      <div class="modal-acciones-top" id="marcarTotalWrap">
+        <button type="button" class="btn-marcar-total" id="btnMarcarPagoTotal">Marcar pago total</button>
+      </div>
+
       <div id="detalleAdminLista"></div>
+
+      <div class="abono-manual-box" id="abonoManualBox">
+        <div class="titulo">Registrar un abono manual (pago fuera de la plataforma)</div>
+        <div class="abono-manual-row">
+          <input type="number" id="montoAbonoManual" min="1" step="1" placeholder="Monto del abono">
+          <button type="button" class="btn-registrar-abono" id="btnRegistrarAbonoManual">Registrar</button>
+        </div>
+        <div class="modal-msg" id="abonoManualMsg"></div>
+      </div>
+
       <button class="modal-close" id="detalleAdminCloseBtn">Cerrar</button>
     </div>
   </div>
@@ -208,6 +268,7 @@
     let puedeEditar = false;
     let comprasCliente = [];
     let comprasAdmin = [];
+    let abonosCliente = [];
     let vistaAdminActiva = 'admin-por-cobrar';
     let vistaClienteActiva = 'por-pagar';
 
@@ -261,6 +322,10 @@
         .channel('cartera-cliente-cambios')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'compras', filter: `cliente_id=eq.${perfilActual.id}` }, cargarCompraCliente)
         .subscribe();
+      supabase
+        .channel('cartera-cliente-abonos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'abonos', filter: `cliente_id=eq.${perfilActual.id}` }, cargarAbonosCliente)
+        .subscribe();
     }
 
     async function cargarCompraCliente(){
@@ -276,14 +341,31 @@
       }
 
       comprasCliente = data || [];
+      await cargarAbonosCliente();
+      actualizarResumenCliente();
+      pintarListaCliente();
+    }
 
-      const porPagar = comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pendiente');
+    async function cargarAbonosCliente(){
+      const { data } = await supabase
+        .from('abonos')
+        .select('*')
+        .eq('cliente_id', perfilActual.id)
+        .order('created_at', { ascending: false });
+      abonosCliente = data || [];
+      document.getElementById('countPagosCliente').textContent = abonosCliente.length;
+      if (vistaClienteActiva === 'pagos-cliente') pintarListaCliente();
+    }
+
+    function actualizarResumenCliente(){
+      const porPagar = comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago !== 'pagado');
       const pendApr = comprasCliente.filter(c => c.estado_aprobacion === 'pendiente');
       const pagadas = comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pagado');
       const denegadas = comprasCliente.filter(c => c.estado_aprobacion === 'denegado');
 
-      const debe = porPagar.reduce((s, c) => s + Number(c.precio_total), 0);
-      const pagado = pagadas.reduce((s, c) => s + Number(c.precio_total), 0);
+      const debe = porPagar.reduce((s, c) => s + (Number(c.precio_total) - Number(c.monto_pagado || 0)), 0);
+      deudaActualCliente = debe;
+      const pagado = comprasCliente.filter(c => c.estado_aprobacion === 'aprobado').reduce((s, c) => s + Number(c.monto_pagado || 0), 0);
       document.getElementById('clienteDebe').textContent = '$ ' + debe.toLocaleString('es-CO');
       document.getElementById('clientePagado').textContent = '$ ' + pagado.toLocaleString('es-CO');
       document.getElementById('countPorPagar').textContent = porPagar.length;
@@ -291,25 +373,50 @@
       document.getElementById('countPagadas').textContent = pagadas.length;
       document.getElementById('countDenegadasCliente').textContent = denegadas.length;
 
-      pintarListaCliente();
+      document.getElementById('btnPagarTotal').disabled = debe <= 0;
+      document.getElementById('btnAbonar').disabled = debe <= 0;
     }
 
     function pintarListaCliente(){
+      const cont = document.getElementById('listaCliente');
+
+      if (vistaClienteActiva === 'pagos-cliente') {
+        if (abonosCliente.length === 0) {
+          cont.innerHTML = `<div class="empty-note">Todavía no has hecho ningún pago.</div>`;
+          return;
+        }
+        cont.innerHTML = abonosCliente.map(a => `
+          <div class="abono-row">
+            <div class="info">
+              <div class="nombre">Pago de $ ${Number(a.monto).toLocaleString('es-CO')}</div>
+              <div class="fecha">${new Date(a.created_at).toLocaleDateString('es-CO')} ${new Date(a.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}${a.registrado_por_staff ? ' · Registrado por el colegio' : ''}</div>
+            </div>
+            <div class="monto">$ ${Number(a.monto).toLocaleString('es-CO')}</div>
+            ${a.comprobante_url ? `<button class="btn-ver-comprobante" data-action="ver-comprobante" data-url="${a.comprobante_url}">Ver comprobante</button>` : ''}
+          </div>
+        `).join('');
+        cont.querySelectorAll('[data-action="ver-comprobante"]').forEach(btn => {
+          btn.addEventListener('click', () => abrirVerComprobante(btn.dataset.url));
+        });
+        return;
+      }
+
       const map = {
-        'por-pagar': comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pendiente'),
+        'por-pagar': comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago !== 'pagado'),
         'pendiente-aprobacion': comprasCliente.filter(c => c.estado_aprobacion === 'pendiente'),
         'pagadas': comprasCliente.filter(c => c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pagado'),
         'denegadas-cliente': comprasCliente.filter(c => c.estado_aprobacion === 'denegado')
       };
       const lista = map[vistaClienteActiva] || [];
-      const cont = document.getElementById('listaCliente');
 
       if (lista.length === 0) {
         cont.innerHTML = `<div class="empty-note">No hay nada aquí todavía.</div>`;
         return;
       }
 
-      cont.innerHTML = lista.map(c => `
+      cont.innerHTML = lista.map(c => {
+        const saldo = Number(c.precio_total) - Number(c.monto_pagado || 0);
+        return `
         <div class="compra-card">
           <div class="info">
             <div class="row1">
@@ -319,20 +426,18 @@
               ${c.estado_aprobacion === 'pendiente' ? '<span class="estado-tag pendiente">Pendiente de aprobación</span>' : ''}
               ${c.estado_aprobacion === 'denegado' ? '<span class="estado-tag denegada">Denegada</span>' : ''}
               ${c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pagado' ? '<span class="estado-tag pagado">Pagada</span>' : ''}
+              ${c.estado_aprobacion === 'aprobado' && c.estado_pago === 'parcial' ? '<span class="estado-tag parcial">Pago parcial</span>' : ''}
             </div>
             <div class="meta">${infoLinea(c)}</div>
+            ${c.estado_aprobacion === 'aprobado' && c.estado_pago !== 'pagado' && Number(c.monto_pagado) > 0 ? `<div class="saldo">Abonado: $ ${Number(c.monto_pagado).toLocaleString('es-CO')} · Saldo: $ ${saldo.toLocaleString('es-CO')}</div>` : ''}
           </div>
           <div class="precio">$ ${Number(c.precio_total).toLocaleString('es-CO')}</div>
           <div class="acciones">
-            ${c.estado_aprobacion === 'aprobado' && c.estado_pago === 'pendiente' ? `<button class="btn-pagar" data-action="pagar" data-id="${c.id}">Pagar</button>` : ''}
             ${c.comprobante_url ? `<button class="btn-ver-comprobante" data-action="ver-comprobante" data-url="${c.comprobante_url}">Ver comprobante</button>` : ''}
           </div>
         </div>
-      `).join('');
+      `;}).join('');
 
-      cont.querySelectorAll('[data-action="pagar"]').forEach(btn => {
-        btn.addEventListener('click', () => abrirModalPagar(btn.dataset.id));
-      });
       cont.querySelectorAll('[data-action="ver-comprobante"]').forEach(btn => {
         btn.addEventListener('click', () => abrirVerComprobante(btn.dataset.url));
       });
@@ -347,19 +452,29 @@
       });
     });
 
-    // ---------------- Modal Pagar ----------------
+    // ---------------- Modal Pagar (Pagar total / Abonar) ----------------
     const pagarOverlay = document.getElementById('pagarOverlay');
-    let compraAPagarId = null;
     let archivoComprobante = null;
+    let deudaActualCliente = 0;
 
-    async function abrirModalPagar(compraId){
-      compraAPagarId = compraId;
+    function abrirModalPagar(modo){
       archivoComprobante = null;
       document.getElementById('comprobanteNombre').textContent = 'Ningún archivo';
       document.getElementById('comprobantePreview').style.display = 'none';
       document.getElementById('pagarMsg').style.display = 'none';
       document.getElementById('pagarSaveBtn').disabled = false;
       document.getElementById('pagarSaveBtn').textContent = 'Confirmar pago';
+
+      if (modo === 'total') {
+        document.getElementById('pagarTitulo').textContent = 'Pagar total';
+        document.getElementById('pagarLead').textContent = `Vas a pagar el total de tu deuda: $ ${deudaActualCliente.toLocaleString('es-CO')}.`;
+        document.getElementById('montoPagar').value = deudaActualCliente;
+      } else {
+        document.getElementById('pagarTitulo').textContent = 'Abonar';
+        document.getElementById('pagarLead').textContent = 'Escribe cuánto quieres abonar.';
+        document.getElementById('montoPagar').value = '';
+      }
+      document.getElementById('montoPagar').max = deudaActualCliente;
 
       const config = obtenerConfiguracionActual();
       const metodos = config?.metodos_pago || [];
@@ -377,6 +492,9 @@
 
       pagarOverlay.classList.add('active');
     }
+
+    document.getElementById('btnPagarTotal').addEventListener('click', () => abrirModalPagar('total'));
+    document.getElementById('btnAbonar').addEventListener('click', () => abrirModalPagar('abonar'));
 
     document.getElementById('btnComprobante').addEventListener('click', () => document.getElementById('fileComprobante').click());
     document.getElementById('fileComprobante').addEventListener('change', (e) => {
@@ -396,6 +514,18 @@
       const msg = document.getElementById('pagarMsg');
       msg.style.display = 'none';
 
+      const monto = parseFloat(document.getElementById('montoPagar').value);
+
+      if (!monto || monto <= 0) {
+        msg.textContent = 'Ingresa un monto válido.';
+        msg.style.display = 'block';
+        return;
+      }
+      if (monto > deudaActualCliente) {
+        msg.textContent = `El monto no puede ser mayor a lo que debes ($ ${deudaActualCliente.toLocaleString('es-CO')}).`;
+        msg.style.display = 'block';
+        return;
+      }
       if (!archivoComprobante) {
         msg.textContent = 'Sube una foto del comprobante para continuar.';
         msg.style.display = 'block';
@@ -406,15 +536,12 @@
       btn.textContent = 'Enviando…';
 
       try {
-        const ruta = `${perfilActual.id}/${compraAPagarId}-${Date.now()}-${archivoComprobante.name}`;
+        const ruta = `${perfilActual.id}/${Date.now()}-${archivoComprobante.name}`;
         const { error: upErr } = await supabase.storage.from('comprobantes').upload(ruta, archivoComprobante);
         if (upErr) throw new Error(upErr.message);
         const { data: pub } = supabase.storage.from('comprobantes').getPublicUrl(ruta);
 
-        const { error } = await supabase
-          .from('compras')
-          .update({ estado_pago: 'pagado', comprobante_url: pub.publicUrl })
-          .eq('id', compraAPagarId);
+        const { error } = await supabase.rpc('registrar_pago', { p_monto: monto, p_comprobante_url: pub.publicUrl });
         if (error) throw new Error(error.message);
 
         pagarOverlay.classList.remove('active');
@@ -458,15 +585,21 @@
 
       comprasAdmin = data || [];
 
-      const porCobrar = comprasAdmin.filter(c => c.estado_pago === 'pendiente');
+      const porCobrar = comprasAdmin.filter(c => c.estado_pago !== 'pagado');
       const pagados = comprasAdmin.filter(c => c.estado_pago === 'pagado');
 
-      document.getElementById('adminPorCobrar').textContent = '$ ' + porCobrar.reduce((s, c) => s + Number(c.precio_total), 0).toLocaleString('es-CO');
-      document.getElementById('adminPagado').textContent = '$ ' + pagados.reduce((s, c) => s + Number(c.precio_total), 0).toLocaleString('es-CO');
+      document.getElementById('adminPorCobrar').textContent = '$ ' + porCobrar.reduce((s, c) => s + (Number(c.precio_total) - Number(c.monto_pagado || 0)), 0).toLocaleString('es-CO');
+      document.getElementById('adminPagado').textContent = '$ ' + comprasAdmin.reduce((s, c) => s + Number(c.monto_pagado || 0), 0).toLocaleString('es-CO');
       document.getElementById('countAdminPorCobrar').textContent = porCobrar.length;
       document.getElementById('countAdminPagados').textContent = pagados.length;
 
       pintarGrupoAdmin();
+
+      // Si el modal de detalle de un cliente está abierto, se
+      // refresca con los datos nuevos (ej: tras registrar un pago).
+      if (detalleAdminOverlay.classList.contains('active') && clienteDetalleActual) {
+        abrirDetalleAdmin(clienteDetalleActual);
+      }
     }
 
     function agruparPorCliente(lista){
@@ -476,14 +609,14 @@
         if (!grupos.has(key)) grupos.set(key, { cliente_id: key, nombre_cliente: c.nombre_cliente || 'Acudiente', items: [], total: 0 });
         const g = grupos.get(key);
         g.items.push(c);
-        g.total += Number(c.precio_total);
+        g.total += Number(c.precio_total) - Number(c.monto_pagado || 0);
       });
       return [...grupos.values()].sort((a, b) => b.total - a.total);
     }
 
     function pintarGrupoAdmin(){
       const fuente = vistaAdminActiva === 'admin-por-cobrar'
-        ? comprasAdmin.filter(c => c.estado_pago === 'pendiente')
+        ? comprasAdmin.filter(c => c.estado_pago !== 'pagado')
         : comprasAdmin.filter(c => c.estado_pago === 'pagado');
 
       const grid = document.getElementById('clientesGridAdmin');
@@ -522,26 +655,42 @@
     // ---------------- Modal detalle por acudiente (admin) ----------------
     const detalleAdminOverlay = document.getElementById('detalleAdminOverlay');
     let clienteDetalleActual = null;
+    let deudaClienteDetalleActual = 0;
 
     function abrirDetalleAdmin(clienteId){
       clienteDetalleActual = clienteId;
       const fuente = vistaAdminActiva === 'admin-por-cobrar'
-        ? comprasAdmin.filter(c => c.estado_pago === 'pendiente')
+        ? comprasAdmin.filter(c => c.estado_pago !== 'pagado')
         : comprasAdmin.filter(c => c.estado_pago === 'pagado');
       const items = fuente.filter(c => c.cliente_id === clienteId);
-      if (items.length === 0) return;
+      if (items.length === 0) {
+        detalleAdminOverlay.classList.remove('active');
+        return;
+      }
+
+      deudaClienteDetalleActual = items.reduce((s, c) => s + (Number(c.precio_total) - Number(c.monto_pagado || 0)), 0);
 
       document.getElementById('detalleAdminTitulo').textContent = items[0].nombre_cliente || 'Acudiente';
       document.getElementById('detalleAdminLead').textContent = vistaAdminActiva === 'admin-por-cobrar'
-        ? 'Compras aprobadas que aún debe pagar.'
+        ? `Debe $ ${deudaClienteDetalleActual.toLocaleString('es-CO')} en total.`
         : 'Compras ya pagadas.';
+
+      const esPorCobrar = vistaAdminActiva === 'admin-por-cobrar';
+      document.getElementById('marcarTotalWrap').style.display = puedeEditar && esPorCobrar ? 'flex' : 'none';
+      document.getElementById('abonoManualBox').style.display = puedeEditar && esPorCobrar ? 'block' : 'none';
+      document.getElementById('btnMarcarPagoTotal').textContent = `Marcar pago total ($ ${deudaClienteDetalleActual.toLocaleString('es-CO')})`;
+      document.getElementById('montoAbonoManual').value = '';
+      document.getElementById('abonoManualMsg').style.display = 'none';
+
       pintarDetalleAdmin(items);
       detalleAdminOverlay.classList.add('active');
     }
 
     function pintarDetalleAdmin(items){
       const cont = document.getElementById('detalleAdminLista');
-      cont.innerHTML = items.map(c => `
+      cont.innerHTML = items.map(c => {
+        const saldo = Number(c.precio_total) - Number(c.monto_pagado || 0);
+        return `
         <div class="solicitud-row">
           <div class="row1">
             <span class="item-nombre">${c.nombre_item}</span>
@@ -550,43 +699,87 @@
           <div class="tags">
             <span class="tipo-tag ${c.tipo_item}">${c.tipo_item === 'producto' ? 'Producto' : 'Servicio'}</span>
             ${c.nombre_alumno ? `<span class="tipo-tag mascota">🐾 ${c.nombre_alumno}</span>` : ''}
-            <span class="estado-tag ${c.estado_pago === 'pagado' ? 'pagado' : 'pendiente'}">${c.estado_pago === 'pagado' ? 'Pagada' : 'Por pagar'}</span>
+            <span class="estado-tag ${c.estado_pago}">${c.estado_pago === 'pagado' ? 'Pagada' : c.estado_pago === 'parcial' ? 'Pago parcial' : 'Por pagar'}</span>
           </div>
           <div class="meta">${infoLinea(c)}</div>
+          ${c.estado_pago !== 'pagado' && Number(c.monto_pagado) > 0 ? `<div class="saldo">Abonado: $ ${Number(c.monto_pagado).toLocaleString('es-CO')} · Saldo: $ ${saldo.toLocaleString('es-CO')}</div>` : ''}
           <div class="acciones" style="margin-top:10px; display:flex; gap:8px;">
             ${c.comprobante_url ? `<button class="btn-ver-comprobante" data-action="ver-comprobante" data-url="${c.comprobante_url}">Ver comprobante</button>` : `<span style="font-size:11.5px; color:var(--mist-dim);">Sin comprobante subido</span>`}
-            ${puedeEditar && c.estado_pago === 'pendiente' ? `<button class="btn-marcar-pagado" data-action="marcar-pagado" data-id="${c.id}">Marcar como pagado</button>` : ''}
           </div>
         </div>
-      `).join('');
+      `;}).join('');
 
       cont.querySelectorAll('[data-action="ver-comprobante"]').forEach(btn => {
         btn.addEventListener('click', () => abrirVerComprobante(btn.dataset.url));
       });
-      cont.querySelectorAll('[data-action="marcar-pagado"]').forEach(btn => {
-        btn.addEventListener('click', () => marcarComoPagado(btn.dataset.id));
-      });
     }
 
-    async function marcarComoPagado(id){
-      if (!confirm('¿Marcar esta compra como pagada? Úsalo solo si el Acudiente pagó por fuera de la plataforma.')) return;
+    document.getElementById('btnMarcarPagoTotal').addEventListener('click', async () => {
+      if (!confirm(`¿Marcar como pagado el total de $ ${deudaClienteDetalleActual.toLocaleString('es-CO')}? Úsalo solo si el Acudiente ya pagó por fuera de la plataforma.`)) return;
 
-      const { error } = await supabase.from('compras').update({ estado_pago: 'pagado' }).eq('id', id);
+      const { error } = await supabase.rpc('registrar_pago_admin', {
+        p_cliente_id: clienteDetalleActual, p_monto: deudaClienteDetalleActual, p_comprobante_url: null
+      });
       if (error) {
-        alert('No se pudo actualizar: ' + error.message);
+        alert('No se pudo registrar: ' + error.message);
+        return;
+      }
+      await cargarCompraAdmin();
+    });
+
+    document.getElementById('btnRegistrarAbonoManual').addEventListener('click', async () => {
+      const msg = document.getElementById('abonoManualMsg');
+      msg.style.display = 'none';
+      const monto = parseFloat(document.getElementById('montoAbonoManual').value);
+
+      if (!monto || monto <= 0) {
+        msg.textContent = 'Ingresa un monto válido.';
+        msg.style.display = 'block';
+        return;
+      }
+      if (monto > deudaClienteDetalleActual) {
+        msg.textContent = `No puede ser mayor a lo que debe ($ ${deudaClienteDetalleActual.toLocaleString('es-CO')}).`;
+        msg.style.display = 'block';
         return;
       }
 
-      await cargarCompraAdmin();
-      const restantes = comprasAdmin.filter(c => c.cliente_id === clienteDetalleActual && c.estado_pago === 'pendiente');
-      if (vistaAdminActiva === 'admin-por-cobrar' && restantes.length === 0) {
-        detalleAdminOverlay.classList.remove('active');
-      } else if (vistaAdminActiva === 'admin-por-cobrar') {
-        pintarDetalleAdmin(restantes);
+      const { error } = await supabase.rpc('registrar_pago_admin', {
+        p_cliente_id: clienteDetalleActual, p_monto: monto, p_comprobante_url: null
+      });
+      if (error) {
+        msg.textContent = 'No se pudo registrar: ' + error.message;
+        msg.style.display = 'block';
+        return;
       }
-    }
+      document.getElementById('montoAbonoManual').value = '';
+      await cargarCompraAdmin();
+    });
 
     document.getElementById('detalleAdminCloseBtn').addEventListener('click', () => detalleAdminOverlay.classList.remove('active'));
+
+    // ---------------- Descargar Excel de deudas ----------------
+    document.getElementById('btnDescargarExcel').addEventListener('click', () => {
+      const porCobrar = comprasAdmin.filter(c => c.estado_pago !== 'pagado');
+      const grupos = agruparPorCliente(porCobrar);
+
+      if (grupos.length === 0) {
+        alert('No hay ninguna deuda pendiente para exportar.');
+        return;
+      }
+
+      const filas = grupos.map(g => ({
+        'Acudiente': g.nombre_cliente,
+        'Valor que debe': g.total
+      }));
+
+      const hoja = XLSX.utils.json_to_sheet(filas);
+      hoja['!cols'] = [{ wch: 32 }, { wch: 18 }];
+      const libro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(libro, hoja, 'Deudas');
+
+      const fecha = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(libro, `deudas-cartera-${fecha}.xlsx`);
+    });
   </script>
 </body>
 </html>
