@@ -82,6 +82,15 @@
 
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .field input{
+    width:100%; padding:11px 13px; border-radius:10px;
+    border:1px solid var(--line); background:var(--ink);
+    color:var(--white); font-size:14px; outline:none;
+    transition:border-color .2s ease;
+  }
+  .field input:focus{ border-color:var(--blue-bright); }
+  .field input[readonly]{ background:var(--navy-panel-2); color:var(--mist); cursor:default; }
+  .field .hint{ font-size:11px; color:var(--mist-dim); margin-top:6px; }
   .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; }
   .file-row{ display:flex; align-items:center; gap:10px; }
   .file-row .file-name{ flex:1; font-size:12.5px; color:var(--mist-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -99,7 +108,7 @@
 
   .modal-acciones-top{ display:flex; gap:10px; margin-bottom:18px; }
   .btn-marcar-total{ flex:1; border:none; border-radius:10px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
-  .abono-manual-box{ background:var(--navy-panel-2); border:1px dashed var(--line-strong); border-radius:12px; padding:14px; margin-top:6px; }
+  .abono-manual-box{ background:var(--navy-panel-2); border:1px dashed var(--line-strong); border-radius:12px; padding:14px; margin-bottom:20px; }
   .abono-manual-box .titulo{ font-size:12.5px; font-weight:600; color:var(--mist); margin-bottom:10px; }
   .abono-manual-row{ display:flex; gap:8px; }
   .abono-manual-row input{ flex:1; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; outline:none; }
@@ -208,6 +217,7 @@
       <div class="field" id="montoPagarWrap">
         <label>Monto a pagar</label>
         <input type="number" id="montoPagar" min="1" step="1" placeholder="Ej: 100000">
+        <div class="hint" id="montoPagarHint"></div>
       </div>
 
       <div class="field">
@@ -235,6 +245,24 @@
     </div>
   </div>
 
+  <!-- Modal: confirmar pago total (admin) -->
+  <div class="modal-overlay" id="confirmarPagoTotalOverlay">
+    <div class="modal">
+      <h2>Marcar pago total</h2>
+      <p class="lead" id="confirmarPagoTotalLead">Vas a marcar como pagada toda la deuda de este Acudiente.</p>
+
+      <div class="field">
+        <label>Monto</label>
+        <input type="text" id="montoPagoTotalAdmin" readonly>
+        <div class="hint">Úsalo solo si el Acudiente ya pagó por fuera de la plataforma (efectivo, transferencia directa, etc.).</div>
+      </div>
+
+      <div class="modal-msg" id="confirmarPagoTotalMsg"></div>
+      <button class="btn-save" id="confirmarPagoTotalBtn">Confirmar pago total</button>
+      <button class="modal-close" id="confirmarPagoTotalCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
   <!-- Modal: detalle por acudiente (admin) -->
   <div class="modal-overlay" id="detalleAdminOverlay">
     <div class="modal modal-lg">
@@ -245,8 +273,6 @@
         <button type="button" class="btn-marcar-total" id="btnMarcarPagoTotal">Marcar pago total</button>
       </div>
 
-      <div id="detalleAdminLista"></div>
-
       <div class="abono-manual-box" id="abonoManualBox">
         <div class="titulo">Registrar un abono manual (pago fuera de la plataforma)</div>
         <div class="abono-manual-row">
@@ -255,6 +281,8 @@
         </div>
         <div class="modal-msg" id="abonoManualMsg"></div>
       </div>
+
+      <div id="detalleAdminLista"></div>
 
       <button class="modal-close" id="detalleAdminCloseBtn">Cerrar</button>
     </div>
@@ -465,16 +493,23 @@
       document.getElementById('pagarSaveBtn').disabled = false;
       document.getElementById('pagarSaveBtn').textContent = 'Confirmar pago';
 
+      const montoInput = document.getElementById('montoPagar');
+      const hint = document.getElementById('montoPagarHint');
+
       if (modo === 'total') {
         document.getElementById('pagarTitulo').textContent = 'Pagar total';
         document.getElementById('pagarLead').textContent = `Vas a pagar el total de tu deuda: $ ${deudaActualCliente.toLocaleString('es-CO')}.`;
-        document.getElementById('montoPagar').value = deudaActualCliente;
+        montoInput.value = deudaActualCliente;
+        montoInput.setAttribute('readonly', 'readonly');
+        hint.textContent = '';
       } else {
         document.getElementById('pagarTitulo').textContent = 'Abonar';
         document.getElementById('pagarLead').textContent = 'Escribe cuánto quieres abonar.';
-        document.getElementById('montoPagar').value = '';
+        montoInput.value = '';
+        montoInput.removeAttribute('readonly');
+        hint.textContent = `Puedes abonar hasta $ ${deudaActualCliente.toLocaleString('es-CO')} (tu deuda total).`;
       }
-      document.getElementById('montoPagar').max = deudaActualCliente;
+      montoInput.max = deudaActualCliente;
 
       const config = obtenerConfiguracionActual();
       const metodos = config?.metodos_pago || [];
@@ -495,6 +530,17 @@
 
     document.getElementById('btnPagarTotal').addEventListener('click', () => abrirModalPagar('total'));
     document.getElementById('btnAbonar').addEventListener('click', () => abrirModalPagar('abonar'));
+
+    document.getElementById('montoPagar').addEventListener('input', (e) => {
+      const msg = document.getElementById('pagarMsg');
+      const valor = parseFloat(e.target.value);
+      if (valor > deudaActualCliente) {
+        msg.textContent = `No puedes abonar más de tu deuda total: $ ${deudaActualCliente.toLocaleString('es-CO')}.`;
+        msg.style.display = 'block';
+      } else {
+        msg.style.display = 'none';
+      }
+    });
 
     document.getElementById('btnComprobante').addEventListener('click', () => document.getElementById('fileComprobante').click());
     document.getElementById('fileComprobante').addEventListener('change', (e) => {
@@ -714,16 +760,41 @@
       });
     }
 
-    document.getElementById('btnMarcarPagoTotal').addEventListener('click', async () => {
-      if (!confirm(`¿Marcar como pagado el total de $ ${deudaClienteDetalleActual.toLocaleString('es-CO')}? Úsalo solo si el Acudiente ya pagó por fuera de la plataforma.`)) return;
+    const confirmarPagoTotalOverlay = document.getElementById('confirmarPagoTotalOverlay');
+
+    document.getElementById('btnMarcarPagoTotal').addEventListener('click', () => {
+      document.getElementById('confirmarPagoTotalLead').textContent =
+        `Vas a marcar como pagada toda la deuda de ${document.getElementById('detalleAdminTitulo').textContent}.`;
+      document.getElementById('montoPagoTotalAdmin').value = '$ ' + deudaClienteDetalleActual.toLocaleString('es-CO');
+      document.getElementById('confirmarPagoTotalMsg').style.display = 'none';
+      document.getElementById('confirmarPagoTotalBtn').disabled = false;
+      document.getElementById('confirmarPagoTotalBtn').textContent = 'Confirmar pago total';
+      confirmarPagoTotalOverlay.classList.add('active');
+    });
+
+    document.getElementById('confirmarPagoTotalCloseBtn').addEventListener('click', () => {
+      confirmarPagoTotalOverlay.classList.remove('active');
+    });
+
+    document.getElementById('confirmarPagoTotalBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('confirmarPagoTotalBtn');
+      const msg = document.getElementById('confirmarPagoTotalMsg');
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
 
       const { error } = await supabase.rpc('registrar_pago_admin', {
         p_cliente_id: clienteDetalleActual, p_monto: deudaClienteDetalleActual, p_comprobante_url: null
       });
+
       if (error) {
-        alert('No se pudo registrar: ' + error.message);
+        msg.textContent = 'No se pudo registrar: ' + error.message;
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Confirmar pago total';
         return;
       }
+
+      confirmarPagoTotalOverlay.classList.remove('active');
       await cargarCompraAdmin();
     });
 
