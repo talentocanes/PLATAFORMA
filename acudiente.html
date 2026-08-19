@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Acudiente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<script src="theme-inline.js?v=12"></script>
+<style>
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--mist-dim); background:none; border:none; cursor:pointer; padding:0; margin-bottom:14px; }
+  .back-link:hover{ color:var(--white); }
+  .back-link svg{ width:14px; height:14px; }
+
+  /* ---- Cabecera del acudiente ---- */
+  .person-header{ display:flex; align-items:center; gap:18px; background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:20px; flex-wrap:wrap; }
+  .person-avatar{ width:64px; height:64px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--white); background:linear-gradient(135deg, var(--blue-deep), var(--blue-bright)); }
+  .person-main{ flex:1; min-width:180px; }
+  .person-main h1{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; line-height:1.2; }
+  .person-user{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--mist-dim); margin-top:4px; }
+  .person-tags{ display:flex; gap:7px; margin-top:9px; flex-wrap:wrap; }
+  .person-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .badge-activo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
+  .badge-activo.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
+  .badge-activo.no{ color:var(--mist-dim); background:rgba(111,131,160,0.12); border:1px solid var(--line); }
+  .badge-neutral{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; color:var(--mist); background:var(--navy-panel-2); border:1px solid var(--line); white-space:nowrap; }
+
+  /* ---- Tarjetas de sección ---- */
+  .card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:20px; }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .card-title{ font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; }
+  .card-sub{ font-size:12px; color:var(--mist-dim); margin-top:3px; }
+
+  .info-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px 20px; }
+  .info-item{ font-size:13.5px; }
+  .info-item b{ display:block; font-size:10.5px; color:var(--mist-dim); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+
+  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; }
+  .stat-box{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .stat-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:7px; }
+  .stat-value{ font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; }
+  .stat-value.debe{ color:var(--danger); }
+  .stat-value.ok{ color:#7bd88f; }
+
+  .pets-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px; }
+  .pet-mini-card{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 10px; }
+  .pet-mini-photo{ width:56px; height:56px; border-radius:50%; background:var(--navy-panel); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .pet-mini-photo img{ width:100%; height:100%; object-fit:cover; }
+  .pet-mini-photo svg{ width:22px; height:22px; color:var(--mist-dim); opacity:.5; }
+  .pet-mini-name{ font-size:12.5px; font-weight:600; }
+  .pet-mini-meta{ font-size:10.5px; color:var(--mist-dim); }
+
+  .empty-note{ color:var(--mist-dim); font-size:13px; padding:24px; text-align:center; }
+
+  /* ---- Tablas ---- */
+  .table-scroll{ overflow-x:auto; margin:0 -22px -20px; }
+  table{ width:100%; border-collapse:collapse; min-width:640px; }
+  th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); padding:12px 22px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); white-space:nowrap; }
+  td{ padding:13px 22px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  .cell-dim{ color:var(--mist-dim); }
+  .precio-tachado{ color:var(--mist-dim); text-decoration:line-through; font-size:12px; margin-right:6px; }
+  .precio-final{ font-weight:600; color:var(--white); white-space:nowrap; }
+  .desc-tag{ font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:3px 8px; border-radius:6px; background:color-mix(in srgb, var(--blue-bright) 16%, transparent); color:var(--blue-glow); border:1px solid color-mix(in srgb, var(--blue-bright) 32%, transparent); white-space:nowrap; }
+
+  .btn-add{ display:flex; align-items:center; gap:8px; padding:10px 16px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .btn-add svg{ width:15px; height:15px; }
+  .btn-icon{ display:inline-flex; align-items:center; gap:5px; padding:6px 11px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
+  .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
+  .btn-icon.danger:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
+  .btn-icon svg{ width:13px; height:13px; }
+
+  /* ---- Modales ---- */
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.75); z-index:200; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  .modal-overlay.active{ display:flex; }
+  .modal{ width:100%; max-width:560px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:18px; padding:26px; margin:auto; }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:8px; }
+  .modal-lead{ color:var(--mist-dim); font-size:13px; line-height:1.5; margin-bottom:18px; }
+  .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
+  .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+  .btn-save{ width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; margin-top:16px; }
+  .btn-save:disabled{ opacity:.6; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
+  .field input, .field select, .field textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; font-family:inherit; }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--blue-bright); }
+  .field textarea{ resize:vertical; min-height:60px; }
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:11px 12px; margin-bottom:14px; }
+  .toggle-row span{ font-size:13px; }
+  .toggle-row .hint{ display:block; font-size:11.5px; color:var(--mist-dim); margin-top:3px; }
+  .switch{ position:relative; width:38px; height:22px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; inset:0; background:var(--line); border-radius:20px; cursor:pointer; transition:.2s; }
+  .slider::before{ content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:var(--white); border-radius:50%; transition:.2s; }
+  .switch input:checked + .slider{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); }
+  .switch input:checked + .slider::before{ transform:translateX(16px); }
+
+  /* Selector fijo / porcentaje */
+  .seg{ display:flex; gap:8px; margin-bottom:14px; }
+  .seg button{ flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); font-size:13px; font-weight:500; cursor:pointer; }
+  .seg button.active{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 14%, transparent); font-weight:600; }
+
+  /* Lista de ítems seleccionables */
+  .picker-search{ display:flex; align-items:center; gap:8px; background:var(--ink); border:1px solid var(--line); padding:9px 12px; border-radius:10px; margin-bottom:10px; }
+  .picker-search svg{ width:14px; height:14px; opacity:.7; flex-shrink:0; color:var(--mist-dim); }
+  .picker-search input{ flex:1; background:none; border:none; outline:none; color:var(--white); font-size:13px; }
+  .picker-list{ max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:12px; background:var(--ink); }
+  .pick-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .pick-row:last-child{ border-bottom:none; }
+  .pick-row:hover{ background:color-mix(in srgb, var(--blue-bright) 6%, transparent); }
+  .pick-row.plan{ padding-left:34px; background:color-mix(in srgb, var(--blue-bright) 3%, transparent); }
+  .pick-row input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--blue-bright); flex-shrink:0; cursor:pointer; }
+  .pick-row.disabled{ opacity:.42; pointer-events:none; }
+  .pick-info{ flex:1; min-width:0; }
+  .pick-name{ font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pick-meta{ font-size:11px; color:var(--mist-dim); margin-top:2px; }
+  .pick-price{ font-size:12.5px; white-space:nowrap; text-align:right; }
+  .pick-count{ font-size:12px; color:var(--mist-dim); margin:10px 0 4px; }
+
+  @media (max-width:680px){
+    .card{ padding:18px 16px; }
+    .table-scroll{ margin:0 -16px -18px; }
+    th, td{ padding:11px 16px; }
+    .person-header{ padding:18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+  <script src="sidebar-inline.js?v=12" data-active="clientes"></script>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b id="crumbLabel">Acudientes</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <button class="back-link" id="btnVolver">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <span id="volverLabel">Volver a acudientes</span>
+    </button>
+
+    <!-- Cabecera -->
+    <div class="person-header">
+      <div class="person-avatar" id="pAvatar">—</div>
+      <div class="person-main">
+        <h1 id="pNombre">Cargando…</h1>
+        <div class="person-user" id="pUsuario"></div>
+        <div class="person-tags" id="pTags"></div>
+      </div>
+      <div class="person-actions" id="pActions"></div>
+    </div>
+
+    <!-- Datos de contacto -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Datos de contacto</div></div>
+      <div class="info-grid">
+        <div class="info-item"><b>Teléfono</b><span id="iTelefono">—</span></div>
+        <div class="info-item"><b>Correo</b><span id="iCorreo">—</span></div>
+        <div class="info-item"><b>Identificación</b><span id="iIdentificacion">—</span></div>
+        <div class="info-item"><b>Ubicación</b><span id="iUbicacion">—</span></div>
+      </div>
+    </div>
+
+    <!-- Cartera -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Estado de cuenta</div>
+          <div class="card-sub">Resumen de sus compras aprobadas.</div>
+        </div>
+        <button class="btn-icon" id="btnIrCartera">Ver en Cartera</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Por cobrar</div>
+          <div class="stat-value debe" id="sDebe">$ 0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Abonado</div>
+          <div class="stat-value" id="sAbonado">$ 0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Total pagado</div>
+          <div class="stat-value ok" id="sPagado">$ 0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Compras</div>
+          <div class="stat-value" id="sCompras">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mascotas -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Mascotas</div></div>
+      <div class="pets-grid" id="petsGrid">
+        <div class="empty-note">Cargando…</div>
+      </div>
+    </div>
+
+    <!-- Precios especiales -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Precios especiales</div>
+          <div class="card-sub">Descuentos que solo aplican para esta persona.</div>
+        </div>
+        <button class="btn-add" id="btnAsignar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Asignar descuento
+        </button>
+      </div>
+      <div id="preciosWrap">
+        <div class="empty-note">Cargando…</div>
+      </div>
+    </div>
+
+    <!-- Compras recientes -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Compras recientes</div></div>
+      <div id="comprasWrap">
+        <div class="empty-note">Cargando…</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: asignar descuento -->
+  <div class="modal-overlay" id="asignarOverlay">
+    <div class="modal">
+      <h2 id="asignarTitulo">Asignar descuento</h2>
+      <p class="modal-lead">Elige uno o varios ítems y aplícales el mismo descuento de una sola vez. Si marcas un servicio con planes, el descuento se aplica a todos sus planes; si prefieres, marca solo los planes que quieras.</p>
+
+      <div class="picker-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="pickerSearch" placeholder="Buscar ítem…" autocomplete="off">
+      </div>
+      <div class="picker-list" id="pickerList">
+        <div class="empty-note">Cargando ítems…</div>
+      </div>
+      <div class="pick-count" id="pickCount">Ninguno seleccionado</div>
+
+      <div class="seg" id="segTipo">
+        <button type="button" data-tipo="porcentaje" class="active">Descuento %</button>
+        <button type="button" data-tipo="fijo">Precio fijo</button>
+      </div>
+
+      <div class="field">
+        <label id="labelValor">Porcentaje de descuento</label>
+        <input type="text" id="inputValor" inputmode="numeric" placeholder="Ej: 15" autocomplete="off">
+      </div>
+
+      <div class="toggle-row">
+        <span>
+          Mostrar como descuento
+          <span class="hint" id="hintMostrar">Verá el precio original tachado junto al suyo.</span>
+        </span>
+        <label class="switch">
+          <input type="checkbox" id="inputMostrar" checked autocomplete="off">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Nota interna (opcional)</label>
+        <input type="text" id="inputNota" placeholder="Ej: convenio con la veterinaria" autocomplete="off">
+      </div>
+
+      <div class="modal-msg" id="asignarMsg"></div>
+      <button class="btn-save" id="asignarSaveBtn">Aplicar descuento</button>
+      <button class="modal-close" id="asignarCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: editar acudiente -->
+  <div class="modal-overlay" id="editOverlay">
+    <div class="modal" style="max-width:440px;">
+      <h2 id="editTitulo">Editar acudiente</h2>
+      <p class="modal-lead">Estos cambios los define el administrador.</p>
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="editFullName" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="text" id="editPhone" placeholder="Ej: 3001234567" autocomplete="off">
+      </div>
+      <div class="toggle-row">
+        <span id="editActivoLabel">Acudiente activo</span>
+        <label class="switch">
+          <input type="checkbox" id="editActivo" autocomplete="off">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="modal-msg" id="editMsg"></div>
+      <button class="btn-save" id="editSaveBtn">Guardar cambios</button>
+      <button class="modal-close" id="editCloseBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Aplica de inmediato el término cacheado (evita el "flash" del
+       valor por defecto mientras se espera la respuesta de Supabase). -->
+  <script>
+    (function () {
+      try {
+        var singular = localStorage.getItem('tc_etiqueta_cliente') || 'Acudiente';
+        var plural = localStorage.getItem('tc_etiqueta_cliente_plural') || 'Acudientes';
+        var sMin = singular.toLowerCase();
+        document.title = 'Talento Canes · ' + singular;
+        document.getElementById('crumbLabel').textContent = plural;
+        document.getElementById('volverLabel').textContent = 'Volver a ' + plural.toLowerCase();
+        document.getElementById('editTitulo').textContent = 'Editar ' + sMin;
+        document.getElementById('editActivoLabel').textContent = singular + ' activo';
+      } catch (e) { /* el módulo de abajo lo corrige igual */ }
+    })();
+  </script>
+
+  <script type="module">
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=12';
+    import { supabase } from './supabaseClient.js?v=12';
+    import { capitalizarPalabras } from './textutils.js?v=12';
+
+    const params = new URLSearchParams(window.location.search);
+    const CLIENTE_ID = params.get('id');
+
+    let esAdmin = false;
+    let puedeEditar = false;
+    let etiquetaCliente = 'Acudiente';
+    let etiquetaClientePlural = 'Acudientes';
+    let persona = null;
+    let detalle = {};
+    let catalogo = [];        // tienda_items
+    let planesPorItem = {};   // { item_id: [planes] }
+    let seleccion = new Set();// claves "item:<id>" o "plan:<id>"
+    let tipoDescuento = 'porcentaje';
+    let terminoPicker = '';
+
+    // ---------- utilidades ----------
+    function formatearMiles(valor){
+      const soloDigitos = String(valor || '').replace(/\D/g, '');
+      if (!soloDigitos) return '';
+      return Number(soloDigitos).toLocaleString('es-CO');
+    }
+    function quitarFormatoMiles(valor){
+      return String(valor || '').replace(/\D/g, '');
+    }
+    function pesos(n){
+      return '$ ' + Number(n || 0).toLocaleString('es-CO');
+    }
+    // Mismo redondeo que aplicar_descuento() en la base de datos.
+    function aplicarDescuento(base, tipo, valor){
+      const b = Number(base) || 0;
+      const v = Number(valor) || 0;
+      const bruto = tipo === 'fijo' ? v : b - (b * v / 100);
+      return Math.max(0, Math.round(bruto / 100) * 100);
+    }
+    function escapar(t){
+      return String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function fechaCorta(iso){
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    // ---------- arranque ----------
+    (async () => {
+      const profile = await initLayout({ activeKey: 'clientes' });
+      if (!profile) return;
+
+      esAdmin = profile.role === 'admin';
+
+      // El permiso de edición no es exclusivo del admin: un trabajador
+      // con el módulo "Clientes" en modo edición también puede asignar
+      // y quitar precios especiales (la RLS ya lo contempla vía
+      // tiene_modulo_edicion('clientes')).
+      if (esAdmin) {
+        puedeEditar = true;
+      } else if (profile.role === 'trabajador') {
+        const { data } = await supabase
+          .from('trabajador_detalle')
+          .select('modulos_edicion')
+          .eq('id', profile.id)
+          .single();
+        puedeEditar = !!data?.modulos_edicion?.includes('clientes');
+      }
+
+      const config = obtenerConfiguracionActual();
+      etiquetaCliente = config?.etiqueta_cliente || 'Acudiente';
+      etiquetaClientePlural = config?.etiqueta_cliente_plural || 'Acudientes';
+      aplicarTerminologia();
+
+      if (!CLIENTE_ID) {
+        document.getElementById('pNombre').textContent = 'Falta el identificador.';
+        return;
+      }
+      if (!esAdmin && profile.role !== 'trabajador') {
+        window.location.href = 'inicio.html';
+        return;
+      }
+
+      if (!puedeEditar) {
+        document.getElementById('btnAsignar').style.display = 'none';
+      }
+
+      await cargarPersona();
+      await Promise.all([
+        cargarMascotas(),
+        cargarCartera(),
+        cargarPreciosEspeciales(),
+        cargarCompras()
+      ]);
+    })();
+
+    function aplicarTerminologia(){
+      const sMin = etiquetaCliente.toLowerCase();
+      document.title = `Talento Canes · ${etiquetaCliente}`;
+      document.getElementById('crumbLabel').textContent = etiquetaClientePlural;
+      document.getElementById('volverLabel').textContent = `Volver a ${etiquetaClientePlural.toLowerCase()}`;
+      document.getElementById('editTitulo').textContent = `Editar ${sMin}`;
+      document.getElementById('editActivoLabel').textContent = `${etiquetaCliente} activo`;
+    }
+
+    document.getElementById('btnVolver').addEventListener('click', () => {
+      window.location.href = 'clientes.html';
+    });
+    document.getElementById('btnIrCartera').addEventListener('click', () => {
+      window.location.href = 'cartera.html';
+    });
+
+    // ---------- datos de la persona ----------
+    async function cargarPersona(){
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, phone, cliente_detalle(activo, correo, tipo_persona, tipo_identificacion, numero_identificacion, direccion, ciudad, departamento)')
+        .eq('id', CLIENTE_ID)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('pNombre').textContent = 'No se pudo cargar la información.';
+        return;
+      }
+
+      persona = data;
+      detalle = data.cliente_detalle || {};
+
+      const nombre = data.full_name || data.username || '—';
+      document.getElementById('pNombre').textContent = nombre;
+      document.getElementById('pUsuario').textContent = '@' + data.username;
+      document.getElementById('pAvatar').textContent = (nombre.trim()[0] || '?').toUpperCase();
+
+      const activo = detalle.activo ?? true;
+      const tags = [`<span class="badge-activo ${activo ? 'si' : 'no'}">${activo ? 'Activo' : 'Inactivo'}</span>`];
+      if (detalle.tipo_persona) tags.push(`<span class="badge-neutral">${escapar(detalle.tipo_persona)}</span>`);
+      document.getElementById('pTags').innerHTML = tags.join('');
+
+      if (puedeEditar) {
+        const acciones = document.getElementById('pActions');
+        acciones.innerHTML = `<button class="btn-icon" id="btnEditar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Editar</button>`;
+        document.getElementById('btnEditar').addEventListener('click', abrirEdicion);
+      }
+
+      document.getElementById('iTelefono').textContent = data.phone || '—';
+      document.getElementById('iCorreo').textContent = detalle.correo || '—';
+      document.getElementById('iIdentificacion').textContent =
+        (detalle.tipo_identificacion && detalle.numero_identificacion)
+          ? `${detalle.tipo_identificacion} ${detalle.numero_identificacion}` : '—';
+      document.getElementById('iUbicacion').textContent =
+        [detalle.direccion, detalle.ciudad, detalle.departamento].filter(Boolean).join(', ') || '—';
+    }
+
+    // ---------- mascotas ----------
+    async function cargarMascotas(){
+      const grid = document.getElementById('petsGrid');
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('id, nombre, foto_url, raza, status')
+        .eq('acudiente_id', CLIENTE_ID)
+        .order('created_at', { ascending: false });
+
+      if (error) { grid.innerHTML = '<div class="empty-note">No se pudieron cargar las mascotas.</div>'; return; }
+      if (!data || data.length === 0) { grid.innerHTML = '<div class="empty-note">Aún no ha registrado mascotas.</div>'; return; }
+
+      grid.innerHTML = data.map(m => `
+        <div class="pet-mini-card">
+          <div class="pet-mini-photo">
+            ${m.foto_url
+              ? `<img src="${escapar(m.foto_url)}" alt="${escapar(m.nombre)}">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>`}
+          </div>
+          <div class="pet-mini-name">${escapar(m.nombre)}</div>
+          <div class="pet-mini-meta">${escapar(m.raza || 'Sin raza')}${m.status === 'pending' ? ' · Pendiente' : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // ---------- cartera ----------
+    async function cargarCartera(){
+      const { data, error } = await supabase
+        .from('compras')
+        .select('precio_total, monto_pagado, estado_aprobacion, estado_pago')
+        .eq('cliente_id', CLIENTE_ID)
+        .eq('estado_aprobacion', 'aprobado');
+
+      if (error || !data) return;
+
+      let total = 0, abonado = 0, pagado = 0;
+      data.forEach(c => {
+        const t = Number(c.precio_total) || 0;
+        const p = Number(c.monto_pagado) || 0;
+        total += t;
+        abonado += p;
+        if (c.estado_pago === 'pagado') pagado += t;
+      });
+
+      document.getElementById('sDebe').textContent = pesos(Math.max(0, total - abonado));
+      document.getElementById('sAbonado').textContent = pesos(abonado);
+      document.getElementById('sPagado').textContent = pesos(pagado);
+      document.getElementById('sCompras').textContent = data.length;
+    }
+
+    // ---------- compras recientes ----------
+    async function cargarCompras(){
+      const wrap = document.getElementById('comprasWrap');
+      const { data, error } = await supabase
+        .from('compras')
+        .select('id, nombre_item, nombre_alumno, cantidad, precio_total, estado_aprobacion, estado_pago, created_at')
+        .eq('cliente_id', CLIENTE_ID)
+        .order('created_at', { ascending: false })
+        .limit(12);
+
+      if (error) { wrap.innerHTML = '<div class="empty-note">No se pudieron cargar las compras.</div>'; return; }
+      if (!data || data.length === 0) { wrap.innerHTML = '<div class="empty-note">Aún no ha hecho compras.</div>'; return; }
+
+      const estadoTexto = c => {
+        if (c.estado_aprobacion === 'pendiente') return 'Por aprobar';
+        if (c.estado_aprobacion === 'denegado') return 'Denegada';
+        return c.estado_pago === 'pagado' ? 'Pagada' : 'Por pagar';
+      };
+
+      wrap.innerHTML = `
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Fecha</th><th>Ítem</th><th>Mascota</th><th>Valor</th><th>Estado</th></tr></thead>
+            <tbody>
+              ${data.map(c => `
+                <tr>
+                  <td class="cell-dim">${fechaCorta(c.created_at)}</td>
+                  <td>${escapar(c.nombre_item || '—')}${c.cantidad > 1 ? ` <span class="cell-dim">× ${c.cantidad}</span>` : ''}</td>
+                  <td class="${c.nombre_alumno ? '' : 'cell-dim'}">${escapar(c.nombre_alumno || '—')}</td>
+                  <td class="precio-final">${pesos(c.precio_total)}</td>
+                  <td class="cell-dim">${estadoTexto(c)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    // ---------- precios especiales ----------
+    async function cargarPreciosEspeciales(){
+      const wrap = document.getElementById('preciosWrap');
+      const { data, error } = await supabase
+        .from('precios_especiales')
+        .select('id, item_id, plan_id, tipo_descuento, valor, mostrar_descuento, nota, tienda_items(nombre, tipo_item, categoria, precio), tienda_planes(nombre, precio)')
+        .eq('cliente_id', CLIENTE_ID);
+
+      if (error) {
+        wrap.innerHTML = `<div class="empty-note">No se pudieron cargar los precios especiales.<br><span style="font-size:11.5px;">${escapar(error.message)}</span></div>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        wrap.innerHTML = '<div class="empty-note">Sin descuentos asignados. Paga los precios normales de la Tienda.</div>';
+        return;
+      }
+
+      const filas = data.map(r => {
+        const esPlan = !!r.plan_id;
+        const base = esPlan ? Number(r.tienda_planes?.precio) : Number(r.tienda_items?.precio);
+        return {
+          id: r.id,
+          item: r.tienda_items?.nombre || '—',
+          plan: esPlan ? (r.tienda_planes?.nombre || '—') : null,
+          categoria: r.tienda_items?.categoria || (r.tienda_items?.tipo_item === 'producto' ? 'Producto' : 'Servicio'),
+          base,
+          final: aplicarDescuento(base, r.tipo_descuento, r.valor),
+          tipo: r.tipo_descuento,
+          valor: Number(r.valor),
+          mostrar: r.mostrar_descuento,
+          nota: r.nota
+        };
+      }).sort((a, b) => a.item.localeCompare(b.item, 'es', { sensitivity:'base' }));
+
+      wrap.innerHTML = `
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Ítem</th><th>Descuento</th><th>Precio para esta persona</th><th>Lo ve tachado</th>${puedeEditar ? '<th></th>' : ''}</tr>
+            </thead>
+            <tbody>
+              ${filas.map(f => `
+                <tr>
+                  <td>
+                    ${escapar(f.item)}${f.plan ? ` <span class="cell-dim">· ${escapar(f.plan)}</span>` : ''}
+                    <div class="cell-dim" style="font-size:11.5px; margin-top:2px;">
+                      ${escapar(f.categoria)}${f.plan ? '' : ' · aplica a todo el ítem'}${f.nota ? ' · ' + escapar(f.nota) : ''}
+                    </div>
+                  </td>
+                  <td><span class="desc-tag">${f.tipo === 'porcentaje' ? `−${f.valor}%` : 'Precio fijo'}</span></td>
+                  <td>
+                    <span class="precio-tachado">${pesos(f.base)}</span>
+                    <span class="precio-final">${pesos(f.final)}</span>
+                  </td>
+                  <td class="cell-dim">${f.mostrar ? 'Sí' : 'No'}</td>
+                  ${puedeEditar ? `<td><button class="btn-icon danger" data-quitar="${f.id}">Quitar</button></td>` : ''}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>`;
+
+      wrap.querySelectorAll('[data-quitar]').forEach(btn => {
+        btn.addEventListener('click', () => quitarDescuento(btn.dataset.quitar));
+      });
+    }
+
+    async function quitarDescuento(id){
+      if (!confirm('¿Quitar este precio especial? Volverá a pagar el precio normal.')) return;
+      const { error } = await supabase.rpc('quitar_precios_especiales', { p_ids: [id] });
+      if (error) { alert('No se pudo quitar: ' + error.message); return; }
+      await cargarPreciosEspeciales();
+    }
+
+    // ---------- modal: asignar ----------
+    const asignarOverlay = document.getElementById('asignarOverlay');
+    const asignarMsg = document.getElementById('asignarMsg');
+
+    document.getElementById('btnAsignar').addEventListener('click', abrirAsignar);
+    document.getElementById('asignarCloseBtn').addEventListener('click', () => asignarOverlay.classList.remove('active'));
+
+    async function abrirAsignar(){
+      seleccion.clear();
+      terminoPicker = '';
+      tipoDescuento = 'porcentaje';
+      document.getElementById('pickerSearch').value = '';
+      document.getElementById('inputValor').value = '';
+      document.getElementById('inputNota').value = '';
+      document.getElementById('inputMostrar').checked = true;
+      document.querySelectorAll('#segTipo button').forEach(b => b.classList.toggle('active', b.dataset.tipo === 'porcentaje'));
+      actualizarEtiquetaValor();
+      asignarMsg.style.display = 'none';
+      asignarOverlay.classList.add('active');
+
+      if (catalogo.length === 0) await cargarCatalogo();
+      pintarPicker();
+    }
+
+    async function cargarCatalogo(){
+      const [{ data: items }, { data: planes }] = await Promise.all([
+        supabase.from('tienda_items').select('id, nombre, tipo_item, categoria, precio, activo').order('orden', { ascending: true }),
+        supabase.from('tienda_planes').select('id, tienda_item_id, nombre, precio').order('orden', { ascending: true })
+      ]);
+
+      catalogo = items || [];
+      planesPorItem = {};
+      (planes || []).forEach(p => {
+        if (!planesPorItem[p.tienda_item_id]) planesPorItem[p.tienda_item_id] = [];
+        planesPorItem[p.tienda_item_id].push(p);
+      });
+    }
+
+    function pintarPicker(){
+      const cont = document.getElementById('pickerList');
+      const q = terminoPicker.toLowerCase();
+      const lista = catalogo.filter(i =>
+        !q || (i.nombre || '').toLowerCase().includes(q) || (i.categoria || '').toLowerCase().includes(q)
+      );
+
+      if (lista.length === 0) {
+        cont.innerHTML = '<div class="empty-note">No hay ítems que coincidan.</div>';
+        actualizarConteo();
+        return;
+      }
+
+      cont.innerHTML = lista.map(i => {
+        const planes = planesPorItem[i.id] || [];
+        const itemMarcado = seleccion.has('item:' + i.id);
+        const filaItem = `
+          <label class="pick-row" data-key="item:${i.id}">
+            <input type="checkbox" ${itemMarcado ? 'checked' : ''}>
+            <div class="pick-info">
+              <div class="pick-name">${escapar(i.nombre)}${!i.activo ? ' <span class="cell-dim">(oculto)</span>' : ''}</div>
+              <div class="pick-meta">${escapar(i.categoria || (i.tipo_item === 'producto' ? 'Producto' : 'Servicio'))}${planes.length ? ` · ${planes.length} plan(es)` : ''}</div>
+            </div>
+            <div class="pick-price" id="precio-item:${i.id}">${pesos(i.precio)}</div>
+          </label>`;
+
+        const filasPlanes = planes.map(p => `
+          <label class="pick-row plan ${itemMarcado ? 'disabled' : ''}" data-key="plan:${p.id}">
+            <input type="checkbox" ${seleccion.has('plan:' + p.id) ? 'checked' : ''}>
+            <div class="pick-info">
+              <div class="pick-name">${escapar(p.nombre)}</div>
+            </div>
+            <div class="pick-price" id="precio-plan:${p.id}">${pesos(p.precio)}</div>
+          </label>`).join('');
+
+        return filaItem + filasPlanes;
+      }).join('');
+
+      cont.querySelectorAll('.pick-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') return;
+          const key = row.dataset.key;
+          if (seleccion.has(key)) seleccion.delete(key); else seleccion.add(key);
+          // marcar el ítem padre deshabilita sus planes (el descuento se hereda)
+          if (key.startsWith('item:')) {
+            const itemId = key.slice(5);
+            (planesPorItem[itemId] || []).forEach(p => seleccion.delete('plan:' + p.id));
+          }
+          pintarPicker();
+        });
+      });
+
+      actualizarConteo();
+      actualizarPreviaPrecios();
+    }
+
+    function actualizarConteo(){
+      const n = seleccion.size;
+      document.getElementById('pickCount').textContent =
+        n === 0 ? 'Ninguno seleccionado' : `${n} seleccionado(s)`;
+    }
+
+    // Muestra en vivo cómo quedaría el precio de cada ítem seleccionado.
+    function actualizarPreviaPrecios(){
+      const crudo = tipoDescuento === 'fijo'
+        ? quitarFormatoMiles(document.getElementById('inputValor').value)
+        : document.getElementById('inputValor').value.replace(/[^\d.]/g, '');
+      const valor = parseFloat(crudo);
+
+      const basePorClave = {};
+      catalogo.forEach(i => { basePorClave['item:' + i.id] = i.precio; });
+      Object.values(planesPorItem).flat().forEach(p => { basePorClave['plan:' + p.id] = p.precio; });
+
+      document.querySelectorAll('.pick-price').forEach(el => {
+        const key = el.id.replace('precio-', '');
+        const base = basePorClave[key];
+        if (base == null) return;
+        if (seleccion.has(key) && !isNaN(valor) && valor >= 0) {
+          const final = aplicarDescuento(base, tipoDescuento, valor);
+          el.innerHTML = `<span class="precio-tachado">${pesos(base)}</span><span class="precio-final">${pesos(final)}</span>`;
+        } else {
+          el.textContent = pesos(base);
+        }
+      });
+    }
+
+    document.getElementById('pickerSearch').addEventListener('input', (e) => {
+      terminoPicker = e.target.value.trim();
+      pintarPicker();
+    });
+
+    document.querySelectorAll('#segTipo button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tipoDescuento = btn.dataset.tipo;
+        document.querySelectorAll('#segTipo button').forEach(b => b.classList.toggle('active', b === btn));
+        document.getElementById('inputValor').value = '';
+        actualizarEtiquetaValor();
+        actualizarPreviaPrecios();
+      });
+    });
+
+    function actualizarEtiquetaValor(){
+      const label = document.getElementById('labelValor');
+      const input = document.getElementById('inputValor');
+      if (tipoDescuento === 'fijo') {
+        label.textContent = 'Precio fijo para esta persona';
+        input.placeholder = 'Ej: 350.000';
+      } else {
+        label.textContent = 'Porcentaje de descuento';
+        input.placeholder = 'Ej: 15';
+      }
+    }
+
+    document.getElementById('inputValor').addEventListener('input', (e) => {
+      if (tipoDescuento === 'fijo') {
+        e.target.value = formatearMiles(e.target.value);
+      } else {
+        let v = e.target.value.replace(/[^\d]/g, '');
+        if (v !== '' && parseInt(v, 10) > 100) v = '100';
+        e.target.value = v;
+      }
+      actualizarPreviaPrecios();
+    });
+
+    document.getElementById('inputMostrar').addEventListener('change', (e) => {
+      document.getElementById('hintMostrar').textContent = e.target.checked
+        ? 'Verá el precio original tachado junto al suyo.'
+        : 'Verá solo su precio, como si fuera el normal.';
+    });
+
+    document.getElementById('asignarSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('asignarSaveBtn');
+      asignarMsg.style.display = 'none';
+
+      if (seleccion.size === 0) {
+        asignarMsg.textContent = 'Selecciona al menos un ítem.';
+        asignarMsg.style.display = 'block';
+        return;
+      }
+
+      const crudo = tipoDescuento === 'fijo'
+        ? quitarFormatoMiles(document.getElementById('inputValor').value)
+        : document.getElementById('inputValor').value.replace(/[^\d]/g, '');
+      const valor = parseFloat(crudo);
+
+      if (isNaN(valor) || valor < 0) {
+        asignarMsg.textContent = tipoDescuento === 'fijo'
+          ? 'Ingresa un precio válido.'
+          : 'Ingresa un porcentaje válido.';
+        asignarMsg.style.display = 'block';
+        return;
+      }
+      if (tipoDescuento === 'porcentaje' && valor > 100) {
+        asignarMsg.textContent = 'El porcentaje no puede pasar de 100.';
+        asignarMsg.style.display = 'block';
+        return;
+      }
+
+      const objetivos = [...seleccion].map(k => k.startsWith('item:')
+        ? { item_id: k.slice(5), plan_id: null }
+        : { item_id: null, plan_id: k.slice(5) });
+
+      btn.disabled = true;
+      btn.textContent = 'Aplicando…';
+
+      const { error } = await supabase.rpc('asignar_precios_especiales', {
+        p_cliente:   CLIENTE_ID,
+        p_objetivos: objetivos,
+        p_tipo:      tipoDescuento,
+        p_valor:     valor,
+        p_mostrar:   document.getElementById('inputMostrar').checked,
+        p_nota:      document.getElementById('inputNota').value.trim() || null
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Aplicar descuento';
+
+      if (error) {
+        asignarMsg.textContent = 'No se pudo aplicar: ' + error.message;
+        asignarMsg.style.display = 'block';
+        return;
+      }
+
+      asignarOverlay.classList.remove('active');
+      await cargarPreciosEspeciales();
+    });
+
+    // ---------- modal: editar ----------
+    const editOverlay = document.getElementById('editOverlay');
+    const editMsg = document.getElementById('editMsg');
+
+    function abrirEdicion(){
+      if (!persona) return;
+      editMsg.style.display = 'none';
+      document.getElementById('editFullName').value = persona.full_name || '';
+      document.getElementById('editPhone').value = persona.phone || '';
+      document.getElementById('editActivo').checked = detalle.activo ?? true;
+      editOverlay.classList.add('active');
+    }
+
+    document.getElementById('editCloseBtn').addEventListener('click', () => editOverlay.classList.remove('active'));
+
+    document.getElementById('editSaveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('editSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      editMsg.style.display = 'none';
+
+      const fullName = capitalizarPalabras(document.getElementById('editFullName').value.trim());
+      const phone = document.getElementById('editPhone').value.trim();
+      const activo = document.getElementById('editActivo').checked;
+
+      const [r1, r2] = await Promise.all([
+        supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', CLIENTE_ID),
+        supabase.from('cliente_detalle').update({ activo }).eq('id', CLIENTE_ID)
+      ]);
+
+      btn.disabled = false;
+      btn.textContent = 'Guardar cambios';
+
+      if (r1.error || r2.error) {
+        editMsg.textContent = 'No se pudo guardar: ' + (r1.error?.message || r2.error?.message);
+        editMsg.style.display = 'block';
+        return;
+      }
+
+      editOverlay.classList.remove('active');
+      await cargarPersona();
+    });
+  </script>
+</body>
+</html>
