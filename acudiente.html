@@ -119,6 +119,8 @@
   .pick-meta{ font-size:11px; color:var(--mist-dim); margin-top:2px; }
   .pick-price{ font-size:12.5px; white-space:nowrap; text-align:right; }
   .pick-count{ font-size:12px; color:var(--mist-dim); margin:10px 0 4px; }
+  .precio-final.invalido{ color:var(--danger); }
+  .pick-warn{ font-size:12px; color:var(--danger); line-height:1.5; margin:6px 0 0; display:none; }
 
   @media (max-width:680px){
     .card{ padding:18px 16px; }
@@ -251,6 +253,7 @@
         <div class="empty-note">Cargando ítems…</div>
       </div>
       <div class="pick-count" id="pickCount">Ninguno seleccionado</div>
+      <div class="pick-warn" id="pickWarn"></div>
 
       <div class="seg" id="segTipo">
         <button type="button" data-tipo="porcentaje" class="active">Descuento %</button>
@@ -662,6 +665,8 @@
       document.getElementById('inputMostrar').checked = true;
       document.querySelectorAll('#segTipo button').forEach(b => b.classList.toggle('active', b.dataset.tipo === 'porcentaje'));
       actualizarEtiquetaValor();
+      document.getElementById('pickWarn').style.display = 'none';
+      document.getElementById('asignarSaveBtn').disabled = false;
       asignarMsg.style.display = 'none';
       asignarOverlay.classList.add('active');
 
@@ -745,28 +750,72 @@
         n === 0 ? 'Ninguno seleccionado' : `${n} seleccionado(s)`;
     }
 
-    // Muestra en vivo cómo quedaría el precio de cada ítem seleccionado.
-    function actualizarPreviaPrecios(){
+    // Mapa auxiliar: clave de selección -> { base, nombre }
+    function basesSeleccionables(){
+      const m = {};
+      catalogo.forEach(i => {
+        m['item:' + i.id] = { base: Number(i.precio) || 0, nombre: i.nombre };
+      });
+      Object.entries(planesPorItem).forEach(([itemId, planes]) => {
+        const padre = catalogo.find(c => c.id === itemId);
+        planes.forEach(p => {
+          m['plan:' + p.id] = {
+            base: Number(p.precio) || 0,
+            nombre: `${padre?.nombre || ''} · ${p.nombre}`.trim()
+          };
+        });
+      });
+      return m;
+    }
+
+    // Devuelve los seleccionados donde el precio fijo supera al precio
+    // normal — eso no sería un descuento, sino un recargo.
+    function seleccionadosInvalidos(valor){
+      if (tipoDescuento !== 'fijo' || isNaN(valor)) return [];
+      const mapa = basesSeleccionables();
+      return [...seleccion]
+        .filter(k => mapa[k] && valor > mapa[k].base)
+        .map(k => mapa[k].nombre);
+    }
+
+    function valorIngresado(){
       const crudo = tipoDescuento === 'fijo'
         ? quitarFormatoMiles(document.getElementById('inputValor').value)
-        : document.getElementById('inputValor').value.replace(/[^\d.]/g, '');
-      const valor = parseFloat(crudo);
+        : document.getElementById('inputValor').value.replace(/[^\d]/g, '');
+      return parseFloat(crudo);
+    }
 
-      const basePorClave = {};
-      catalogo.forEach(i => { basePorClave['item:' + i.id] = i.precio; });
-      Object.values(planesPorItem).flat().forEach(p => { basePorClave['plan:' + p.id] = p.precio; });
+    // Muestra en vivo cómo quedaría el precio de cada ítem seleccionado.
+    function actualizarPreviaPrecios(){
+      const valor = valorIngresado();
+      const mapa = basesSeleccionables();
 
       document.querySelectorAll('.pick-price').forEach(el => {
         const key = el.id.replace('precio-', '');
-        const base = basePorClave[key];
-        if (base == null) return;
+        const entrada = mapa[key];
+        if (!entrada) return;
+        const base = entrada.base;
         if (seleccion.has(key) && !isNaN(valor) && valor >= 0) {
           const final = aplicarDescuento(base, tipoDescuento, valor);
-          el.innerHTML = `<span class="precio-tachado">${pesos(base)}</span><span class="precio-final">${pesos(final)}</span>`;
+          const invalido = tipoDescuento === 'fijo' && valor > base;
+          el.innerHTML = `<span class="precio-tachado">${pesos(base)}</span><span class="precio-final${invalido ? ' invalido' : ''}">${pesos(final)}</span>`;
         } else {
           el.textContent = pesos(base);
         }
       });
+
+      const invalidos = seleccionadosInvalidos(valor);
+      const warn = document.getElementById('pickWarn');
+      if (invalidos.length === 0) {
+        warn.style.display = 'none';
+      } else {
+        warn.style.display = 'block';
+        warn.textContent = invalidos.length === 1
+          ? `El precio que pusiste supera el precio normal de "${invalidos[0]}". Un precio especial no puede quedar por encima del normal.`
+          : `El precio que pusiste supera el precio normal de ${invalidos.length} ítems seleccionados (${invalidos.slice(0, 3).join(', ')}${invalidos.length > 3 ? '…' : ''}). Un precio especial no puede quedar por encima del normal.`;
+      }
+
+      document.getElementById('asignarSaveBtn').disabled = invalidos.length > 0;
     }
 
     document.getElementById('pickerSearch').addEventListener('input', (e) => {
@@ -823,10 +872,7 @@
         return;
       }
 
-      const crudo = tipoDescuento === 'fijo'
-        ? quitarFormatoMiles(document.getElementById('inputValor').value)
-        : document.getElementById('inputValor').value.replace(/[^\d]/g, '');
-      const valor = parseFloat(crudo);
+      const valor = valorIngresado();
 
       if (isNaN(valor) || valor < 0) {
         asignarMsg.textContent = tipoDescuento === 'fijo'
@@ -837,6 +883,13 @@
       }
       if (tipoDescuento === 'porcentaje' && valor > 100) {
         asignarMsg.textContent = 'El porcentaje no puede pasar de 100.';
+        asignarMsg.style.display = 'block';
+        return;
+      }
+
+      const invalidos = seleccionadosInvalidos(valor);
+      if (invalidos.length > 0) {
+        asignarMsg.textContent = `Un precio especial no puede ser mayor al precio normal. Revisa: ${invalidos.slice(0, 3).join(', ')}${invalidos.length > 3 ? '…' : ''}.`;
         asignarMsg.style.display = 'block';
         return;
       }
