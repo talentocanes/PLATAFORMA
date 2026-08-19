@@ -57,6 +57,11 @@
   .compra-card .info .tipo-tag.servicio{ color:#7bd88f; border:1px solid rgba(123,216,143,0.3); }
   .compra-card .info .meta{ font-size:12px; color:var(--mist-dim); line-height:1.6; }
   .compra-card .precio{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--white); white-space:nowrap; }
+
+  /* Precios especiales del acudiente */
+  .precio-tachado{ color:var(--mist-dim); text-decoration:line-through; font-size:.78em; font-weight:400; margin-right:7px; }
+  .item-desc-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.5px; text-transform:uppercase; padding:3px 7px; border-radius:6px; margin-top:6px;
+    background:color-mix(in srgb, var(--blue-bright) 16%, transparent); color:var(--blue-glow); border:1px solid color-mix(in srgb, var(--blue-bright) 32%, transparent); }
   .compra-actions{ display:flex; gap:8px; }
   .btn-aprobar{ border:none; border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); white-space:nowrap; }
   .btn-denegar{ border:1px solid rgba(255,107,107,0.35); border-radius:9px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; background:transparent; color:var(--danger); white-space:nowrap; }
@@ -558,6 +563,7 @@
           .eq('status', 'approved')
           .order('nombre', { ascending: true });
         misMascotas = data || [];
+        await cargarMisDescuentos(profile.id);
       }
 
       if (puedeEditar) {
@@ -600,6 +606,78 @@
       badge.style.display = 'flex';
     }
 
+    // ---------------- Precios especiales del acudiente ----------------
+    // Solo se cargan para el rol 'cliente': el staff siempre ve los
+    // precios normales de la tienda. La RLS de precios_especiales ya
+    // limita al acudiente a sus propias filas.
+    let descuentosItem = {};            // { item_id: { tipo, valor, mostrar } }
+    let descuentosPlan = {};            // { plan_id: { tipo, valor, mostrar } }
+    let planesConDescuento = new Set(); // item_id de los ítems con algún plan en descuento
+
+    async function cargarMisDescuentos(clienteId){
+      const { data, error } = await supabase
+        .from('precios_especiales')
+        .select('item_id, plan_id, tipo_descuento, valor, mostrar_descuento')
+        .eq('cliente_id', clienteId);
+
+      if (error || !data) return;
+
+      descuentosItem = {};
+      descuentosPlan = {};
+      data.forEach(d => {
+        const entrada = { tipo: d.tipo_descuento, valor: Number(d.valor), mostrar: d.mostrar_descuento };
+        if (d.plan_id) descuentosPlan[d.plan_id] = entrada;
+        else descuentosItem[d.item_id] = entrada;
+      });
+    }
+
+    // Mismo redondeo que aplicar_descuento() en la base de datos.
+    function aplicarDescuento(base, tipo, valor){
+      const b = Number(base) || 0;
+      const v = Number(valor) || 0;
+      const bruto = tipo === 'fijo' ? v : b - (b * v / 100);
+      return Math.max(0, Math.round(bruto / 100) * 100);
+    }
+
+    // El descuento del plan manda; si no hay, se hereda el del ítem padre.
+    function descuentoAplicable(itemId, planId){
+      if (perfilActual?.role !== 'cliente') return null;
+      if (planId && descuentosPlan[planId]) return descuentosPlan[planId];
+      return descuentosItem[itemId] || null;
+    }
+
+    // Devuelve { base, final, tiene, mostrar } para un precio dado.
+    function resolverPrecio(base, itemId, planId){
+      const d = descuentoAplicable(itemId, planId);
+      if (!d) return { base, final: base, tiene: false, mostrar: false };
+      return { base, final: aplicarDescuento(base, d.tipo, d.valor), tiene: true, mostrar: d.mostrar };
+    }
+
+    // HTML del precio: con el original tachado si así se configuró.
+    function htmlPrecio(base, itemId, planId, sufijo = ''){
+      const r = resolverPrecio(base, itemId, planId);
+      const final = `$ ${Number(r.final).toLocaleString('es-CO')}${sufijo}`;
+      if (!r.tiene || !r.mostrar) return final;
+      return `<span class="precio-tachado">$ ${Number(r.base).toLocaleString('es-CO')}</span>${final}`;
+    }
+
+    // ¿Este ítem tiene algún descuento a nivel de plan? (para la insignia
+    // de la cuadrícula, donde no se conocen los precios de cada plan).
+    function tieneDescuentoEnAlgunPlan(itemId){
+      if (perfilActual?.role !== 'cliente') return false;
+      return Object.keys(descuentosPlan).length > 0 && planesConDescuento.has(itemId);
+    }
+
+    async function marcarItemsConPlanesEnDescuento(){
+      const ids = Object.keys(descuentosPlan);
+      if (ids.length === 0) { planesConDescuento = new Set(); return; }
+      const { data } = await supabase
+        .from('tienda_planes')
+        .select('id, tienda_item_id')
+        .in('id', ids);
+      planesConDescuento = new Set((data || []).map(p => p.tienda_item_id));
+    }
+
     async function cargarItems(){
       const grid = document.getElementById('itemsGrid');
       const { data, error } = await supabase
@@ -615,6 +693,7 @@
       }
 
       items = data || [];
+      await marcarItemsConPlanesEnDescuento();
       pintarGrid();
     }
 
@@ -668,6 +747,32 @@
       if (conError) console.error('Error al guardar el nuevo orden:', conError.error);
     }
 
+    // Precio que se muestra en la tarjeta. En los ítems con rango de
+    // precios (servicios con planes) solo se puede aplicar aquí el
+    // descuento del ítem padre: los precios de cada plan no se cargan
+    // en la cuadrícula. Si el descuento es de un plan suelto, la tarjeta
+    // mantiene el rango normal y se marca con la insignia.
+    function precioTarjeta(i){
+      const hayRango = i.precio_max != null && i.precio_max !== i.precio;
+      if (!hayRango) return htmlPrecio(i.precio, i.id, null);
+
+      const d = descuentoAplicable(i.id, null);
+      const min = Number(i.precio).toLocaleString('es-CO');
+      const max = Number(i.precio_max).toLocaleString('es-CO');
+      if (!d) return `$ ${min} - $ ${max}`;
+
+      const minD = aplicarDescuento(i.precio, d.tipo, d.valor).toLocaleString('es-CO');
+      const maxD = aplicarDescuento(i.precio_max, d.tipo, d.valor).toLocaleString('es-CO');
+      const conDesc = `$ ${minD} - $ ${maxD}`;
+      return d.mostrar ? `<span class="precio-tachado">$ ${min} - $ ${max}</span>${conDesc}` : conDesc;
+    }
+
+    function insigniaDescuento(i){
+      const d = descuentoAplicable(i.id, null);
+      const visible = (d && d.mostrar) || tieneDescuentoEnAlgunPlan(i.id);
+      return visible ? '<div class="item-desc-badge">Precio especial para ti</div>' : '';
+    }
+
     function pintarGrid(){
       const grid = document.getElementById('itemsGrid');
       let filtrados = items;
@@ -698,10 +803,9 @@
           <div class="item-body">
             <div class="item-cat">${i.categoria || (i.tipo_item === 'producto' ? 'Sin categoría' : 'Sin tipo')}</div>
             <div class="item-name">${i.nombre}</div>
-            <div class="item-price">${i.precio_max != null && i.precio_max !== i.precio
-              ? `$ ${Number(i.precio).toLocaleString('es-CO')} - $ ${Number(i.precio_max).toLocaleString('es-CO')}`
-              : `$ ${Number(i.precio).toLocaleString('es-CO')}`}</div>
+            <div class="item-price">${precioTarjeta(i)}</div>
             ${i.tipo_item === 'producto' && i.stock !== null ? `<div class="item-stock">Stock: ${i.stock}</div>` : ''}
+            ${insigniaDescuento(i)}
           </div>
           ${puedeEditar ? `
             <div class="item-actions">
@@ -1465,12 +1569,14 @@
           let planActivo = 0;
 
           function pintarPrecioPlan(){
-            priceEl.textContent = '$ ' + Number(planes[planActivo].precio).toLocaleString('es-CO');
+            const plan = planes[planActivo];
+            const r = resolverPrecio(plan.precio, item.id, plan.id);
+            priceEl.innerHTML = htmlPrecio(plan.precio, item.id, plan.id);
             seleccionCompra = {
-              tienda_plan_id: planes[planActivo].id,
-              nombre_item: planes[planActivo].nombre,
-              precio_unitario: planes[planActivo].precio,
-              precio_total: planes[planActivo].precio
+              tienda_plan_id: plan.id,
+              nombre_item: plan.nombre,
+              precio_unitario: r.final,
+              precio_total: r.final
             };
             actualizarTotalCompra();
           }
@@ -1490,16 +1596,19 @@
 
           pintarPrecioPlan();
         } else {
-          priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
-          seleccionCompra = { nombre_item: item.nombre, precio_unitario: item.precio, precio_total: item.precio };
+          const r = resolverPrecio(item.precio, item.id, null);
+          priceEl.innerHTML = htmlPrecio(item.precio, item.id, null);
+          seleccionCompra = { nombre_item: item.nombre, precio_unitario: r.final, precio_total: r.final };
         }
       } else if (esHotel) {
         hotelBlock.style.display = 'block';
-        priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO') + ' / noche';
-        renderCalendarioHotel(item.precio);
+        const r = resolverPrecio(item.precio, item.id, null);
+        priceEl.innerHTML = htmlPrecio(item.precio, item.id, null, ' / noche');
+        renderCalendarioHotel(r.final);
       } else {
-        priceEl.textContent = '$ ' + Number(item.precio).toLocaleString('es-CO');
-        seleccionCompra = { nombre_item: item.nombre, precio_unitario: item.precio, precio_total: item.precio };
+        const r = resolverPrecio(item.precio, item.id, null);
+        priceEl.innerHTML = htmlPrecio(item.precio, item.id, null);
+        seleccionCompra = { nombre_item: item.nombre, precio_unitario: r.final, precio_total: r.final };
       }
 
       prepararBloqueCompra(item);
@@ -1591,7 +1700,7 @@
         mostrar = mascotasSeleccionadas.size > 0 && precioUnitario > 0;
       } else {
         const cantidad = parseInt(document.getElementById('detailCantidad').value, 10) || 1;
-        total = item.precio * cantidad;
+        total = resolverPrecio(item.precio, item.id, null).final * cantidad;
         mostrar = true;
       }
 
@@ -1676,7 +1785,7 @@
           }
           datosItem = {
             nombre_item: item.nombre,
-            precio_unitario: item.precio,
+            precio_unitario: resolverPrecio(item.precio, item.id, null).final,
             precio_total: seleccionCompra.precio_total,
             fecha_checkin: seleccionCompra.fecha_checkin,
             fecha_checkout: seleccionCompra.fecha_checkout,
@@ -1705,12 +1814,13 @@
           msg.style.display = 'block';
           return;
         }
+        const unitario = resolverPrecio(item.precio, item.id, null).final;
         filas = [{
           ...base,
           nombre_item: item.nombre,
           cantidad,
-          precio_unitario: item.precio,
-          precio_total: item.precio * cantidad
+          precio_unitario: unitario,
+          precio_total: unitario * cantidad
         }];
       }
 
