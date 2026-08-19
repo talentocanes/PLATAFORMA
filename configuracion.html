@@ -196,6 +196,12 @@
             <input type="text" id="fEtiquetaClientePlural" placeholder="Acudientes" autocomplete="off">
           </div>
         </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label>Aviso de precio especial</label>
+          <input type="text" id="fEtiquetaDescuento" placeholder="Precio especial para ti" autocomplete="off">
+          <p style="color:var(--mist-dim); font-size:12px; margin:6px 0 0;">Frase que ve el acudiente en la Tienda sobre los ítems que tienen un precio especial asignado (ej: Oferta, Descuento, Precio especial).</p>
+        </div>
       </div>
 
       <div class="card">
@@ -491,6 +497,7 @@
       document.getElementById('fPaginaWeb').value = config.pagina_web || '';
       document.getElementById('fEtiquetaCliente').value = config.etiqueta_cliente || 'Acudiente';
       document.getElementById('fEtiquetaClientePlural').value = config.etiqueta_cliente_plural || 'Acudientes';
+      document.getElementById('fEtiquetaDescuento').value = config.etiqueta_descuento || 'Precio especial para ti';
       metodosPago = (config.metodos_pago || []).map(m => ({ filaId: siguienteMetodoId++, nombre: m.nombre || '', detalle: m.detalle || '' }));
       pintarMetodosPago();
       document.getElementById('contratoNombre').textContent = config.contrato_nombre || 'Ningún archivo';
@@ -576,6 +583,7 @@
           pagina_web: document.getElementById('fPaginaWeb').value.trim(),
           etiqueta_cliente: document.getElementById('fEtiquetaCliente').value.trim() || 'Acudiente',
           etiqueta_cliente_plural: document.getElementById('fEtiquetaClientePlural').value.trim() || 'Acudientes',
+          etiqueta_descuento: document.getElementById('fEtiquetaDescuento').value.trim() || 'Precio especial para ti',
           metodos_pago: metodosPago
             .filter(m => m.nombre.trim() !== '' || m.detalle.trim() !== '')
             .map(m => ({ nombre: m.nombre.trim(), detalle: m.detalle.trim() })),
