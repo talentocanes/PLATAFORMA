@@ -510,7 +510,7 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=12';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=12';
     import { supabase } from './supabaseClient.js?v=12';
     import { capitalizarPalabras } from './textutils.js?v=12';
 
@@ -545,6 +545,9 @@
       const profile = await initLayout({ activeKey: 'servicios' });
       if (!profile) return;
       perfilActual = profile;
+
+      const config = obtenerConfiguracionActual();
+      if (config?.etiqueta_descuento) etiquetaDescuento = config.etiqueta_descuento;
 
       if (profile.role === 'admin') {
         puedeEditar = true;
@@ -614,6 +617,11 @@
     let descuentosPlan = {};            // { plan_id: { tipo, valor, mostrar } }
     let planesConDescuento = new Set(); // item_id de los ítems con algún plan en descuento
 
+    // Frase que ve el acudiente en la tarjeta cuando tiene precio
+    // especial. El colegio la personaliza desde Configuración
+    // ("Precio especial", "Oferta", "Descuento"…).
+    let etiquetaDescuento = 'Precio especial para ti';
+
     async function cargarMisDescuentos(clienteId){
       const { data, error } = await supabase
         .from('precios_especiales')
@@ -665,11 +673,13 @@
     // de la cuadrícula, donde no se conocen los precios de cada plan).
     function tieneDescuentoEnAlgunPlan(itemId){
       if (perfilActual?.role !== 'cliente') return false;
-      return Object.keys(descuentosPlan).length > 0 && planesConDescuento.has(itemId);
+      return planesConDescuento.has(itemId);
     }
 
     async function marcarItemsConPlanesEnDescuento(){
-      const ids = Object.keys(descuentosPlan);
+      // Solo cuentan los planes cuyo descuento se muestra: si está
+      // apagado, el acudiente no debe saber que tiene precio especial.
+      const ids = Object.keys(descuentosPlan).filter(id => descuentosPlan[id].mostrar);
       if (ids.length === 0) { planesConDescuento = new Set(); return; }
       const { data } = await supabase
         .from('tienda_planes')
@@ -770,7 +780,7 @@
     function insigniaDescuento(i){
       const d = descuentoAplicable(i.id, null);
       const visible = (d && d.mostrar) || tieneDescuentoEnAlgunPlan(i.id);
-      return visible ? '<div class="item-desc-badge">Precio especial para ti</div>' : '';
+      return visible ? `<div class="item-desc-badge">${etiquetaDescuento}</div>` : '';
     }
 
     function pintarGrid(){
