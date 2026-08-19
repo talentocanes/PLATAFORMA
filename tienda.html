@@ -135,6 +135,39 @@
   .btn-secondary{ padding:9px 16px; border:1px solid var(--line-strong); border-radius:10px; background:var(--navy-panel-2); color:var(--blue-glow); font-weight:600; font-size:12.5px; cursor:pointer; }
 
   .toggle-row{ display:flex; align-items:center; justify-content:space-between; background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; }
+
+  /* Modal de asignación masiva de descuentos */
+  .desc-search{ display:flex; align-items:center; gap:8px; background:var(--ink); border:1px solid var(--line); padding:9px 12px; border-radius:10px; margin-bottom:10px; }
+  .desc-search svg{ width:14px; height:14px; color:var(--mist-dim); flex-shrink:0; }
+  .desc-search input{ flex:1; background:none; border:none; outline:none; color:var(--white); font-size:13px; }
+  .desc-list{ max-height:250px; overflow-y:auto; border:1px solid var(--line); border-radius:12px; background:var(--ink); }
+  .desc-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .desc-row:last-child{ border-bottom:none; }
+  .desc-row:hover{ background:color-mix(in srgb, var(--blue-bright) 6%, transparent); }
+  .desc-row.plan{ padding-left:32px; background:color-mix(in srgb, var(--blue-bright) 3%, transparent); }
+  .desc-row.sel{ background:color-mix(in srgb, var(--blue-bright) 11%, transparent); }
+  .desc-row input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--blue-bright); flex-shrink:0; cursor:pointer; }
+  .desc-info{ flex:1; min-width:0; }
+  .desc-name{ font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .desc-meta{ font-size:11px; color:var(--mist-dim); margin-top:2px; }
+  .desc-right{ font-size:12.5px; white-space:nowrap; text-align:right; color:var(--mist); }
+  .desc-ya{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; padding:2px 6px; border-radius:5px;
+    background:color-mix(in srgb, var(--blue-bright) 14%, transparent); color:var(--blue-glow); border:1px solid color-mix(in srgb, var(--blue-bright) 30%, transparent); }
+  .desc-elegido{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+  .desc-elegido .n{ font-size:13.5px; font-weight:600; }
+  .desc-elegido .p{ font-size:12px; color:var(--mist-dim); margin-top:2px; }
+  .desc-barra{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 4px; }
+  .desc-conteo{ font-size:12px; color:var(--mist-dim); }
+  .desc-seg{ display:flex; gap:8px; margin-bottom:14px; }
+  .desc-seg button{ flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); font-size:13px; cursor:pointer; }
+  .desc-seg button.active{ border-color:var(--blue-bright); color:var(--white); background:color-mix(in srgb, var(--blue-bright) 14%, transparent); font-weight:600; }
+  .desc-msg{ font-size:12px; color:var(--danger); margin-top:10px; display:none; }
+  .desc-ok{ font-size:12.5px; color:#7bd88f; margin-top:10px; display:none; }
+  .modal-actions{ display:flex; gap:10px; margin-top:18px; }
+  .modal-actions button{ flex:1; padding:12px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .modal-actions .prim{ border:none; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
+  .modal-actions .prim:disabled{ opacity:.55; cursor:default; }
+  .modal-actions .sec{ border:1px solid var(--line); background:none; color:var(--mist); }
   .toggle-row span{ font-size:13px; }
   .switch{ position:relative; width:38px; height:22px; }
   .switch input{ opacity:0; width:0; height:0; }
@@ -259,6 +292,10 @@
           Notificaciones de Tienda
           <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
         </a>
+        <button class="btn-notif" id="btnDescuentos" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 5-14 14"/><circle cx="7.5" cy="7.5" r="2.2"/><circle cx="16.5" cy="16.5" r="2.2"/></svg>
+          Añadir descuentos
+        </button>
         <button class="btn-add" id="btnAdd" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           Crear
@@ -509,6 +546,90 @@
     </div>
   </div>
 
+  <!-- Modal: añadir descuentos (un ítem → muchos acudientes) -->
+  <div class="modal-overlay" id="descOverlay">
+    <div class="modal modal-md">
+
+      <!-- Paso 1: elegir el ítem -->
+      <div id="descPaso1">
+        <h2>Añadir descuentos</h2>
+        <p class="modal-lead">Elige el producto, servicio o plan al que le vas a poner un precio especial.</p>
+
+        <div class="desc-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="descBuscarItem" placeholder="Buscar ítem…" autocomplete="off">
+        </div>
+        <div class="desc-list" id="descListaItems"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="sec" id="descCerrar1">Cancelar</button>
+          <button type="button" class="prim" id="descContinuar" disabled>Continuar</button>
+        </div>
+      </div>
+
+      <!-- Paso 2: elegir los acudientes y el descuento -->
+      <div id="descPaso2" style="display:none;">
+        <h2>Añadir descuentos</h2>
+        <p class="modal-lead">Marca a quiénes les aplica. Al guardar, quien quede sin marcar pierde el descuento de este ítem.</p>
+
+        <div class="desc-elegido">
+          <div>
+            <div class="n" id="descItemNombre">—</div>
+            <div class="p" id="descItemPrecio">—</div>
+          </div>
+          <button type="button" class="btn-secondary" id="descCambiarItem">Cambiar</button>
+        </div>
+
+        <div class="desc-seg" id="descSegTipo">
+          <button type="button" data-tipo="porcentaje" class="active">Descuento %</button>
+          <button type="button" data-tipo="fijo">Precio fijo</button>
+        </div>
+
+        <div class="field">
+          <label id="descLabelValor">Porcentaje de descuento</label>
+          <input type="text" id="descValor" inputmode="numeric" placeholder="Ej: 15" autocomplete="off">
+        </div>
+
+        <div class="toggle-row">
+          <span>
+            Mostrar como descuento
+            <span style="display:block; font-size:11.5px; color:var(--mist-dim); margin-top:3px;" id="descHintMostrar">Verán el precio original tachado junto al suyo.</span>
+          </span>
+          <label class="switch">
+            <input type="checkbox" id="descMostrar" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label>Nota interna (opcional)</label>
+          <input type="text" id="descNota" placeholder="Ej: promoción de temporada" autocomplete="off">
+        </div>
+
+        <div class="desc-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="descBuscarCliente" placeholder="Buscar acudiente…" autocomplete="off">
+        </div>
+
+        <div class="desc-barra">
+          <span class="desc-conteo" id="descConteo">Ninguno seleccionado</span>
+          <button type="button" class="btn-secondary" id="descTodos">Seleccionar todos</button>
+        </div>
+
+        <div class="desc-list" id="descListaClientes"></div>
+
+        <div class="desc-msg" id="descMsg"></div>
+        <div class="desc-ok" id="descOk"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="sec" id="descCerrar2">Cancelar</button>
+          <button type="button" class="prim" id="descGuardar">Guardar</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=12';
     import { supabase } from './supabaseClient.js?v=12';
@@ -531,6 +652,7 @@
 
     let items = [];
     let puedeEditar = false;
+    let puedeAsignarDescuentos = false;
     let tipoActual = 'producto'; // el que se está creando/editando en el formulario
     let editandoId = null;
     let fotosCombinadas = []; // { fid, tipo:'url'|'file', valor } en el orden final; [0] = portada
@@ -551,6 +673,7 @@
 
       if (profile.role === 'admin') {
         puedeEditar = true;
+        puedeAsignarDescuentos = true;
       } else if (profile.role === 'trabajador') {
         const { data } = await supabase
           .from('trabajador_detalle')
@@ -558,6 +681,9 @@
           .eq('id', profile.id)
           .single();
         puedeEditar = !!data?.modulos_edicion?.includes('servicios');
+        // Los descuentos son datos del acudiente, no del catálogo:
+        // el permiso que manda es el de Acudientes, igual que la RLS.
+        puedeAsignarDescuentos = !!data?.modulos_edicion?.includes('clientes');
       } else if (profile.role === 'cliente') {
         const { data } = await supabase
           .from('alumnos')
@@ -567,6 +693,10 @@
           .order('nombre', { ascending: true });
         misMascotas = data || [];
         await cargarMisDescuentos(profile.id);
+      }
+
+      if (puedeAsignarDescuentos) {
+        document.getElementById('btnDescuentos').style.display = 'flex';
       }
 
       if (puedeEditar) {
@@ -1855,6 +1985,379 @@
     });
 
     document.getElementById('detailCloseBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
+
+    // ================================================================
+    //  Añadir descuentos: un ítem → muchos acudientes
+    //  Espejo de la página del acudiente, donde es un cliente → muchos
+    //  ítems. La selección representa el estado final: al guardar, los
+    //  acudientes marcados reciben el descuento y a los desmarcados que
+    //  lo tenían se les quita.
+    // ================================================================
+    const descOverlay = document.getElementById('descOverlay');
+
+    let descCatalogo = [];        // ítems de la tienda
+    let descPlanes = {};          // { item_id: [planes] }
+    let descAcudientes = [];      // todos los acudientes
+    let descElegido = null;       // { itemId, planId, nombre, precio }
+    let descSeleccion = new Set();// cliente_id marcados
+    let descExistentes = {};      // { cliente_id: id de la fila existente }
+    let descTipo = 'porcentaje';
+    let descQItem = '';
+    let descQCliente = '';
+
+    document.getElementById('btnDescuentos').addEventListener('click', abrirDescuentos);
+    document.getElementById('descCerrar1').addEventListener('click', () => descOverlay.classList.remove('active'));
+    document.getElementById('descCerrar2').addEventListener('click', () => descOverlay.classList.remove('active'));
+
+    async function abrirDescuentos(){
+      descElegido = null;
+      descQItem = '';
+      document.getElementById('descBuscarItem').value = '';
+      document.getElementById('descContinuar').disabled = true;
+      document.getElementById('descPaso1').style.display = 'block';
+      document.getElementById('descPaso2').style.display = 'none';
+      descOverlay.classList.add('active');
+
+      if (descCatalogo.length === 0) {
+        document.getElementById('descListaItems').innerHTML =
+          '<div style="padding:22px; text-align:center; color:var(--mist-dim); font-size:13px;">Cargando…</div>';
+        const [{ data: its }, { data: pls }] = await Promise.all([
+          supabase.from('tienda_items').select('id, nombre, tipo_item, categoria, precio, activo').order('orden', { ascending: true }),
+          supabase.from('tienda_planes').select('id, tienda_item_id, nombre, precio').order('orden', { ascending: true })
+        ]);
+        descCatalogo = its || [];
+        descPlanes = {};
+        (pls || []).forEach(p => {
+          if (!descPlanes[p.tienda_item_id]) descPlanes[p.tienda_item_id] = [];
+          descPlanes[p.tienda_item_id].push(p);
+        });
+      }
+      pintarListaItems();
+    }
+
+    function escaparTxt(t){
+      return String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function enPesos(n){ return '$ ' + Number(n || 0).toLocaleString('es-CO'); }
+
+    // ---------------- Paso 1: lista de ítems ----------------
+    function pintarListaItems(){
+      const cont = document.getElementById('descListaItems');
+      const q = descQItem.toLowerCase();
+      const lista = descCatalogo.filter(i =>
+        !q || (i.nombre || '').toLowerCase().includes(q) || (i.categoria || '').toLowerCase().includes(q)
+      );
+
+      if (lista.length === 0) {
+        cont.innerHTML = '<div style="padding:22px; text-align:center; color:var(--mist-dim); font-size:13px;">No hay ítems que coincidan.</div>';
+        return;
+      }
+
+      cont.innerHTML = lista.map(i => {
+        const planes = descPlanes[i.id] || [];
+        const selItem = descElegido && descElegido.itemId === i.id && !descElegido.planId;
+        const filaItem = `
+          <div class="desc-row ${selItem ? 'sel' : ''}" data-item="${i.id}">
+            <div class="desc-info">
+              <div class="desc-name">${escaparTxt(i.nombre)}${!i.activo ? ' <span style="color:var(--mist-dim);">(oculto)</span>' : ''}</div>
+              <div class="desc-meta">${escaparTxt(i.categoria || (i.tipo_item === 'producto' ? 'Producto' : 'Servicio'))}${planes.length ? ` · ${planes.length} plan(es)` : ''}</div>
+            </div>
+            <div class="desc-right">${enPesos(i.precio)}</div>
+          </div>`;
+
+        const filasPlanes = planes.map(p => {
+          const selPlan = descElegido && descElegido.planId === p.id;
+          return `
+            <div class="desc-row plan ${selPlan ? 'sel' : ''}" data-item="${i.id}" data-plan="${p.id}">
+              <div class="desc-info"><div class="desc-name">${escaparTxt(p.nombre)}</div></div>
+              <div class="desc-right">${enPesos(p.precio)}</div>
+            </div>`;
+        }).join('');
+
+        return filaItem + filasPlanes;
+      }).join('');
+
+      cont.querySelectorAll('.desc-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const itemId = row.dataset.item;
+          const planId = row.dataset.plan || null;
+          const item = descCatalogo.find(c => c.id === itemId);
+          const plan = planId ? (descPlanes[itemId] || []).find(p => p.id === planId) : null;
+          descElegido = {
+            itemId,
+            planId,
+            nombre: plan ? `${item.nombre} · ${plan.nombre}` : item.nombre,
+            precio: plan ? Number(plan.precio) : Number(item.precio)
+          };
+          document.getElementById('descContinuar').disabled = false;
+          pintarListaItems();
+        });
+      });
+    }
+
+    document.getElementById('descBuscarItem').addEventListener('input', (e) => {
+      descQItem = e.target.value.trim();
+      pintarListaItems();
+    });
+
+    document.getElementById('descContinuar').addEventListener('click', irAPaso2);
+    document.getElementById('descCambiarItem').addEventListener('click', () => {
+      document.getElementById('descPaso1').style.display = 'block';
+      document.getElementById('descPaso2').style.display = 'none';
+      pintarListaItems();
+    });
+
+    // ---------------- Paso 2: acudientes ----------------
+    async function irAPaso2(){
+      if (!descElegido) return;
+
+      document.getElementById('descPaso1').style.display = 'none';
+      document.getElementById('descPaso2').style.display = 'block';
+      document.getElementById('descItemNombre').textContent = descElegido.nombre;
+      document.getElementById('descItemPrecio').textContent = 'Precio normal: ' + enPesos(descElegido.precio);
+      document.getElementById('descMsg').style.display = 'none';
+      document.getElementById('descOk').style.display = 'none';
+      document.getElementById('descBuscarCliente').value = '';
+      descQCliente = '';
+      document.getElementById('descListaClientes').innerHTML =
+        '<div style="padding:22px; text-align:center; color:var(--mist-dim); font-size:13px;">Cargando…</div>';
+
+      if (descAcudientes.length === 0) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, username, full_name')
+          .eq('role', 'cliente')
+          .order('full_name', { ascending: true });
+        descAcudientes = data || [];
+      }
+
+      // Descuentos ya existentes para este ítem/plan concreto
+      let consulta = supabase
+        .from('precios_especiales')
+        .select('id, cliente_id, tipo_descuento, valor, mostrar_descuento, nota')
+        .eq('item_id', descElegido.itemId);
+      consulta = descElegido.planId
+        ? consulta.eq('plan_id', descElegido.planId)
+        : consulta.is('plan_id', null);
+
+      const { data: existentes } = await consulta;
+
+      descExistentes = {};
+      descSeleccion = new Set();
+      (existentes || []).forEach(r => {
+        descExistentes[r.cliente_id] = r.id;
+        descSeleccion.add(r.cliente_id);
+      });
+
+      // Si ya había descuentos, se precargan sus valores para que
+      // editar sea añadir o quitar gente, no volver a escribir todo.
+      const primero = (existentes || [])[0];
+      if (primero) {
+        descTipo = primero.tipo_descuento;
+        document.getElementById('descValor').value = primero.tipo_descuento === 'fijo'
+          ? formatearMiles(String(primero.valor)) : String(Number(primero.valor));
+        document.getElementById('descMostrar').checked = primero.mostrar_descuento;
+        document.getElementById('descNota').value = primero.nota || '';
+      } else {
+        descTipo = 'porcentaje';
+        document.getElementById('descValor').value = '';
+        document.getElementById('descMostrar').checked = true;
+        document.getElementById('descNota').value = '';
+      }
+      document.querySelectorAll('#descSegTipo button').forEach(b => b.classList.toggle('active', b.dataset.tipo === descTipo));
+      actualizarEtiquetaValorDesc();
+      actualizarHintMostrar();
+
+      pintarListaClientes();
+    }
+
+    function pintarListaClientes(){
+      const cont = document.getElementById('descListaClientes');
+      const q = descQCliente.toLowerCase();
+      const lista = descAcudientes.filter(c =>
+        !q || (c.full_name || '').toLowerCase().includes(q) || (c.username || '').toLowerCase().includes(q)
+      );
+
+      if (lista.length === 0) {
+        cont.innerHTML = '<div style="padding:22px; text-align:center; color:var(--mist-dim); font-size:13px;">No hay acudientes que coincidan.</div>';
+        actualizarConteoDesc();
+        return;
+      }
+
+      cont.innerHTML = lista.map(c => `
+        <label class="desc-row ${descSeleccion.has(c.id) ? 'sel' : ''}" data-cliente="${c.id}">
+          <input type="checkbox" ${descSeleccion.has(c.id) ? 'checked' : ''}>
+          <div class="desc-info">
+            <div class="desc-name">${escaparTxt(c.full_name || c.username)}</div>
+            <div class="desc-meta">@${escaparTxt(c.username)}</div>
+          </div>
+          <div class="desc-right">${descExistentes[c.id] ? '<span class="desc-ya">Ya tiene</span>' : ''}</div>
+        </label>
+      `).join('');
+
+      cont.querySelectorAll('.desc-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') return;
+          const id = row.dataset.cliente;
+          if (descSeleccion.has(id)) descSeleccion.delete(id); else descSeleccion.add(id);
+          row.classList.toggle('sel', descSeleccion.has(id));
+          actualizarConteoDesc();
+        });
+      });
+
+      actualizarConteoDesc();
+    }
+
+    function actualizarConteoDesc(){
+      const n = descSeleccion.size;
+      document.getElementById('descConteo').textContent =
+        n === 0 ? 'Ninguno seleccionado' : `${n} de ${descAcudientes.length} seleccionados`;
+
+      // El botón alterna: si ya están todos, sirve para quitarlos.
+      const todos = descAcudientes.length > 0 && n === descAcudientes.length;
+      document.getElementById('descTodos').textContent = todos ? 'Quitar todos' : 'Seleccionar todos';
+    }
+
+    document.getElementById('descTodos').addEventListener('click', () => {
+      const todos = descAcudientes.length > 0 && descSeleccion.size === descAcudientes.length;
+      descSeleccion = todos ? new Set() : new Set(descAcudientes.map(c => c.id));
+      pintarListaClientes();
+    });
+
+    document.getElementById('descBuscarCliente').addEventListener('input', (e) => {
+      descQCliente = e.target.value.trim();
+      pintarListaClientes();
+    });
+
+    document.querySelectorAll('#descSegTipo button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        descTipo = btn.dataset.tipo;
+        document.querySelectorAll('#descSegTipo button').forEach(b => b.classList.toggle('active', b === btn));
+        document.getElementById('descValor').value = '';
+        actualizarEtiquetaValorDesc();
+      });
+    });
+
+    function actualizarEtiquetaValorDesc(){
+      const label = document.getElementById('descLabelValor');
+      const input = document.getElementById('descValor');
+      if (descTipo === 'fijo') {
+        label.textContent = 'Precio fijo para los seleccionados';
+        input.placeholder = 'Ej: 350.000';
+      } else {
+        label.textContent = 'Porcentaje de descuento';
+        input.placeholder = 'Ej: 15';
+      }
+    }
+
+    function actualizarHintMostrar(){
+      document.getElementById('descHintMostrar').textContent =
+        document.getElementById('descMostrar').checked
+          ? 'Verán el precio original tachado junto al suyo.'
+          : 'Verán solo su precio, como si fuera el normal.';
+    }
+    document.getElementById('descMostrar').addEventListener('change', actualizarHintMostrar);
+
+    document.getElementById('descValor').addEventListener('input', (e) => {
+      if (descTipo === 'fijo') {
+        e.target.value = formatearMiles(e.target.value);
+      } else {
+        let v = e.target.value.replace(/[^\d]/g, '');
+        if (v !== '' && parseInt(v, 10) > 100) v = '100';
+        e.target.value = v;
+      }
+    });
+
+    function valorDescIngresado(){
+      const crudo = descTipo === 'fijo'
+        ? quitarFormatoMiles(document.getElementById('descValor').value)
+        : document.getElementById('descValor').value.replace(/[^\d]/g, '');
+      return parseFloat(crudo);
+    }
+
+    document.getElementById('descGuardar').addEventListener('click', async () => {
+      const btn = document.getElementById('descGuardar');
+      const msg = document.getElementById('descMsg');
+      const ok = document.getElementById('descOk');
+      msg.style.display = 'none';
+      ok.style.display = 'none';
+
+      // A quién se le quita: tenía descuento y quedó sin marcar.
+      const aQuitar = Object.keys(descExistentes)
+        .filter(id => !descSeleccion.has(id))
+        .map(id => descExistentes[id]);
+      const aAsignar = [...descSeleccion];
+
+      if (aAsignar.length === 0 && aQuitar.length === 0) {
+        msg.textContent = 'Selecciona al menos un acudiente.';
+        msg.style.display = 'block';
+        return;
+      }
+
+      const valor = valorDescIngresado();
+
+      if (aAsignar.length > 0) {
+        if (isNaN(valor) || valor < 0) {
+          msg.textContent = descTipo === 'fijo' ? 'Ingresa un precio válido.' : 'Ingresa un porcentaje válido.';
+          msg.style.display = 'block';
+          return;
+        }
+        if (descTipo === 'porcentaje' && valor > 100) {
+          msg.textContent = 'El porcentaje no puede pasar de 100.';
+          msg.style.display = 'block';
+          return;
+        }
+        if (descTipo === 'fijo' && valor > descElegido.precio) {
+          msg.textContent = `El precio especial no puede ser mayor al precio normal (${enPesos(descElegido.precio)}).`;
+          msg.style.display = 'block';
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      let errorFinal = null;
+
+      if (aQuitar.length > 0) {
+        const { error } = await supabase.rpc('quitar_precios_especiales', { p_ids: aQuitar });
+        if (error) errorFinal = error;
+      }
+
+      if (!errorFinal && aAsignar.length > 0) {
+        const { error } = await supabase.rpc('asignar_precio_a_clientes', {
+          p_clientes: aAsignar,
+          p_item:     descElegido.itemId,
+          p_plan:     descElegido.planId,
+          p_tipo:     descTipo,
+          p_valor:    valor,
+          p_mostrar:  document.getElementById('descMostrar').checked,
+          p_nota:     document.getElementById('descNota').value.trim() || null
+        });
+        if (error) errorFinal = error;
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+
+      if (errorFinal) {
+        msg.textContent = 'No se pudo guardar: ' + errorFinal.message;
+        msg.style.display = 'block';
+        return;
+      }
+
+      const partes = [];
+      if (aAsignar.length > 0) partes.push(`${aAsignar.length} con descuento`);
+      if (aQuitar.length > 0) partes.push(`${aQuitar.length} sin descuento`);
+      ok.textContent = `Listo: ${partes.join(' y ')}.`;
+      ok.style.display = 'block';
+
+      // Se recarga el estado para que "Ya tiene" quede al día si el
+      // admin sigue trabajando sobre el mismo ítem.
+      await irAPaso2();
+      ok.textContent = `Listo: ${partes.join(' y ')}.`;
+      ok.style.display = 'block';
+    });
   </script>
 </body>
 </html>
