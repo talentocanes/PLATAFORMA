@@ -46,6 +46,8 @@
   .duenio-avatar{ width:46px; height:46px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--white); background:linear-gradient(135deg, var(--blue-deep), var(--blue-bright)); }
   .duenio-info{ flex:1; min-width:140px; }
   .duenio-nombre{ font-size:14px; font-weight:600; }
+  .nombre-link{ cursor:pointer; border-bottom:1px solid transparent; display:inline-block; }
+  .nombre-link:hover{ color:var(--blue-glow); border-bottom-color:currentColor; }
   .duenio-meta{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--mist-dim); margin-top:3px; }
 
   /* Carné */
@@ -367,10 +369,14 @@
       box.innerHTML = `
         <div class="duenio-avatar">${escapar((nombre.trim()[0] || '?').toUpperCase())}</div>
         <div class="duenio-info">
-          <div class="duenio-nombre">${escapar(nombre)}</div>
+          <div class="duenio-nombre nombre-link" data-ficha="${data.id}">${escapar(nombre)}</div>
           <div class="duenio-meta">@${escapar(data.username)}${data.phone ? ' · ' + escapar(data.phone) : ''}</div>
         </div>
         <a class="btn-icon" href="acudiente.html?id=${data.id}">Ver ficha del acudiente</a>`;
+
+      box.querySelectorAll('[data-ficha]').forEach(el => {
+        el.addEventListener('click', () => { window.location.href = `acudiente.html?id=${el.dataset.ficha}`; });
+      });
     }
 
     function estadoCompra(c){
