@@ -168,6 +168,23 @@
   .modal-actions .prim{ border:none; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
   .modal-actions .prim:disabled{ opacity:.55; cursor:default; }
   .modal-actions .sec{ border:1px solid var(--line); background:none; color:var(--mist); }
+
+  /* Descuento distinto para cada plan de un mismo servicio */
+  .dplan-labels{ display:grid; grid-template-columns:22px 1fr 96px 112px; gap:8px; margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--mist-dim); }
+  .dplan-row{ display:grid; grid-template-columns:22px 1fr 96px 112px; gap:8px; align-items:center; margin-bottom:8px; }
+  .dplan-row input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--blue-bright); cursor:pointer; }
+  .dplan-row select, .dplan-row input[type="text"]{ width:100%; padding:9px 10px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13px; outline:none; font-family:inherit; }
+  .dplan-row select:focus, .dplan-row input[type="text"]:focus{ border-color:var(--blue-bright); }
+  .dplan-row.off select, .dplan-row.off input[type="text"]{ opacity:.4; pointer-events:none; }
+  .dplan-nombre{ font-size:13px; font-weight:500; }
+  .dplan-precio{ font-size:11.5px; color:var(--mist-dim); margin-top:2px; }
+  .dplan-precio .nuevo{ color:var(--blue-glow); font-weight:600; }
+  .dplan-precio .mal{ color:var(--danger); font-weight:600; }
+  @media (max-width:560px){
+    .dplan-labels{ display:none; }
+    .dplan-row{ grid-template-columns:22px 1fr; row-gap:6px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+    .dplan-row select, .dplan-row input[type="text"]{ grid-column:2; }
+  }
   .toggle-row span{ font-size:13px; }
   .switch{ position:relative; width:38px; height:22px; }
   .switch input{ opacity:0; width:0; height:0; }
@@ -580,14 +597,23 @@
           <button type="button" class="btn-secondary" id="descCambiarItem">Cambiar</button>
         </div>
 
-        <div class="desc-seg" id="descSegTipo">
-          <button type="button" data-tipo="porcentaje" class="active">Descuento %</button>
-          <button type="button" data-tipo="fijo">Precio fijo</button>
+        <div id="descValorBloque">
+          <div class="desc-seg" id="descSegTipo">
+            <button type="button" data-tipo="porcentaje" class="active">Descuento %</button>
+            <button type="button" data-tipo="fijo">Precio fijo</button>
+          </div>
+
+          <div class="field">
+            <label id="descLabelValor">Porcentaje de descuento</label>
+            <input type="text" id="descValor" inputmode="numeric" placeholder="Ej: 15" autocomplete="off">
+          </div>
         </div>
 
-        <div class="field">
-          <label id="descLabelValor">Porcentaje de descuento</label>
-          <input type="text" id="descValor" inputmode="numeric" placeholder="Ej: 15" autocomplete="off">
+        <div id="descPlanesBloque" style="display:none;">
+          <label style="display:block; font-size:12px; color:var(--mist); margin-bottom:8px;">Descuento de cada plan</label>
+          <div class="dplan-labels"><span></span><span>Plan</span><span>Tipo</span><span>Valor</span></div>
+          <div id="descPlanesFilas"></div>
+          <button type="button" class="btn-add-plan" id="descCopiarATodos" style="margin-bottom:14px;">Aplicar el primero a todos los planes</button>
         </div>
 
         <div class="toggle-row">
@@ -2000,7 +2026,9 @@
     let descAcudientes = [];      // todos los acudientes
     let descElegido = null;       // { itemId, planId, nombre, precio }
     let descSeleccion = new Set();// cliente_id marcados
-    let descExistentes = {};      // { cliente_id: id de la fila existente }
+    let descExistentes = {};      // { cliente_id: [ filas existentes de este ítem ] }
+    let descFilas = [];           // modo por planes: [{ planId, nombre, precio, activo, tipo, valor }]
+    let descModoPlanes = false;
     let descTipo = 'porcentaje';
     let descQItem = '';
     let descQCliente = '';
@@ -2111,10 +2139,20 @@
     async function irAPaso2(){
       if (!descElegido) return;
 
+      // Si se eligió un servicio con planes (y no un plan suelto), cada
+      // plan lleva su propio descuento: se le puede poner a unos sí y a
+      // otros no.
+      const planesDelItem = descPlanes[descElegido.itemId] || [];
+      descModoPlanes = !descElegido.planId && planesDelItem.length > 0;
+
       document.getElementById('descPaso1').style.display = 'none';
       document.getElementById('descPaso2').style.display = 'block';
+      document.getElementById('descValorBloque').style.display = descModoPlanes ? 'none' : 'block';
+      document.getElementById('descPlanesBloque').style.display = descModoPlanes ? 'block' : 'none';
       document.getElementById('descItemNombre').textContent = descElegido.nombre;
-      document.getElementById('descItemPrecio').textContent = 'Precio normal: ' + enPesos(descElegido.precio);
+      document.getElementById('descItemPrecio').textContent = descModoPlanes
+        ? `${planesDelItem.length} planes · cada uno con su propio descuento`
+        : 'Precio normal: ' + enPesos(descElegido.precio);
       document.getElementById('descMsg').style.display = 'none';
       document.getElementById('descOk').style.display = 'none';
       document.getElementById('descBuscarCliente').value = '';
@@ -2131,45 +2169,140 @@
         descAcudientes = data || [];
       }
 
-      // Descuentos ya existentes para este ítem/plan concreto
+      // Descuentos ya existentes para este ítem (todos sus planes en el
+      // modo por planes; solo la fila exacta en el modo simple).
       let consulta = supabase
         .from('precios_especiales')
-        .select('id, cliente_id, tipo_descuento, valor, mostrar_descuento, nota')
+        .select('id, cliente_id, plan_id, tipo_descuento, valor, mostrar_descuento, nota')
         .eq('item_id', descElegido.itemId);
-      consulta = descElegido.planId
-        ? consulta.eq('plan_id', descElegido.planId)
-        : consulta.is('plan_id', null);
+      if (!descModoPlanes) {
+        consulta = descElegido.planId
+          ? consulta.eq('plan_id', descElegido.planId)
+          : consulta.is('plan_id', null);
+      }
 
       const { data: existentes } = await consulta;
 
       descExistentes = {};
       descSeleccion = new Set();
       (existentes || []).forEach(r => {
-        descExistentes[r.cliente_id] = r.id;
+        if (!descExistentes[r.cliente_id]) descExistentes[r.cliente_id] = [];
+        descExistentes[r.cliente_id].push(r);
         descSeleccion.add(r.cliente_id);
       });
 
-      // Si ya había descuentos, se precargan sus valores para que
-      // editar sea añadir o quitar gente, no volver a escribir todo.
+      // Se precargan los valores que ya había, para que editar sea
+      // añadir o quitar gente y no volver a escribirlo todo.
       const primero = (existentes || [])[0];
-      if (primero) {
-        descTipo = primero.tipo_descuento;
-        document.getElementById('descValor').value = primero.tipo_descuento === 'fijo'
-          ? formatearMiles(String(primero.valor)) : String(Number(primero.valor));
-        document.getElementById('descMostrar').checked = primero.mostrar_descuento;
-        document.getElementById('descNota').value = primero.nota || '';
-      } else {
-        descTipo = 'porcentaje';
-        document.getElementById('descValor').value = '';
-        document.getElementById('descMostrar').checked = true;
-        document.getElementById('descNota').value = '';
-      }
-      document.querySelectorAll('#descSegTipo button').forEach(b => b.classList.toggle('active', b.dataset.tipo === descTipo));
-      actualizarEtiquetaValorDesc();
-      actualizarHintMostrar();
+      const mostrar = primero ? primero.mostrar_descuento : true;
+      document.getElementById('descMostrar').checked = mostrar;
+      document.getElementById('descNota').value = primero?.nota || '';
 
+      if (descModoPlanes) {
+        // Una fila por plan; se activa la que ya tenga descuento.
+        const porPlan = {};
+        (existentes || []).forEach(r => { if (r.plan_id && !porPlan[r.plan_id]) porPlan[r.plan_id] = r; });
+        descFilas = planesDelItem.map(p => {
+          const prev = porPlan[p.id];
+          return {
+            planId: p.id,
+            nombre: p.nombre,
+            precio: Number(p.precio),
+            activo: !!prev,
+            tipo: prev ? prev.tipo_descuento : 'porcentaje',
+            valor: prev ? String(Number(prev.valor)) : ''
+          };
+        });
+        pintarFilasPlanesDesc();
+      } else {
+        descTipo = primero ? primero.tipo_descuento : 'porcentaje';
+        document.getElementById('descValor').value = primero
+          ? (primero.tipo_descuento === 'fijo' ? formatearMiles(String(primero.valor)) : String(Number(primero.valor)))
+          : '';
+        document.querySelectorAll('#descSegTipo button').forEach(b => b.classList.toggle('active', b.dataset.tipo === descTipo));
+        actualizarEtiquetaValorDesc();
+      }
+
+      actualizarHintMostrar();
       pintarListaClientes();
     }
+
+    // ---------------- Filas de descuento por plan ----------------
+    function pintarFilasPlanesDesc(){
+      const cont = document.getElementById('descPlanesFilas');
+      cont.innerHTML = descFilas.map((f, idx) => {
+        const valorNum = f.tipo === 'fijo'
+          ? parseFloat(quitarFormatoMiles(f.valor))
+          : parseFloat(String(f.valor).replace(/[^\d]/g, ''));
+        let resumen = enPesos(f.precio);
+        if (f.activo && !isNaN(valorNum)) {
+          const final = aplicarDescuento(f.precio, f.tipo, valorNum);
+          const excede = f.tipo === 'fijo' && valorNum > f.precio;
+          resumen = excede
+            ? `${enPesos(f.precio)} → <span class="mal">supera el precio normal</span>`
+            : `${enPesos(f.precio)} → <span class="nuevo">${enPesos(final)}</span>`;
+        }
+        return `
+          <div class="dplan-row ${f.activo ? '' : 'off'}" data-idx="${idx}">
+            <input type="checkbox" data-campo="activo" ${f.activo ? 'checked' : ''}>
+            <div>
+              <div class="dplan-nombre">${escaparTxt(f.nombre)}</div>
+              <div class="dplan-precio">${resumen}</div>
+            </div>
+            <select data-campo="tipo">
+              <option value="porcentaje" ${f.tipo === 'porcentaje' ? 'selected' : ''}>%</option>
+              <option value="fijo" ${f.tipo === 'fijo' ? 'selected' : ''}>Fijo</option>
+            </select>
+            <input type="text" data-campo="valor" inputmode="numeric" value="${escaparTxt(f.valor)}" placeholder="${f.tipo === 'fijo' ? '350.000' : '15'}">
+          </div>`;
+      }).join('');
+
+      cont.querySelectorAll('.dplan-row').forEach(row => {
+        const idx = parseInt(row.dataset.idx, 10);
+        row.querySelector('[data-campo="activo"]').addEventListener('change', (e) => {
+          descFilas[idx].activo = e.target.checked;
+          pintarFilasPlanesDesc();
+        });
+        row.querySelector('[data-campo="tipo"]').addEventListener('change', (e) => {
+          descFilas[idx].tipo = e.target.value;
+          descFilas[idx].valor = '';
+          pintarFilasPlanesDesc();
+        });
+        const inputValor = row.querySelector('[data-campo="valor"]');
+        inputValor.addEventListener('input', (e) => {
+          if (descFilas[idx].tipo === 'fijo') {
+            e.target.value = formatearMiles(e.target.value);
+          } else {
+            let v = e.target.value.replace(/[^\d]/g, '');
+            if (v !== '' && parseInt(v, 10) > 100) v = '100';
+            e.target.value = v;
+          }
+          descFilas[idx].valor = e.target.value;
+          // Se actualiza solo el resumen para no perder el foco del campo.
+          const valorNum = descFilas[idx].tipo === 'fijo'
+            ? parseFloat(quitarFormatoMiles(e.target.value))
+            : parseFloat(e.target.value.replace(/[^\d]/g, ''));
+          const resumenEl = row.querySelector('.dplan-precio');
+          if (isNaN(valorNum) || !descFilas[idx].activo) {
+            resumenEl.textContent = enPesos(descFilas[idx].precio);
+          } else if (descFilas[idx].tipo === 'fijo' && valorNum > descFilas[idx].precio) {
+            resumenEl.innerHTML = `${enPesos(descFilas[idx].precio)} → <span class="mal">supera el precio normal</span>`;
+          } else {
+            const final = aplicarDescuento(descFilas[idx].precio, descFilas[idx].tipo, valorNum);
+            resumenEl.innerHTML = `${enPesos(descFilas[idx].precio)} → <span class="nuevo">${enPesos(final)}</span>`;
+          }
+        });
+      });
+    }
+
+    // Copia el primer plan activo al resto — atajo para el caso común
+    // de "el mismo porcentaje a todos los planes".
+    document.getElementById('descCopiarATodos').addEventListener('click', () => {
+      const modelo = descFilas.find(f => f.activo && String(f.valor).trim() !== '') || descFilas[0];
+      if (!modelo) return;
+      descFilas = descFilas.map(f => ({ ...f, activo: true, tipo: modelo.tipo, valor: modelo.valor }));
+      pintarFilasPlanesDesc();
+    });
 
     function pintarListaClientes(){
       const cont = document.getElementById('descListaClientes');
@@ -2191,7 +2324,7 @@
             <div class="desc-name">${escaparTxt(c.full_name || c.username)}</div>
             <div class="desc-meta">@${escaparTxt(c.username)}</div>
           </div>
-          <div class="desc-right">${descExistentes[c.id] ? '<span class="desc-ya">Ya tiene</span>' : ''}</div>
+          <div class="desc-right">${descExistentes[c.id]?.length ? '<span class="desc-ya">Ya tiene</span>' : ''}</div>
         </label>
       `).join('');
 
@@ -2282,59 +2415,76 @@
       msg.style.display = 'none';
       ok.style.display = 'none';
 
-      // A quién se le quita: tenía descuento y quedó sin marcar.
-      const aQuitar = Object.keys(descExistentes)
-        .filter(id => !descSeleccion.has(id))
-        .map(id => descExistentes[id]);
-      const aAsignar = [...descSeleccion];
+      const error = (texto) => { msg.textContent = texto; msg.style.display = 'block'; };
+      const seleccionados = [...descSeleccion];
 
-      if (aAsignar.length === 0 && aQuitar.length === 0) {
-        msg.textContent = 'Selecciona al menos un acudiente.';
-        msg.style.display = 'block';
-        return;
+      // Qué se va a aplicar: una entrada por plan activo, o una sola
+      // en el modo simple.
+      let aAplicar = [];
+      if (descModoPlanes) {
+        for (const f of descFilas) {
+          if (!f.activo) continue;
+          const valor = f.tipo === 'fijo'
+            ? parseFloat(quitarFormatoMiles(f.valor))
+            : parseFloat(String(f.valor).replace(/[^\d]/g, ''));
+          if (isNaN(valor) || valor < 0) return error(`Ingresa el valor del descuento de "${f.nombre}".`);
+          if (f.tipo === 'porcentaje' && valor > 100) return error(`El porcentaje de "${f.nombre}" no puede pasar de 100.`);
+          if (f.tipo === 'fijo' && valor > f.precio) return error(`El precio especial de "${f.nombre}" no puede ser mayor a ${enPesos(f.precio)}.`);
+          aAplicar.push({ planId: f.planId, tipo: f.tipo, valor });
+        }
+        if (seleccionados.length > 0 && aAplicar.length === 0) {
+          return error('Activa al menos un plan, o desmarca a todos los acudientes para quitar los descuentos.');
+        }
+      } else if (seleccionados.length > 0) {
+        const valor = valorDescIngresado();
+        if (isNaN(valor) || valor < 0) return error(descTipo === 'fijo' ? 'Ingresa un precio válido.' : 'Ingresa un porcentaje válido.');
+        if (descTipo === 'porcentaje' && valor > 100) return error('El porcentaje no puede pasar de 100.');
+        if (descTipo === 'fijo' && valor > descElegido.precio) {
+          return error(`El precio especial no puede ser mayor al precio normal (${enPesos(descElegido.precio)}).`);
+        }
+        aAplicar.push({ planId: descElegido.planId, tipo: descTipo, valor });
       }
 
-      const valor = valorDescIngresado();
+      // Qué se va a quitar: todo lo de los acudientes desmarcados, más
+      // los planes que quedaron sin descuento en los que sí siguen.
+      const planesActivos = new Set(aAplicar.map(a => a.planId));
+      const aQuitar = [];
+      Object.entries(descExistentes).forEach(([clienteId, filas]) => {
+        const sigue = descSeleccion.has(clienteId);
+        filas.forEach(f => {
+          if (!sigue || !planesActivos.has(f.plan_id)) aQuitar.push(f.id);
+        });
+      });
 
-      if (aAsignar.length > 0) {
-        if (isNaN(valor) || valor < 0) {
-          msg.textContent = descTipo === 'fijo' ? 'Ingresa un precio válido.' : 'Ingresa un porcentaje válido.';
-          msg.style.display = 'block';
-          return;
-        }
-        if (descTipo === 'porcentaje' && valor > 100) {
-          msg.textContent = 'El porcentaje no puede pasar de 100.';
-          msg.style.display = 'block';
-          return;
-        }
-        if (descTipo === 'fijo' && valor > descElegido.precio) {
-          msg.textContent = `El precio especial no puede ser mayor al precio normal (${enPesos(descElegido.precio)}).`;
-          msg.style.display = 'block';
-          return;
-        }
+      if (aAplicar.length === 0 && aQuitar.length === 0) {
+        return error('Selecciona al menos un acudiente.');
       }
 
       btn.disabled = true;
       btn.textContent = 'Guardando…';
 
+      const mostrar = document.getElementById('descMostrar').checked;
+      const nota = document.getElementById('descNota').value.trim() || null;
       let errorFinal = null;
 
       if (aQuitar.length > 0) {
-        const { error } = await supabase.rpc('quitar_precios_especiales', { p_ids: aQuitar });
-        if (error) errorFinal = error;
+        const r = await supabase.rpc('quitar_precios_especiales', { p_ids: aQuitar });
+        if (r.error) errorFinal = r.error;
       }
 
-      if (!errorFinal && aAsignar.length > 0) {
-        const { error } = await supabase.rpc('asignar_precio_a_clientes', {
-          p_clientes: aAsignar,
-          p_item:     descElegido.itemId,
-          p_plan:     descElegido.planId,
-          p_tipo:     descTipo,
-          p_valor:    valor,
-          p_mostrar:  document.getElementById('descMostrar').checked,
-          p_nota:     document.getElementById('descNota').value.trim() || null
-        });
-        if (error) errorFinal = error;
+      if (!errorFinal && seleccionados.length > 0) {
+        for (const a of aAplicar) {
+          const r = await supabase.rpc('asignar_precio_a_clientes', {
+            p_clientes: seleccionados,
+            p_item:     descElegido.itemId,
+            p_plan:     a.planId,
+            p_tipo:     a.tipo,
+            p_valor:    a.valor,
+            p_mostrar:  mostrar,
+            p_nota:     nota
+          });
+          if (r.error) { errorFinal = r.error; break; }
+        }
       }
 
       btn.disabled = false;
@@ -2347,15 +2497,16 @@
       }
 
       const partes = [];
-      if (aAsignar.length > 0) partes.push(`${aAsignar.length} con descuento`);
-      if (aQuitar.length > 0) partes.push(`${aQuitar.length} sin descuento`);
-      ok.textContent = `Listo: ${partes.join(' y ')}.`;
-      ok.style.display = 'block';
+      if (seleccionados.length > 0 && aAplicar.length > 0) {
+        partes.push(`${seleccionados.length} acudiente(s) con descuento en ${aAplicar.length} ${aAplicar.length === 1 ? 'ítem' : 'planes'}`);
+      }
+      if (aQuitar.length > 0) partes.push(`${aQuitar.length} descuento(s) retirado(s)`);
+      const resumen = `Listo: ${partes.join(' · ')}.`;
 
       // Se recarga el estado para que "Ya tiene" quede al día si el
       // admin sigue trabajando sobre el mismo ítem.
       await irAPaso2();
-      ok.textContent = `Listo: ${partes.join(' y ')}.`;
+      ok.textContent = resumen;
       ok.style.display = 'block';
     });
   </script>
