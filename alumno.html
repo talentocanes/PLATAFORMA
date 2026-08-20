@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Canes · Alumno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<script src="theme-inline.js?v=12"></script>
+<style>
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--mist-dim); background:none; border:none; cursor:pointer; padding:0; margin-bottom:14px; }
+  .back-link:hover{ color:var(--white); }
+  .back-link svg{ width:14px; height:14px; }
+
+  /* Cabecera */
+  .pet-header{ display:flex; align-items:center; gap:18px; background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:20px; flex-wrap:wrap; }
+  .pet-avatar{ width:78px; height:78px; border-radius:50%; flex-shrink:0; overflow:hidden; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; border:1px solid var(--line); }
+  .pet-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .pet-avatar svg{ width:32px; height:32px; color:var(--mist-dim); opacity:.5; }
+  .pet-main{ flex:1; min-width:180px; }
+  .pet-main h1{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; line-height:1.2; }
+  .pet-sub{ font-size:12.5px; color:var(--mist-dim); margin-top:4px; }
+  .pet-tags{ display:flex; gap:7px; margin-top:9px; flex-wrap:wrap; }
+  .pet-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .tag-base{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; border:1px solid var(--line); color:var(--mist); background:var(--navy-panel-2); }
+  .tag-base.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border-color:rgba(123,216,143,0.3); }
+  .tag-base.no{ color:var(--mist-dim); }
+  .tag-base.pend{ color:#ffcb7a; background:rgba(255,203,122,0.12); border-color:rgba(255,203,122,0.3); }
+  .tag-base.macho{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 13%, transparent); border-color:color-mix(in srgb, var(--blue-bright) 30%, transparent); }
+  .tag-base.hembra{ color:#ff8fa0; background:rgba(255,143,160,0.12); border-color:rgba(255,143,160,0.3); }
+
+  /* Tarjetas */
+  .card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:20px; }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .card-title{ font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; }
+  .card-sub{ font-size:12px; color:var(--mist-dim); margin-top:3px; }
+
+  .info-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:14px 20px; }
+  .info-item{ font-size:13.5px; }
+  .info-item b{ display:block; font-size:10.5px; color:var(--mist-dim); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+
+  /* Dueño */
+  .duenio{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .duenio-avatar{ width:46px; height:46px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--white); background:linear-gradient(135deg, var(--blue-deep), var(--blue-bright)); }
+  .duenio-info{ flex:1; min-width:140px; }
+  .duenio-nombre{ font-size:14px; font-weight:600; }
+  .duenio-meta{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--mist-dim); margin-top:3px; }
+
+  /* Carné */
+  .carne-box{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .carne-thumb{ width:110px; height:110px; border-radius:12px; overflow:hidden; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .carne-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .carne-thumb svg{ width:30px; height:30px; color:var(--mist-dim); opacity:.6; }
+  .carne-falta{ display:flex; align-items:center; gap:9px; font-size:13px; color:#ffcb7a; background:rgba(255,203,122,0.1); border:1px solid rgba(255,203,122,0.28); border-radius:11px; padding:12px 14px; }
+  .carne-falta svg{ width:16px; height:16px; flex-shrink:0; }
+
+  /* Historial */
+  .hist-lista{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--ink); }
+  .hist-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-item{ font-size:13.5px; font-weight:500; }
+  .hist-meta{ font-size:11.5px; color:var(--mist-dim); margin-top:3px; line-height:1.45; }
+  .hist-der{ text-align:right; white-space:nowrap; flex-shrink:0; }
+  .hist-valor{ font-size:13.5px; font-weight:600; }
+  .hist-estado{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; padding:2px 6px; border-radius:5px; display:inline-block; margin-top:5px; border:1px solid var(--line); color:var(--mist-dim); }
+  .hist-estado.pagada{ color:#7bd88f; background:rgba(123,216,143,0.11); border-color:rgba(123,216,143,0.28); }
+  .hist-estado.porpagar{ color:var(--danger); background:rgba(255,107,107,0.1); border-color:rgba(255,107,107,0.28); }
+  .hist-estado.abonada{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 13%, transparent); border-color:color-mix(in srgb, var(--blue-bright) 30%, transparent); }
+
+  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px; }
+  .stat-box{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .stat-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:7px; }
+  .stat-value{ font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; }
+  .stat-value.debe{ color:var(--danger); }
+
+  .empty-note{ color:var(--mist-dim); font-size:13px; padding:24px; text-align:center; }
+
+  .btn-icon{ display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:9px; font-size:12.5px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); text-decoration:none; }
+  .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
+  .btn-icon svg{ width:14px; height:14px; }
+
+  @media (max-width:680px){
+    .card{ padding:18px 16px; }
+    .pet-header{ padding:18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+  <script src="sidebar-inline.js?v=12" data-active="alumnos"></script>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="crumbs">Panel &nbsp;/&nbsp; <b id="crumbLabel">Alumnos</b></div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="clock">— — —</div>
+      </div>
+    </div>
+
+    <button class="back-link" id="btnVolver">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <span id="volverLabel">Volver a alumnos</span>
+    </button>
+
+    <!-- Cabecera -->
+    <div class="pet-header">
+      <div class="pet-avatar" id="pFoto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg>
+      </div>
+      <div class="pet-main">
+        <h1 id="pNombre">Cargando…</h1>
+        <div class="pet-sub" id="pResumen"></div>
+        <div class="pet-tags" id="pTags"></div>
+      </div>
+      <div class="pet-actions" id="pActions"></div>
+    </div>
+
+    <!-- Información -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Información</div></div>
+      <div class="info-grid">
+        <div class="info-item"><b>Raza</b><span id="iRaza">—</span></div>
+        <div class="info-item"><b>Sexo</b><span id="iSexo">—</span></div>
+        <div class="info-item"><b>Fecha de nacimiento</b><span id="iNacimiento">—</span></div>
+        <div class="info-item"><b>Edad</b><span id="iEdad">—</span></div>
+        <div class="info-item"><b>Color o pelaje</b><span id="iColor">—</span></div>
+        <div class="info-item"><b>Registrado el</b><span id="iRegistro">—</span></div>
+      </div>
+    </div>
+
+    <!-- Dueño -->
+    <div class="card" id="cardDuenio" style="display:none;">
+      <div class="card-head"><div class="card-title" id="tituloDuenio">Acudiente</div></div>
+      <div class="duenio" id="duenioBox">
+        <div class="empty-note" style="padding:8px;">Cargando…</div>
+      </div>
+    </div>
+
+    <!-- Carné -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Carné de vacunación</div></div>
+      <div id="carneWrap"><div class="empty-note">Cargando…</div></div>
+    </div>
+
+    <!-- Compras -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Compras</div>
+          <div class="card-sub">Servicios y productos adquiridos para esta mascota.</div>
+        </div>
+      </div>
+      <div id="comprasWrap"><div class="empty-note">Cargando…</div></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initLayout } from './layout.js?v=12';
+    import { supabase } from './supabaseClient.js?v=12';
+
+    const params = new URLSearchParams(window.location.search);
+    const ALUMNO_ID = params.get('id');
+
+    // initLayout necesita saber de antemano bajo qué módulo se abre la
+    // página, y el rol solo se confirma después. Se usa el perfil que
+    // layout.js ya dejó cacheado en la navegación anterior.
+    let rolCache = null;
+    try { rolCache = JSON.parse(localStorage.getItem('tc_perfil_cache') || 'null')?.role; } catch (e) { /* ignorar */ }
+    const CLAVE_MENU = rolCache === 'cliente' ? 'mis-mascotas' : 'alumnos';
+    document.querySelector('#sidebar')?.setAttribute('data-active', CLAVE_MENU);
+
+    let perfil = null;
+    let alumno = null;
+    let puedeEditar = false;
+
+    const RAZAS_CONOCIDAS = ['Labrador Retriever','Golden Retriever','Pastor Alemán','Bulldog Francés','Poodle / Caniche','Chihuahua','Beagle','Schnauzer','Yorkshire Terrier','Boxer','Rottweiler','Husky Siberiano'];
+
+    function escapar(t){
+      return String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function pesos(n){ return '$ ' + Number(n || 0).toLocaleString('es-CO'); }
+    function fechaCorta(iso){
+      if (!iso) return '—';
+      const d = iso.length <= 10 ? new Date(iso + 'T00:00:00') : new Date(iso);
+      return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+    }
+    function calcularEdadTexto(iso){
+      if (!iso) return null;
+      const nac = new Date(iso + 'T00:00:00');
+      const hoy = new Date();
+      let meses = (hoy.getFullYear() - nac.getFullYear()) * 12 + (hoy.getMonth() - nac.getMonth());
+      if (hoy.getDate() < nac.getDate()) meses--;
+      if (meses < 0) return null;
+      const anios = Math.floor(meses / 12);
+      const resto = meses % 12;
+      if (anios === 0) return `${resto} ${resto === 1 ? 'mes' : 'meses'}`;
+      if (resto === 0) return `${anios} ${anios === 1 ? 'año' : 'años'}`;
+      return `${anios} ${anios === 1 ? 'año' : 'años'} y ${resto} ${resto === 1 ? 'mes' : 'meses'}`;
+    }
+
+    (async () => {
+      const profile = await initLayout({ activeKey: CLAVE_MENU });
+      if (!profile) return;
+      perfil = profile;
+
+      if (profile.role === 'admin') {
+        puedeEditar = true;
+      } else if (profile.role === 'trabajador') {
+        const { data } = await supabase
+          .from('trabajador_detalle')
+          .select('modulos_edicion')
+          .eq('id', profile.id)
+          .single();
+        puedeEditar = !!data?.modulos_edicion?.includes('alumnos');
+      }
+
+      if (profile.role === 'cliente') {
+        document.getElementById('crumbLabel').textContent = 'Mis mascotas';
+        document.getElementById('volverLabel').textContent = 'Volver a mis mascotas';
+      }
+
+      if (!ALUMNO_ID) {
+        document.getElementById('pNombre').textContent = 'Falta el identificador.';
+        return;
+      }
+
+      await cargarAlumno();
+      if (!alumno) return;
+      await Promise.all([cargarDuenio(), cargarCompras()]);
+    })();
+
+    document.getElementById('btnVolver').addEventListener('click', () => {
+      window.location.href = perfil?.role === 'cliente' ? 'mis-mascotas.html' : 'alumnos.html';
+    });
+
+    async function cargarAlumno(){
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('*')
+        .eq('id', ALUMNO_ID)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('pNombre').textContent = 'No se pudo cargar la ficha.';
+        return;
+      }
+
+      // Un acudiente solo puede abrir la ficha de sus propias mascotas.
+      if (perfil.role === 'cliente' && data.acudiente_id !== perfil.id) {
+        window.location.href = 'mis-mascotas.html';
+        return;
+      }
+
+      alumno = data;
+      document.title = `Talento Canes · ${data.nombre}`;
+      document.getElementById('pNombre').textContent = data.nombre || '—';
+
+      if (data.foto_url) {
+        document.getElementById('pFoto').innerHTML = `<img src="${escapar(data.foto_url)}" alt="${escapar(data.nombre)}">`;
+      }
+
+      const resumen = [data.raza || 'Raza sin definir'];
+      if (data.es_mestizo) resumen.push('mestizo');
+      const edad = calcularEdadTexto(data.fecha_nacimiento);
+      if (edad) resumen.push(edad);
+      document.getElementById('pResumen').textContent = resumen.join(' · ');
+
+      const tags = [];
+      if (data.status === 'pending') {
+        tags.push('<span class="tag-base pend">Pendiente de aprobación</span>');
+      } else {
+        tags.push(`<span class="tag-base ${data.activo ? 'si' : 'no'}">${data.activo ? 'Activo' : 'Inactivo'}</span>`);
+      }
+      if (data.sexo) tags.push(`<span class="tag-base ${data.sexo}">${data.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>`);
+      tags.push(`<span class="tag-base ${data.carne_vacunacion_url ? 'si' : 'no'}">${data.carne_vacunacion_url ? 'Carné al día' : 'Sin carné'}</span>`);
+      document.getElementById('pTags').innerHTML = tags.join('');
+
+      // El botón de editar lleva de vuelta a la lista, donde vive el
+      // formulario: la ficha es solo de consulta.
+      const acciones = document.getElementById('pActions');
+      if (puedeEditar) {
+        acciones.innerHTML = `<a class="btn-icon" href="alumnos.html?editar=${data.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Editar</a>`;
+      } else if (perfil.role === 'cliente') {
+        acciones.innerHTML = `<a class="btn-icon" href="mis-mascotas.html?editar=${data.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Editar</a>`;
+      }
+
+      const razaTexto = data.raza
+        ? `${data.raza}${data.es_mestizo ? ' (mestizo)' : ''}${!RAZAS_CONOCIDAS.includes(data.raza) ? '' : ''}`
+        : 'Sin definir';
+      document.getElementById('iRaza').textContent = razaTexto;
+      document.getElementById('iSexo').textContent = data.sexo ? (data.sexo === 'macho' ? 'Macho' : 'Hembra') : '—';
+      document.getElementById('iNacimiento').textContent = data.fecha_nacimiento ? fechaCorta(data.fecha_nacimiento) : '—';
+      document.getElementById('iEdad').textContent = edad || '—';
+      document.getElementById('iColor').textContent = data.color_pelaje || '—';
+      document.getElementById('iRegistro').textContent = fechaCorta(data.created_at);
+
+      pintarCarne(data.carne_vacunacion_url);
+    }
+
+    function pintarCarne(url){
+      const wrap = document.getElementById('carneWrap');
+      if (!url) {
+        wrap.innerHTML = `
+          <div class="carne-falta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+            Todavía no se ha subido el carné de vacunación.
+          </div>`;
+        return;
+      }
+
+      const esImagen = /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url);
+      wrap.innerHTML = `
+        <div class="carne-box">
+          <div class="carne-thumb">
+            ${esImagen
+              ? `<img src="${escapar(url)}" alt="Carné de vacunación">`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>`}
+          </div>
+          <div>
+            <div style="font-size:13.5px; margin-bottom:9px;">${esImagen ? 'Imagen del carné' : 'Documento del carné'}</div>
+            <a class="btn-icon" href="${escapar(url)}" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+              Abrir en pestaña nueva
+            </a>
+          </div>
+        </div>`;
+    }
+
+    async function cargarDuenio(){
+      // El acudiente no necesita que le muestren que la mascota es suya.
+      if (perfil.role === 'cliente') return;
+
+      const card = document.getElementById('cardDuenio');
+      const box = document.getElementById('duenioBox');
+      card.style.display = 'block';
+
+      if (!alumno.acudiente_id) {
+        box.innerHTML = '<div class="empty-note" style="padding:8px;">Sin acudiente asignado.</div>';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, phone')
+        .eq('id', alumno.acudiente_id)
+        .single();
+
+      if (error || !data) {
+        box.innerHTML = '<div class="empty-note" style="padding:8px;">No se pudo cargar el acudiente.</div>';
+        return;
+      }
+
+      const nombre = data.full_name || data.username || '—';
+      box.innerHTML = `
+        <div class="duenio-avatar">${escapar((nombre.trim()[0] || '?').toUpperCase())}</div>
+        <div class="duenio-info">
+          <div class="duenio-nombre">${escapar(nombre)}</div>
+          <div class="duenio-meta">@${escapar(data.username)}${data.phone ? ' · ' + escapar(data.phone) : ''}</div>
+        </div>
+        <a class="btn-icon" href="acudiente.html?id=${data.id}">Ver ficha del acudiente</a>`;
+    }
+
+    function estadoCompra(c){
+      if (c.estado_aprobacion === 'pendiente') return { texto:'Por aprobar', clase:'' };
+      if (c.estado_aprobacion === 'denegado')  return { texto:'Denegada', clase:'' };
+      if (c.estado_pago === 'pagado')          return { texto:'Pagada', clase:'pagada' };
+      if (Number(c.monto_pagado) > 0)          return { texto:'Abonada', clase:'abonada' };
+      return { texto:'Por pagar', clase:'porpagar' };
+    }
+
+    async function cargarCompras(){
+      const wrap = document.getElementById('comprasWrap');
+
+      const { data, error } = await supabase
+        .from('compras')
+        .select('id, nombre_item, categoria_item, cantidad, precio_total, monto_pagado, estado_aprobacion, estado_pago, created_at, fecha_checkin, fecha_checkout, noches')
+        .eq('alumno_id', ALUMNO_ID)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        wrap.innerHTML = '<div class="empty-note">No se pudieron cargar las compras.</div>';
+        return;
+      }
+      if (!data || data.length === 0) {
+        wrap.innerHTML = '<div class="empty-note">Aún no tiene compras registradas.</div>';
+        return;
+      }
+
+      let totalAprobado = 0;
+      let porPagar = 0;
+      data.forEach(c => {
+        if (c.estado_aprobacion !== 'aprobado') return;
+        const t = Number(c.precio_total) || 0;
+        totalAprobado += t;
+        porPagar += Math.max(0, t - (Number(c.monto_pagado) || 0));
+      });
+
+      wrap.innerHTML = `
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-label">Total aprobado</div>
+            <div class="stat-value">${pesos(totalAprobado)}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Pendiente por pagar</div>
+            <div class="stat-value debe">${pesos(porPagar)}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Compras</div>
+            <div class="stat-value">${data.length}</div>
+          </div>
+        </div>
+        <div class="hist-lista">
+          ${data.map(c => {
+            const est = estadoCompra(c);
+            const detalles = [fechaCorta(c.created_at)];
+            if (c.categoria_item) detalles.push(escapar(c.categoria_item));
+            if (c.cantidad > 1) detalles.push(`× ${c.cantidad}`);
+            if (c.fecha_checkin && c.fecha_checkout) {
+              detalles.push(`${fechaCorta(c.fecha_checkin)} → ${fechaCorta(c.fecha_checkout)}${c.noches ? ` (${c.noches} días)` : ''}`);
+            }
+            return `
+              <div class="hist-row">
+                <div>
+                  <div class="hist-item">${escapar(c.nombre_item || '—')}</div>
+                  <div class="hist-meta">${detalles.join(' · ')}</div>
+                </div>
+                <div class="hist-der">
+                  <div class="hist-valor">${pesos(c.precio_total)}</div>
+                  <span class="hist-estado ${est.clase}">${est.texto}</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+  </script>
+</body>
+</html>

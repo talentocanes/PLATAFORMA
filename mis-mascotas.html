@@ -26,6 +26,8 @@
   .pet-head-info{ flex:1; min-width:0; }
   .pet-name-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:2px; }
   .pet-name{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; }
+  .nombre-link{ cursor:pointer; border-bottom:1px solid transparent; }
+  .nombre-link:hover{ color:var(--blue-glow); border-bottom-color:currentColor; }
   .badge-sexo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
   .badge-sexo.macho{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 12%, transparent); border:1px solid var(--line-strong); }
   .badge-sexo.hembra{ color:#ff9ecb; background:rgba(255,158,203,0.12); border:1px solid rgba(255,158,203,0.3); }
@@ -51,21 +53,6 @@
   .section-title{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--mist-dim); margin:18px 0 10px; }
   .section-title:first-of-type{ margin-top:0; }
 
-  /* Historial de compras de la mascota */
-  .hist-lista{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--ink); }
-  .hist-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:11px 13px; border-bottom:1px solid var(--line); }
-  .hist-row:last-child{ border-bottom:none; }
-  .hist-item{ font-size:13px; font-weight:500; }
-  .hist-meta{ font-size:11.5px; color:var(--mist-dim); margin-top:3px; line-height:1.45; }
-  .hist-der{ text-align:right; white-space:nowrap; flex-shrink:0; }
-  .hist-valor{ font-size:13px; font-weight:600; }
-  .hist-estado{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; padding:2px 6px; border-radius:5px; display:inline-block; margin-top:5px; border:1px solid var(--line); color:var(--mist-dim); }
-  .hist-estado.pagada{ color:#7bd88f; background:rgba(123,216,143,0.11); border-color:rgba(123,216,143,0.28); }
-  .hist-estado.porpagar{ color:var(--danger); background:rgba(255,107,107,0.1); border-color:rgba(255,107,107,0.28); }
-  .hist-estado.abonada{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 13%, transparent); border-color:color-mix(in srgb, var(--blue-bright) 30%, transparent); }
-  .hist-vacio{ padding:20px; text-align:center; color:var(--mist-dim); font-size:12.5px; }
-  .hist-resumen{ display:flex; justify-content:space-between; gap:12px; font-size:12.5px; margin-top:10px; }
-  .hist-resumen b{ color:var(--white); }
 
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
@@ -228,11 +215,6 @@
         </div>
       </div>
 
-      <div id="histBloque" style="display:none;">
-        <div class="section-title">Historial de compras</div>
-        <div id="histContenido"></div>
-      </div>
-
       <div class="modal-msg" id="petMsg"></div>
       <button class="btn-save" id="petSaveBtn">Guardar mascota</button>
       <button class="modal-close" id="petCloseBtn">Cancelar</button>
@@ -296,6 +278,13 @@
 
       mascotas = data || [];
       pintarGrid();
+
+      // Igual que en Alumnos: se llega desde la ficha con "?editar=".
+      const paraEditar = new URLSearchParams(window.location.search).get('editar');
+      if (paraEditar && mascotas.some(m => m.id === paraEditar)) {
+        abrirModal(paraEditar);
+        window.history.replaceState({}, '', 'mis-mascotas.html');
+      }
     }
 
     function pintarGrid(){
@@ -315,7 +304,7 @@
             </div>
             <div class="pet-head-info">
               <div class="pet-name-row">
-                <div class="pet-name">${m.nombre}</div>
+                <div class="pet-name nombre-link" data-ficha="${m.id}">${m.nombre}</div>
                 ${m.status === 'pending' ? '<span class="badge-pendiente">Pendiente de aprobación</span>' : (m.sexo ? `<span class="badge-sexo ${m.sexo}">${m.sexo === 'macho' ? 'Macho' : 'Hembra'}</span>` : '')}
               </div>
             </div>
@@ -332,6 +321,7 @@
                 Falta subir el carné de vacunación
               </div>` : ''}
             <div class="pet-actions">
+              <button class="btn-icon" data-action="ficha" data-id="${m.id}">Ver ficha</button>
               <button class="btn-icon" data-action="edit" data-id="${m.id}">Editar</button>
               ${m.status === 'pending' ? `<button class="btn-icon danger" data-action="delete" data-id="${m.id}">Eliminar</button>` : ''}
             </div>
@@ -339,6 +329,12 @@
         </div>
       `).join('');
 
+      grid.querySelectorAll('[data-ficha]').forEach(el => {
+        el.addEventListener('click', () => { window.location.href = `alumno.html?id=${el.dataset.ficha}`; });
+      });
+      grid.querySelectorAll('[data-action="ficha"]').forEach(btn => {
+        btn.addEventListener('click', () => { window.location.href = `alumno.html?id=${btn.dataset.id}`; });
+      });
       grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', () => abrirModal(btn.dataset.id));
       });
@@ -414,8 +410,6 @@
       sexoSeleccionado = null;
       mestizoSeleccionado = null;
       document.querySelectorAll('.toggle-pill').forEach(p => p.classList.remove('selected'));
-      // El historial solo tiene sentido sobre una ficha ya existente.
-      document.getElementById('histBloque').style.display = 'none';
     }
 
     document.getElementById('btnAdd').addEventListener('click', () => {
@@ -464,84 +458,8 @@
 
       petMsg.style.display = 'none';
       petOverlay.classList.add('active');
-      cargarHistorialCompras(id);
     }
 
-    // ---------------- Historial de compras de la mascota ----------------
-    function pesosCol(n){ return '$ ' + Number(n || 0).toLocaleString('es-CO'); }
-
-    function fechaCortaHist(iso){
-      if (!iso) return '—';
-      return new Date(iso).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
-    }
-
-    function estadoCompra(c){
-      if (c.estado_aprobacion === 'pendiente') return { texto:'Por aprobar', clase:'' };
-      if (c.estado_aprobacion === 'denegado')  return { texto:'Denegada', clase:'' };
-      if (c.estado_pago === 'pagado')          return { texto:'Pagada', clase:'pagada' };
-      if (Number(c.monto_pagado) > 0)          return { texto:'Abonada', clase:'abonada' };
-      return { texto:'Por pagar', clase:'porpagar' };
-    }
-
-    async function cargarHistorialCompras(alumnoId){
-      const bloque = document.getElementById('histBloque');
-      const cont = document.getElementById('histContenido');
-      bloque.style.display = 'block';
-      cont.innerHTML = '<div class="hist-vacio">Cargando…</div>';
-
-      const { data, error } = await supabase
-        .from('compras')
-        .select('id, nombre_item, categoria_item, cantidad, precio_total, monto_pagado, estado_aprobacion, estado_pago, created_at, fecha_checkin, fecha_checkout, noches')
-        .eq('alumno_id', alumnoId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        cont.innerHTML = '<div class="hist-vacio">No se pudo cargar el historial de compras.</div>';
-        return;
-      }
-      if (!data || data.length === 0) {
-        cont.innerHTML = '<div class="hist-vacio">Aún no tiene compras registradas.</div>';
-        return;
-      }
-
-      let totalAprobado = 0;
-      let porPagar = 0;
-      data.forEach(c => {
-        if (c.estado_aprobacion !== 'aprobado') return;
-        const t = Number(c.precio_total) || 0;
-        totalAprobado += t;
-        porPagar += Math.max(0, t - (Number(c.monto_pagado) || 0));
-      });
-
-      cont.innerHTML = `
-        <div class="hist-lista">
-          ${data.map(c => {
-            const est = estadoCompra(c);
-            const detalles = [fechaCortaHist(c.created_at)];
-            if (c.categoria_item) detalles.push(c.categoria_item);
-            if (c.cantidad > 1) detalles.push(`× ${c.cantidad}`);
-            if (c.fecha_checkin && c.fecha_checkout) {
-              detalles.push(`${fechaCortaHist(c.fecha_checkin)} → ${fechaCortaHist(c.fecha_checkout)}${c.noches ? ` (${c.noches} días)` : ''}`);
-            }
-            return `
-              <div class="hist-row">
-                <div>
-                  <div class="hist-item">${c.nombre_item || '—'}</div>
-                  <div class="hist-meta">${detalles.join(' · ')}</div>
-                </div>
-                <div class="hist-der">
-                  <div class="hist-valor">${pesosCol(c.precio_total)}</div>
-                  <span class="hist-estado ${est.clase}">${est.texto}</span>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>
-        <div class="hist-resumen">
-          <span>Total aprobado: <b>${pesosCol(totalAprobado)}</b></span>
-          <span>Pendiente por pagar: <b>${pesosCol(porPagar)}</b></span>
-        </div>`;
-    }
 
     document.getElementById('petCloseBtn').addEventListener('click', () => petOverlay.classList.remove('active'));
 
