@@ -28,6 +28,8 @@
   tr:last-child td{ border-bottom:none; }
   .empty-note{ color:var(--mist-dim); font-size:13px; padding:32px; text-align:center; }
   .cell-dim{ color:var(--mist-dim); }
+  .nombre-link{ cursor:pointer; border-bottom:1px solid transparent; }
+  .nombre-link:hover{ color:var(--blue-glow); border-bottom-color:currentColor; }
 
   .badge-activo{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
   .badge-activo.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border:1px solid rgba(123,216,143,0.3); }
@@ -381,7 +383,7 @@
 
       tbody.innerHTML = ordenada.map(p => `
         <tr data-id="${p.id}">
-          <td>${p.full_name || '—'}</td>
+          <td><span class="nombre-link" data-ver="${p.id}">${p.full_name || '—'}</span></td>
           <td>@${p.username}</td>
           <td class="${p.phone ? '' : 'cell-dim'}">${p.phone || '—'}</td>
           <td><span class="badge-activo ${p.activo ? 'si' : 'no'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
@@ -409,6 +411,10 @@
           </td>
         </tr>
       `).join('');
+
+      tbody.querySelectorAll('[data-ver]').forEach(el => {
+        el.addEventListener('click', () => abrirVista(el.dataset.ver));
+      });
 
       tbody.querySelectorAll('[data-action="ver"]').forEach(btn => {
         btn.addEventListener('click', () => abrirVista(btn.dataset.id));
