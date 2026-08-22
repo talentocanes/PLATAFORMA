@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js?v=13';
+import { supabase } from './supabaseClient.js?v=14';
 
 // ---------------------------------------------------------
 // Las 8 paletas del colegio.
@@ -115,7 +115,7 @@ export async function cargarConfiguracionNegocio(){
   // Configuración. Se carga aparte y sin esperar: si pwa.js falta o
   // falla, la app tiene que seguir funcionando igual — es un extra,
   // no una pieza de la que dependa el panel.
-  import('./pwa.js?v=13')
+  import('./pwa.js?v=14')
     .then(m => m.aplicarIdentidadPWA(data))
     .catch(e => console.warn('No se pudo aplicar la identidad de la app instalable:', e));
 

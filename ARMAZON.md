@@ -27,15 +27,15 @@ compatibilidad de `panel.css`, pero **no tendrá barra inferior en móvil**.
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Paleta y modo ANTES de la hoja de estilos: sin esto hay parpadeo -->
-  <script src="theme-inline.js?v=13"></script>
-  <link rel="stylesheet" href="panel.css?v=13">
+  <script src="theme-inline.js?v=14"></script>
+  <link rel="stylesheet" href="panel.css?v=14">
 </head>
 <body>
 
   <!-- De primero: el armazón se pinta antes de que termine de leerse
        la página, y crea él mismo el sidebar, la appbar, la tabbar y
        la hoja de "Más". La página solo aporta su <main>. -->
-  <script src="shell-inline.js?v=13" data-active="alumnos" data-title="Alumnos"></script>
+  <script src="shell-inline.js?v=14" data-active="alumnos" data-title="Alumnos"></script>
 
   <main>
     <div class="page-head">
@@ -50,9 +50,9 @@ compatibilidad de `panel.css`, pero **no tendrá barra inferior en móvil**.
   </main>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=13';
-    import { supabase } from './supabaseClient.js?v=13';
-    import { htmlAvatar, pesos, fechaCorta, abrirDialogo, cerrarDialogo } from './ui.js?v=13';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=14';
+    import { supabase } from './supabaseClient.js?v=14';
+    import { htmlAvatar, pesos, fechaCorta, abrirDialogo, cerrarDialogo } from './ui.js?v=14';
 
     const profile = await initLayout({ activeKey: 'alumnos' });
     if (!profile) return;
