@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=21"></script>
-<link rel="stylesheet" href="panel.css?v=21">
+<script src="theme-inline.js?v=22"></script>
+<link rel="stylesheet" href="panel.css?v=22">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -361,7 +361,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=21" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=22" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -736,9 +736,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=21';
-    import { supabase } from './supabaseClient.js?v=21';
-    import { capitalizarPalabras } from './textutils.js?v=21';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=22';
+    import { supabase } from './supabaseClient.js?v=22';
+    import { capitalizarPalabras } from './textutils.js?v=22';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1793,7 +1793,6 @@
       document.getElementById('detailEyebrow').className = `detail-eyebrow ${item.tipo_item}`;
       document.getElementById('detailEyebrow').textContent = item.tipo_item === 'producto' ? 'Producto' : 'Servicio';
       document.getElementById('detailTitle').textContent = item.nombre;
-      document.getElementById('detailHeadTitle').textContent = item.nombre;
       document.getElementById('detailCat').textContent = item.categoria || '';
       document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
       document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
