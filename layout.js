@@ -19,7 +19,7 @@ export function obtenerConfiguracionActual(){
 
 /* Se mantiene el nombre porque trabajadores.html ya lo importa. */
 export function obtenerModulosAsignables(config){
-  return window.BarklyShell.modulosAsignables(config || configuracionActual);
+  return shell().modulosAsignables(config || configuracionActual);
 }
 
 function guardarPerfilCache(profile){
@@ -133,12 +133,69 @@ function conectarArmazon(){
 }
 
 /* ---------------------------------------------------------
+   Armazón en páginas todavía sin migrar.
+
+   Las páginas migradas traen en su marcado el sidebar, la appbar,
+   la tabbar y la hoja de "Más", y cargan shell-inline.js ellas
+   mismas. Las que aún no se han migrado no tienen nada de eso, así
+   que aquí se les crea al vuelo: así siguen funcionando y de paso
+   ya tienen barra inferior en móvil sin haberlas tocado.
+
+   Se borra cuando no quede ninguna página sin migrar.
+   --------------------------------------------------------- */
+function crearSiFalta(id, tag, clase, dondeAntes){
+  let el = document.getElementById(id);
+  if (el) return el;
+  el = document.createElement(tag);
+  el.id = id;
+  el.className = clase;
+  if (dondeAntes && dondeAntes.parentNode) dondeAntes.parentNode.insertBefore(el, dondeAntes);
+  else document.body.appendChild(el);
+  return el;
+}
+
+async function asegurarArmazon(activeKey){
+  const main = document.querySelector('main');
+  crearSiFalta('sidebar', 'aside', 'sidebar', main);
+  crearSiFalta('appbar', 'header', 'appbar', main);
+  crearSiFalta('tabbar', 'nav', 'tabbar');
+  crearSiFalta('scrim', 'div', 'scrim');
+  crearSiFalta('sheetMas', 'div', 'dialog');
+
+  if (window.BarklyShell) return;
+
+  await new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = 'shell-inline.js?v=13';
+    s.setAttribute('data-active', activeKey || '');
+    // Sin data-title, el armazón usa el nombre del módulo activo.
+    s.onload = resolve;
+    s.onerror = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+/* Si por lo que sea shell-inline.js no cargó, la página no puede
+   quedarse en blanco: se usa un armazón vacío con los valores
+   mínimos para que el resto del arranque siga su curso. */
+function shell(){
+  return window.BarklyShell || {
+    SIEMPRE: ['inicio', 'configuracion'],
+    MODULOS_CLIENTE: ['inicio', 'servicios', 'cartera', 'configuracion', 'mis-mascotas'],
+    pintar(){}, setBadges(){}, disponibles(){ return []; }, estado(){ return null; },
+    modulosAsignables(){ return []; }
+  };
+}
+
+/* ---------------------------------------------------------
    Punto de entrada de cada página protegida
    --------------------------------------------------------- */
 export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
   const profile = await protegerPagina({ rolesPermitidos });
   if (!profile) return null;
   guardarPerfilCache(profile);
+
+  await asegurarArmazon(activeKey);
 
   const config = await cargarConfiguracionNegocio();
   configuracionActual = config;
@@ -158,11 +215,11 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
     trabajadorPerfilCompleto = !!data?.perfil_completo;
     guardarModulosCache(modulosPermitidos);
   } else if (profile.role === 'cliente') {
-    modulosPermitidos = window.BarklyShell.MODULOS_CLIENTE;
+    modulosPermitidos = shell().MODULOS_CLIENTE;
   }
 
   if (modulosPermitidos) {
-    const tieneAcceso = window.BarklyShell.SIEMPRE.includes(activeKey) ||
+    const tieneAcceso = shell().SIEMPRE.includes(activeKey) ||
                         modulosPermitidos.includes(activeKey);
     if (!tieneAcceso) {
       window.location.href = 'inicio.html';
@@ -191,13 +248,13 @@ export async function initLayout({ activeKey, rolesPermitidos = null } = {}){
   }
 
   // Repintado con los datos confirmados.
-  window.BarklyShell.pintar(profile, modulosPermitidos, config || {});
+  shell().pintar(profile, modulosPermitidos, config || {});
   conectarArmazon();
 
   // Los contadores llegan después: el armazón no espera por ellos.
   contarPendientes(profile, modulosPermitidos).then(badges => {
     if (!Object.keys(badges).length) return;
-    window.BarklyShell.setBadges(badges, profile, modulosPermitidos, config || {});
+    shell().setBadges(badges, profile, modulosPermitidos, config || {});
     conectarArmazon();
   });
 
