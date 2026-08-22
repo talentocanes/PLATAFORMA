@@ -496,6 +496,29 @@
   });
 
   /* ---------------------------------------------------------
+     Bloqueo del fondo mientras hay un modal abierto.
+
+     Cada página abre sus modales a su manera (unas añaden .active al
+     fondo oscuro, otras .open al diálogo), así que en vez de tocar
+     cada sitio se vigila el documento: si hay algo abierto, se bloquea
+     el desplazamiento de la página de detrás. Sin esto, al desplazarse
+     dentro de un modal el gesto se escapa y mueve el fondo.
+     --------------------------------------------------------- */
+  function revisarBloqueo(){
+    var abierto = !!document.querySelector('.modal-overlay.active, .dialog.open');
+    document.body.classList.toggle('sin-scroll', abierto);
+  }
+
+  if (window.MutationObserver) {
+    new MutationObserver(revisarBloqueo).observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+
+  /* ---------------------------------------------------------
      API pública
      --------------------------------------------------------- */
   var estadoActual = null;

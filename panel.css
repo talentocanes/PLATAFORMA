@@ -148,6 +148,9 @@
 html{
   -webkit-text-size-adjust:100%;
   background:var(--bg);
+  /* Reserva el hueco de la barra de desplazamiento: sin esto, al abrir
+     un modal el contenido salta unos píxeles a la derecha. */
+  scrollbar-gutter:stable;
 }
 
 body{
@@ -544,6 +547,19 @@ select.input{ appearance:none; padding-right:36px;
 .empty .ico svg{ width:21px; height:21px; }
 .empty h3{ margin-bottom:6px; }
 .empty p{ color:var(--text-2); max-width:44ch; margin:0 auto var(--s-5); }
+
+/* ---- Bloqueo del fondo con un modal abierto ----
+   Sin esto, al desplazarse dentro de un modal el gesto "se escapa" y
+   acaba moviendo la página de detrás. Se aplica sola: el armazón vigila
+   si hay algún modal abierto y pone esta clase. */
+body.sin-scroll{ overflow:hidden; }
+
+/* Y aunque el fondo esté bloqueado, el desplazamiento dentro de una
+   caja no debe propagarse al llegar a su tope. */
+.modal-overlay, .modal, .dialog, .dialog-body, .detail-scroll,
+.desc-list, .picker-list, .sidebar .nav-groups{
+  overscroll-behavior:contain;
+}
 
 /* ---- Capa oscura compartida ---- */
 .scrim{

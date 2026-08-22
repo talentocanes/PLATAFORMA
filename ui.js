@@ -132,7 +132,8 @@ export function abrirDialogo(id){
   if (!d) return;
   document.getElementById('scrim')?.classList.add('open');
   d.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  // El bloqueo del fondo lo aplica el armazón al detectar el diálogo
+  // abierto, así hay un solo mecanismo y no se pisan entre sí.
 }
 
 export function cerrarDialogo(id){
@@ -140,7 +141,6 @@ export function cerrarDialogo(id){
   if (d) d.classList.remove('open');
   if (!document.querySelector('.dialog.open')) {
     document.getElementById('scrim')?.classList.remove('open');
-    document.body.style.overflow = '';
   }
 }
 
@@ -149,7 +149,6 @@ export function conectarCierreDialogos(){
   document.getElementById('scrim')?.addEventListener('click', () => {
     document.querySelectorAll('.dialog.open').forEach(d => d.classList.remove('open'));
     document.getElementById('scrim').classList.remove('open');
-    document.body.style.overflow = '';
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;

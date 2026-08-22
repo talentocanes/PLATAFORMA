@@ -88,19 +88,16 @@ function conectarArmazon(){
   const cerrarHoja = () => {
     hoja?.classList.remove('open');
     scrim?.classList.remove('open');
-    document.body.style.overflow = '';
   };
 
   document.getElementById('tabMas')?.addEventListener('click', () => {
     hoja?.classList.add('open');
     scrim?.classList.add('open');
-    document.body.style.overflow = 'hidden';
   });
 
   scrim?.addEventListener('click', () => {
     document.querySelectorAll('.dialog.open').forEach(d => d.classList.remove('open'));
     scrim.classList.remove('open');
-    document.body.style.overflow = '';
   });
 
   document.addEventListener('keydown', e => {
