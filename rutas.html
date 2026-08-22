@@ -2,68 +2,84 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Barkly">
 <title>Talento Canes · Rutas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js?v=12"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css?v=15">
+<script src="theme-inline.js?v=15"></script>
 <style>
-  .page-header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
-  .page-header h1{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; }
-  .page-header p{ color:var(--mist-dim); font-size:13px; margin-top:4px; }
-  .btn-add{ display:flex; align-items:center; gap:8px; padding:11px 18px; border:none; border-radius:11px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap; }
+  .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
+  .page-header h1{ font-size:var(--t-2xl); }
+  .page-header p{ color:var(--text-2); margin-top:4px; }
+
+  .btn-add{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2); height:40px; padding:0 var(--s-4); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-base); cursor:pointer; white-space:nowrap; }
+  .btn-add:hover{ background:var(--acento-hover); }
   .btn-add svg{ width:16px; height:16px; }
 
-  .table-wrap{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; overflow-x:auto; }
-  table{ width:100%; border-collapse:collapse; min-width:600px; }
-  th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); padding:14px 16px; border-bottom:1px solid var(--line); white-space:nowrap; }
-  td{ padding:14px 16px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  tr:last-child td{ border-bottom:none; }
-  .empty-note{ color:var(--mist-dim); font-size:13px; padding:36px; text-align:center; background:var(--navy-panel); border:1px dashed var(--line); border-radius:var(--radius); }
-  .cell-dim{ color:var(--mist-dim); }
+  /* ---------- Lista de conductores ---------- */
+  .table-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; }
+  .empty-note{ color:var(--text-2); font-size:var(--t-base); padding:var(--s-14) var(--s-6); text-align:center; }
 
-  .btn-icon{ display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); }
-  .btn-icon:hover{ border-color:rgba(255,107,107,0.4); color:var(--danger); }
-  .btn-icon svg{ width:13px; height:13px; }
+  .fila{ display:flex; align-items:center; gap:var(--s-4); min-height:68px; padding:var(--s-3) var(--s-5); border-bottom:1px solid var(--border); transition:background .12s ease; }
+  .fila:last-child{ border-bottom:none; }
+  .fila:hover{ background:var(--surface-2); }
+  .fila-main{ flex:1; min-width:0; }
+  .fila-nombre{ font-size:var(--t-base); font-weight:600; }
+  .fila-meta{ font-size:var(--t-sm); color:var(--text-2); margin-top:2px; }
+  .avatar-txt{ width:44px; height:44px; border-radius:var(--r-full); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:var(--t-sm); }
+  .cell-dim{ color:var(--text-3); }
 
-  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(2,6,14,0.75); z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .btn-icon{ display:inline-flex; align-items:center; justify-content:center; gap:5px; height:34px; padding:0 var(--s-3); border-radius:var(--r-sm); border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); font-size:var(--t-sm); font-weight:500; cursor:pointer; white-space:nowrap; }
+  .btn-icon:hover{ color:var(--danger); border-color:var(--danger-br); background:var(--danger-bg); }
+  .btn-icon svg{ width:14px; height:14px; }
+  @media (max-width:680px){ .fila{ padding:var(--s-3) var(--s-4); } .btn-icon{ height:40px; } }
+
+  /* ---------- Modal / hoja ---------- */
+  .modal-overlay{ display:none; position:fixed; inset:0; z-index:200; background:rgba(9,12,17,.45); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); align-items:center; justify-content:center; padding:var(--s-5); overflow-y:auto; }
   .modal-overlay.active{ display:flex; }
-  .modal{ width:100%; max-width:420px; background:var(--navy-panel); border:1px solid var(--line-strong); border-radius:18px; padding:28px; }
-  .modal h2{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:8px; }
-  .modal p{ color:var(--mist-dim); font-size:13px; line-height:1.5; margin-bottom:18px; }
-  .field label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
-  .field select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--white); font-size:13.5px; outline:none; }
-  .btn-save{ width:100%; margin-top:18px; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); font-weight:600; font-size:14px; cursor:pointer; }
-  .btn-save:disabled{ opacity:.6; }
-  .modal-close{ margin-top:10px; width:100%; padding:10px; border:1px solid var(--line); background:none; border-radius:10px; color:var(--mist); font-size:13px; cursor:pointer; }
-  .modal-msg{ margin-top:12px; font-size:12px; color:var(--danger); display:none; }
+  .modal{ width:100%; max-width:440px; margin:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--sh-3); padding:var(--s-6); }
+  .modal h2{ font-size:var(--t-lg); margin-bottom:6px; }
+  .modal p{ color:var(--text-2); font-size:var(--t-sm); line-height:1.5; margin-bottom:var(--s-5); }
+  @media (max-width:1023px){
+    .modal-overlay{ padding:0; align-items:flex-end; }
+    .modal{ max-width:none; margin:0; max-height:92dvh; overflow-y:auto;
+      border-radius:var(--r-xl) var(--r-xl) 0 0; border-left:none; border-right:none; border-bottom:none;
+      padding:var(--s-5) var(--s-4) calc(var(--s-6) + var(--safe-b)); }
+  }
 
-  .placeholder-card{ background:var(--navy-panel); border:1px dashed var(--line-strong); border-radius:var(--radius); padding:40px 30px; text-align:center; }
-  .placeholder-card svg{ width:40px; height:40px; color:var(--blue-glow); opacity:.7; margin-bottom:14px; }
-  .placeholder-card h2{ font-family:'Space Grotesk',sans-serif; font-size:17px; margin-bottom:8px; }
-  .placeholder-card p{ color:var(--mist-dim); font-size:13px; max-width:420px; margin:0 auto; line-height:1.6; }
+  .field label{ display:block; font-size:var(--t-sm); font-weight:500; color:var(--text); margin-bottom:6px; }
+  .field select{ width:100%; height:42px; padding:0 var(--s-3); border:1px solid var(--border-2); border-radius:var(--r-sm); background:var(--surface); color:var(--text); font-size:var(--t-base); font-family:inherit; outline:none; }
+  .field select:focus{ border-color:var(--acento); box-shadow:0 0 0 3px var(--acento-suave); }
+  @media (max-width:1023px){ .field select{ height:48px; font-size:16px; } }
+
+  .btn-save{ width:100%; height:46px; margin-top:var(--s-4); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-base); cursor:pointer; }
+  .btn-save:hover{ background:var(--acento-hover); }
+  .btn-save:disabled{ opacity:.55; }
+  .modal-close{ width:100%; height:44px; margin-top:var(--s-2); border:1px solid var(--border-2); background:none; border-radius:var(--r-sm); color:var(--text-2); font-size:var(--t-base); font-weight:500; cursor:pointer; }
+  .modal-close:hover{ background:var(--surface-2); color:var(--text); }
+  .modal-msg{ margin-top:var(--s-3); font-size:var(--t-sm); color:var(--danger); display:none; }
+
+  /* ---------- Vista del conductor ---------- */
+  .placeholder-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:var(--s-14) var(--s-6); text-align:center; }
+  .placeholder-card .ico{ width:44px; height:44px; margin:0 auto var(--s-4); border-radius:var(--r-md); background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--text-3); }
+  .placeholder-card .ico svg{ width:21px; height:21px; }
+  .placeholder-card h2{ font-size:var(--t-md); margin-bottom:6px; }
+  .placeholder-card p{ color:var(--text-2); font-size:var(--t-base); max-width:44ch; margin:0 auto; line-height:1.6; }
 </style>
 </head>
 <body>
 
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  <aside class="sidebar" id="sidebar"></aside>
-  <script src="sidebar-inline.js?v=12" data-active="rutas"></script>
+  <script src="shell-inline.js?v=15" data-active="rutas" data-title="Rutas"></script>
 
   <main>
-    <div class="topbar">
-      <div class="topbar-left">
-        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Rutas</b></div>
-      </div>
-      <div class="top-right">
-        <div class="clock" id="clock">— — —</div>
-      </div>
-    </div>
-
     <!-- Vista Administrador -->
     <div id="adminView" style="display:none;">
       <div class="page-header">
@@ -77,15 +93,8 @@
         </button>
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Acciones</th></tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr><td colspan="4" class="empty-note">Cargando…</td></tr>
-          </tbody>
-        </table>
+      <div class="table-wrap" id="tableBody">
+        <div class="empty-note">Cargando…</div>
       </div>
     </div>
 
@@ -98,7 +107,9 @@
         </div>
       </div>
       <div class="placeholder-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6.2" r="2"/><circle cx="18" cy="17.8" r="2"/><path d="M6 8.2c0 4.6 4 3.6 6 6.4s2 3.4 6 3.4" stroke-dasharray="2.4 2.4"/></svg>
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6.2" r="2"/><circle cx="18" cy="17.8" r="2"/><path d="M6 8.2c0 4.6 4 3.6 6 6.4s2 3.4 6 3.4" stroke-dasharray="2.4 2.4"/></svg>
+        </div>
         <h2>Aún no hay rutas asignadas</h2>
         <p>El administrador te asignó como conductor. Muy pronto vas a poder ver aquí tus recorridos de recogida y entrega de alumnos.</p>
       </div>
@@ -123,8 +134,9 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=12';
-    import { supabase } from './supabaseClient.js?v=12';
+    import { initLayout } from './layout.js?v=15';
+    import { supabase } from './supabaseClient.js?v=15';
+    import { escapar, colorDeNombre, iniciales } from './ui.js?v=15';
 
     let esAdmin = false;
     let conductores = [];
@@ -163,7 +175,7 @@
 
       if (error) {
         console.error('Error al cargar conductores:', error);
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-note">No se pudo cargar el listado.</td></tr>`;
+        tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
         return;
       }
 
@@ -174,23 +186,30 @@
     function pintarTabla(){
       const tbody = document.getElementById('tableBody');
       if (conductores.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-note">Aún no has añadido ningún conductor.</td></tr>`;
+        tbody.innerHTML = `
+          <div class="empty-note">
+            <div style="font-size:var(--t-md); font-weight:700; margin-bottom:6px;">Sin conductores</div>
+            <div>Añade a un trabajador como conductor para que vea sus recorridos.</div>
+          </div>`;
         return;
       }
 
-      tbody.innerHTML = conductores.map(c => `
-        <tr>
-          <td>${c.full_name || '—'}</td>
-          <td class="${c.trabajador_detalle?.cargo ? '' : 'cell-dim'}">${c.trabajador_detalle?.cargo || 'Sin definir'}</td>
-          <td class="${c.phone ? '' : 'cell-dim'}">${c.phone || '—'}</td>
-          <td>
-            <button class="btn-icon" data-action="quitar" data-id="${c.id}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              Quitar
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = conductores.map(c => {
+        const nombre = c.full_name || c.username;
+        const datos = [c.trabajador_detalle?.cargo || 'Cargo sin definir', c.phone].filter(Boolean).join(' · ');
+        return `
+        <div class="fila">
+          <div class="avatar-txt" style="background:${colorDeNombre(nombre)}">${escapar(iniciales(nombre))}</div>
+          <div class="fila-main">
+            <div class="fila-nombre">${escapar(nombre)}</div>
+            <div class="fila-meta">${escapar(datos)}</div>
+          </div>
+          <button class="btn-icon" data-action="quitar" data-id="${c.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Quitar
+          </button>
+        </div>
+      `;}).join('');
 
       tbody.querySelectorAll('[data-action="quitar"]').forEach(btn => {
         btn.addEventListener('click', () => quitarConductor(btn.dataset.id));
