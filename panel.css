@@ -290,8 +290,9 @@ main{
     margin-left:0;
     max-width:none;
     padding:var(--s-4) var(--s-4);
-    /* Espacio para que la última fila nunca quede bajo la barra */
-    padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + var(--s-8));
+    /* Justo lo necesario para que la última fila no quede bajo la
+       barra: más margen que este deja un hueco visible al final. */
+    padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + var(--s-4));
   }
   h1{ font-size:var(--t-xl); }
 }
