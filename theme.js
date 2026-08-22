@@ -1,102 +1,103 @@
-import { supabase } from './supabaseClient.js?v=12';
+import { supabase } from './supabaseClient.js?v=13';
 
 // ---------------------------------------------------------
-// 8 paletas de color. La primera ("azul-original") es el tono
-// azul oscuro que ya caracteriza a la plataforma — es la que
-// se usa por defecto.
+// Las 8 paletas del colegio.
+//
+// Los valores de color ya NO viven aquí: están en panel.css,
+// bajo [data-paleta="…"]. Este archivo solo pone el atributo
+// en <html> y CSS resuelve el resto. Así el modo oscuro es
+// otra combinación de atributos, no otro juego de variables.
+//
+// Las claves son las mismas de siempre, así que no hay que
+// migrar nada en configuracion_negocio; solo cambian las
+// etiquetas visibles, que ya no dicen "Nocturno".
 // ---------------------------------------------------------
 export const PALETAS = [
-  {
-    key: 'azul-original',
-    label: 'Zafiro Nocturno',
-    colors: {
-      navyDeep:'#050d1a', navyPanel:'#0b1a30', navyPanel2:'#0f2340',
-      blueDeep:'#0d47a1', blueMid:'#1976d2', blueBright:'#29b6f6', blueGlow:'#4fc3f7'
-    }
-  },
-  {
-    key: 'esmeralda',
-    label: 'Esmeralda Nocturno',
-    colors: {
-      navyDeep:'#04120d', navyPanel:'#0b241c', navyPanel2:'#0f2f24',
-      blueDeep:'#0d5c3a', blueMid:'#12855a', blueBright:'#2ecc94', blueGlow:'#5fe0b0'
-    }
-  },
-  {
-    key: 'purpura',
-    label: 'Púrpura Real',
-    colors: {
-      navyDeep:'#0d0518', navyPanel:'#1a0f2c', navyPanel2:'#22143a',
-      blueDeep:'#4a0d8f', blueMid:'#7024b8', blueBright:'#b374ff', blueGlow:'#d0a3ff'
-    }
-  },
-  {
-    key: 'vino',
-    label: 'Vino Tinto',
-    colors: {
-      navyDeep:'#150507', navyPanel:'#26090d', navyPanel2:'#320d13',
-      blueDeep:'#7a0d1f', blueMid:'#a8172f', blueBright:'#ff5c72', blueGlow:'#ff8fa0'
-    }
-  },
-  {
-    key: 'ambar',
-    label: 'Ámbar Cálido',
-    colors: {
-      navyDeep:'#160e04', navyPanel:'#281a09', navyPanel2:'#34220c',
-      blueDeep:'#8a4b0d', blueMid:'#c26a12', blueBright:'#ffab29', blueGlow:'#ffcb7a'
-    }
-  },
-  {
-    key: 'cian',
-    label: 'Cian Profundo',
-    colors: {
-      navyDeep:'#041315', navyPanel:'#0b2528', navyPanel2:'#0f3033',
-      blueDeep:'#0d5f6b', blueMid:'#128a9c', blueBright:'#29d6f0', blueGlow:'#7ce8f7'
-    }
-  },
-  {
-    key: 'grafito',
-    label: 'Grafito Monocromo',
-    colors: {
-      navyDeep:'#0a0b0d', navyPanel:'#16181c', navyPanel2:'#1d2025',
-      blueDeep:'#3a3f47', blueMid:'#5c636e', blueBright:'#9aa4b2', blueGlow:'#c7cfd9'
-    }
-  },
-  {
-    key: 'bronce',
-    label: 'Bronce Elegante',
-    colors: {
-      navyDeep:'#120d04', navyPanel:'#241b09', navyPanel2:'#302510',
-      blueDeep:'#6b4b0d', blueMid:'#9c7212', blueBright:'#d6a929', blueGlow:'#f0cf7c'
-    }
-  }
+  { key:'azul-original', label:'Zafiro',    muestra:'#1D63D1' },
+  { key:'esmeralda',     label:'Esmeralda', muestra:'#0E8A5F' },
+  { key:'purpura',       label:'Púrpura',   muestra:'#6D3BD1' },
+  { key:'vino',          label:'Vino',      muestra:'#B32741' },
+  { key:'ambar',         label:'Ámbar',     muestra:'#B26A00' },
+  { key:'cian',          label:'Cian',      muestra:'#0A7C90' },
+  { key:'grafito',       label:'Grafito',   muestra:'#3E4651' },
+  { key:'bronce',        label:'Bronce',    muestra:'#8A6A16' }
 ];
 
+const CLAVES = PALETAS.map(p => p.key);
+export const MODOS = ['light', 'dark', 'auto'];
+
+
 // ---------------------------------------------------------
-// Aplica una paleta (por su key) a las variables CSS globales.
-// Si la key no existe, cae en la paleta original por defecto.
+// PALETA — la elige el administrador y es igual para todos.
 // ---------------------------------------------------------
 export function aplicarPaleta(key){
-  const paleta = PALETAS.find(p => p.key === key) || PALETAS[0];
-  const root = document.documentElement.style;
-  root.setProperty('--navy-deep', paleta.colors.navyDeep);
-  root.setProperty('--navy-panel', paleta.colors.navyPanel);
-  root.setProperty('--navy-panel-2', paleta.colors.navyPanel2);
-  root.setProperty('--blue-deep', paleta.colors.blueDeep);
-  root.setProperty('--blue-mid', paleta.colors.blueMid);
-  root.setProperty('--blue-bright', paleta.colors.blueBright);
-  root.setProperty('--blue-glow', paleta.colors.blueGlow);
+  const elegida = CLAVES.includes(key) ? key : CLAVES[0];
+  document.documentElement.setAttribute('data-paleta', elegida);
 
-  // Se guarda localmente para que theme-inline.js pueda aplicarla de
-  // inmediato en la próxima carga, sin esperar la respuesta de Supabase.
-  try { localStorage.setItem('tc_paleta', paleta.key); } catch (e) { /* ignorar */ }
+  // Se guarda para que theme-inline.js la aplique de inmediato en
+  // la siguiente carga, sin esperar la respuesta de Supabase.
+  try { localStorage.setItem('tc_paleta', elegida); } catch (e) { /* ignorar */ }
+
+  actualizarColorBarraNavegador();
+  return elegida;
 }
 
+
 // ---------------------------------------------------------
-// Carga la fila única de configuración del negocio y aplica
-// su paleta. Devuelve la fila completa (o null si falló).
+// MODO — lo elige cada usuario, no el colegio.
+// 'auto' sigue la preferencia del sistema operativo.
+// ---------------------------------------------------------
+export function modoGuardado(){
+  try { return localStorage.getItem('tc_modo') || 'auto'; }
+  catch (e) { return 'auto'; }
+}
+
+export function modoEfectivo(modo = modoGuardado()){
+  if (modo === 'light' || modo === 'dark') return modo;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+export function aplicarModo(modo){
+  const elegido = MODOS.includes(modo) ? modo : 'auto';
+  try { localStorage.setItem('tc_modo', elegido); } catch (e) { /* ignorar */ }
+  document.documentElement.setAttribute('data-theme', modoEfectivo(elegido));
+  actualizarColorBarraNavegador();
+  return elegido;
+}
+
+// Si está en 'auto' y el sistema cambia de claro a oscuro (o al
+// anochecer, en los teléfonos que lo hacen solos), la app sigue.
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (modoGuardado() === 'auto') {
+    document.documentElement.setAttribute('data-theme', modoEfectivo('auto'));
+    actualizarColorBarraNavegador();
+  }
+});
+
+// La barra del navegador (y la de estado, con la app instalada)
+// toma el color del fondo. Sin esto, en móvil queda una franja
+// blanca sobre una app oscura — de lo que más delata una web.
+function actualizarColorBarraNavegador(){
+  const color = getComputedStyle(document.documentElement)
+    .getPropertyValue('--surface').trim() || '#FFFFFF';
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = color;
+}
+
+
+// ---------------------------------------------------------
+// Carga la fila única de configuración del negocio, aplica su
+// paleta y devuelve la fila completa (o null si falló).
 // ---------------------------------------------------------
 export async function cargarConfiguracionNegocio(){
+  // El modo es del usuario, así que se aplica sin esperar a la red.
+  aplicarModo(modoGuardado());
+
   const { data, error } = await supabase
     .from('configuracion_negocio')
     .select('*')
@@ -110,15 +111,15 @@ export async function cargarConfiguracionNegocio(){
 
   aplicarPaleta(data.paleta);
 
-  // Se cachean localmente los textos que se muestran de inmediato al
-  // cargar cualquier página (nombre, logo, terminología), para que un
-  // pequeño script bloqueante los aplique antes de esperar esta misma
-  // consulta la próxima vez — evita el "flash" del valor por defecto.
+  // Textos que se pintan antes de que responda Supabase: se cachean
+  // para que el script bloqueante los aplique al instante y no haya
+  // parpadeo del valor por defecto.
   try {
     localStorage.setItem('tc_nombre_negocio', data.nombre_negocio || 'Talento Canes');
     localStorage.setItem('tc_logo_url', data.logo_url || '');
     localStorage.setItem('tc_etiqueta_cliente', data.etiqueta_cliente || 'Acudiente');
     localStorage.setItem('tc_etiqueta_cliente_plural', data.etiqueta_cliente_plural || 'Acudientes');
+    localStorage.setItem('tc_etiqueta_descuento', data.etiqueta_descuento || 'Precio especial para ti');
   } catch (e) { /* ignorar */ }
 
   return data;
