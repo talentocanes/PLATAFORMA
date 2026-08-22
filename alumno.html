@@ -2,112 +2,108 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Barkly">
 <title>Talento Canes · Alumno</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js?v=12"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css?v=15">
+<script src="theme-inline.js?v=15"></script>
 <style>
-  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--mist-dim); background:none; border:none; cursor:pointer; padding:0; margin-bottom:14px; }
-  .back-link:hover{ color:var(--white); }
-  .back-link svg{ width:14px; height:14px; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s-2) 0 0; font-size:var(--t-sm); font-weight:500; color:var(--text-2); background:none; border:none; cursor:pointer; margin-bottom:var(--s-3); }
+  .back-link:hover{ color:var(--text); }
+  .back-link svg{ width:16px; height:16px; }
 
-  /* Cabecera */
-  .pet-header{ display:flex; align-items:center; gap:18px; background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:20px; flex-wrap:wrap; }
-  .pet-avatar{ width:78px; height:78px; border-radius:50%; flex-shrink:0; overflow:hidden; background:var(--navy-panel-2); display:flex; align-items:center; justify-content:center; border:1px solid var(--line); }
+  /* ---------- Cabecera ---------- */
+  .pet-header{ display:flex; align-items:center; gap:var(--s-5); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:var(--s-5); margin-bottom:var(--s-5); flex-wrap:wrap; }
+  .pet-avatar{ width:78px; height:78px; border-radius:var(--r-full); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--surface-3); color:#fff; font-size:var(--t-2xl); font-weight:700; }
   .pet-avatar img{ width:100%; height:100%; object-fit:cover; }
-  .pet-avatar svg{ width:32px; height:32px; color:var(--mist-dim); opacity:.5; }
   .pet-main{ flex:1; min-width:180px; }
-  .pet-main h1{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; line-height:1.2; }
-  .pet-sub{ font-size:12.5px; color:var(--mist-dim); margin-top:4px; }
-  .pet-tags{ display:flex; gap:7px; margin-top:9px; flex-wrap:wrap; }
-  .pet-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pet-main h1{ font-size:var(--t-2xl); }
+  .pet-sub{ font-size:var(--t-sm); color:var(--text-2); margin-top:4px; }
+  .pet-tags{ display:flex; gap:6px; margin-top:var(--s-3); flex-wrap:wrap; }
+  .pet-actions{ display:flex; gap:var(--s-2); flex-wrap:wrap; }
 
-  .tag-base{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; border:1px solid var(--line); color:var(--mist); background:var(--navy-panel-2); }
-  .tag-base.si{ color:#7bd88f; background:rgba(123,216,143,0.12); border-color:rgba(123,216,143,0.3); }
-  .tag-base.no{ color:var(--mist-dim); }
-  .tag-base.pend{ color:#ffcb7a; background:rgba(255,203,122,0.12); border-color:rgba(255,203,122,0.3); }
-  .tag-base.macho{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 13%, transparent); border-color:color-mix(in srgb, var(--blue-bright) 30%, transparent); }
-  .tag-base.hembra{ color:#ff8fa0; background:rgba(255,143,160,0.12); border-color:rgba(255,143,160,0.3); }
+  .tag-base{ display:inline-flex; align-items:center; height:22px; padding:0 9px; border-radius:var(--r-full); font-size:var(--t-xs); font-weight:600; white-space:nowrap; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }
+  .tag-base.si{ background:var(--ok-bg); color:var(--ok); border-color:var(--ok-br); }
+  .tag-base.no{ background:var(--surface-2); color:var(--text-3); }
+  .tag-base.pend{ background:var(--warn-bg); color:var(--warn); border-color:var(--warn-br); }
+  .tag-base.macho, .tag-base.hembra{ background:var(--surface-2); color:var(--text-2); }
 
-  /* Tarjetas */
-  .card{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:20px; }
-  .card-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-  .card-title{ font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; }
-  .card-sub{ font-size:12px; color:var(--mist-dim); margin-top:3px; }
+  /* ---------- Tarjetas ---------- */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:var(--s-5); margin-bottom:var(--s-5); }
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s-3); margin-bottom:var(--s-4); flex-wrap:wrap; }
+  .card-title{ font-size:var(--t-md); font-weight:700; letter-spacing:-0.01em; }
+  .card-sub{ font-size:var(--t-sm); color:var(--text-2); margin-top:2px; }
 
-  .info-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:14px 20px; }
-  .info-item{ font-size:13.5px; }
-  .info-item b{ display:block; font-size:10.5px; color:var(--mist-dim); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+  .info-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:var(--s-4); }
+  .info-item{ font-size:var(--t-base); }
+  .info-item b{ display:block; font-size:var(--t-sm); color:var(--text-2); font-weight:500; margin-bottom:3px; }
 
-  /* Dueño */
-  .duenio{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-  .duenio-avatar{ width:46px; height:46px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:var(--white); background:linear-gradient(135deg, var(--blue-deep), var(--blue-bright)); }
+  /* ---------- Acudiente ---------- */
+  .duenio{ display:flex; align-items:center; gap:var(--s-3); flex-wrap:wrap; }
+  .duenio-avatar{ width:46px; height:46px; border-radius:var(--r-full); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:var(--t-base); font-weight:700; color:#fff; }
   .duenio-info{ flex:1; min-width:140px; }
-  .duenio-nombre{ font-size:14px; font-weight:600; }
+  .duenio-nombre{ font-size:var(--t-base); font-weight:600; }
   .nombre-link{ cursor:pointer; border-bottom:1px solid transparent; display:inline-block; }
-  .nombre-link:hover{ color:var(--blue-glow); border-bottom-color:currentColor; }
-  .duenio-meta{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--mist-dim); margin-top:3px; }
+  .nombre-link:hover{ color:var(--acento-txt); border-bottom-color:currentColor; }
+  .duenio-meta{ font-size:var(--t-sm); color:var(--text-2); margin-top:2px; }
 
-  /* Carné */
-  .carne-box{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-  .carne-thumb{ width:110px; height:110px; border-radius:12px; overflow:hidden; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  /* ---------- Carné ---------- */
+  .carne-box{ display:flex; align-items:center; gap:var(--s-4); flex-wrap:wrap; }
+  .carne-thumb{ width:104px; height:104px; border-radius:var(--r-md); overflow:hidden; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .carne-thumb img{ width:100%; height:100%; object-fit:cover; }
-  .carne-thumb svg{ width:30px; height:30px; color:var(--mist-dim); opacity:.6; }
-  .carne-falta{ display:flex; align-items:center; gap:9px; font-size:13px; color:#ffcb7a; background:rgba(255,203,122,0.1); border:1px solid rgba(255,203,122,0.28); border-radius:11px; padding:12px 14px; }
-  .carne-falta svg{ width:16px; height:16px; flex-shrink:0; }
+  .carne-thumb svg{ width:28px; height:28px; color:var(--text-3); }
+  .carne-falta{ display:flex; align-items:flex-start; gap:var(--s-2); padding:var(--s-3) var(--s-4); border-radius:var(--r-sm); background:var(--warn-bg); border:1px solid var(--warn-br); color:var(--warn); font-size:var(--t-sm); line-height:1.45; }
+  .carne-falta svg{ width:17px; height:17px; flex-shrink:0; margin-top:1px; }
 
-  /* Historial */
-  .hist-lista{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--ink); }
-  .hist-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
-  .hist-row:last-child{ border-bottom:none; }
-  .hist-item{ font-size:13.5px; font-weight:500; }
-  .hist-meta{ font-size:11.5px; color:var(--mist-dim); margin-top:3px; line-height:1.45; }
-  .hist-der{ text-align:right; white-space:nowrap; flex-shrink:0; }
-  .hist-valor{ font-size:13.5px; font-weight:600; }
-  .hist-estado{ font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; padding:2px 6px; border-radius:5px; display:inline-block; margin-top:5px; border:1px solid var(--line); color:var(--mist-dim); }
-  .hist-estado.pagada{ color:#7bd88f; background:rgba(123,216,143,0.11); border-color:rgba(123,216,143,0.28); }
-  .hist-estado.porpagar{ color:var(--danger); background:rgba(255,107,107,0.1); border-color:rgba(255,107,107,0.28); }
-  .hist-estado.abonada{ color:var(--blue-glow); background:color-mix(in srgb, var(--blue-bright) 13%, transparent); border-color:color-mix(in srgb, var(--blue-bright) 30%, transparent); }
-
-  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px; }
-  .stat-box{ background:var(--navy-panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
-  .stat-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--mist-dim); margin-bottom:7px; }
-  .stat-value{ font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; }
+  /* ---------- Compras ---------- */
+  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:var(--s-3); margin-bottom:var(--s-4); }
+  .stat-box{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-4); }
+  .stat-label{ font-size:var(--t-sm); color:var(--text-2); margin-bottom:5px; }
+  .stat-value{ font-size:var(--t-xl); font-weight:700; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
   .stat-value.debe{ color:var(--danger); }
 
-  .empty-note{ color:var(--mist-dim); font-size:13px; padding:24px; text-align:center; }
+  .hist-lista{ border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; }
+  .hist-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s-3); padding:var(--s-3) var(--s-4); border-bottom:1px solid var(--border); }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-item{ font-size:var(--t-base); font-weight:500; }
+  .hist-meta{ font-size:var(--t-sm); color:var(--text-2); margin-top:2px; line-height:1.45; }
+  .hist-der{ text-align:right; white-space:nowrap; flex-shrink:0; }
+  .hist-valor{ font-size:var(--t-base); font-weight:600; font-variant-numeric:tabular-nums; }
+  .hist-estado{ display:inline-flex; align-items:center; height:20px; padding:0 7px; border-radius:var(--r-full); margin-top:5px; font-size:var(--t-xs); font-weight:600; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }
+  .hist-estado.pagada{ background:var(--ok-bg); color:var(--ok); border-color:var(--ok-br); }
+  .hist-estado.porpagar{ background:var(--danger-bg); color:var(--danger); border-color:var(--danger-br); }
+  .hist-estado.abonada{ background:var(--acento-suave); color:var(--acento-txt); border-color:transparent; }
 
-  .btn-icon{ display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:9px; font-size:12.5px; font-weight:500; cursor:pointer; border:1px solid var(--line); background:var(--navy-panel-2); color:var(--mist); text-decoration:none; }
-  .btn-icon:hover{ border-color:var(--line-strong); color:var(--white); }
-  .btn-icon svg{ width:14px; height:14px; }
+  .empty-note{ color:var(--text-2); font-size:var(--t-base); padding:var(--s-10) var(--s-5); text-align:center; }
+
+  .btn-icon{ display:inline-flex; align-items:center; justify-content:center; gap:6px; height:40px; padding:0 var(--s-4); border-radius:var(--r-sm); border:1px solid var(--border-2); background:var(--surface); color:var(--text); font-size:var(--t-sm); font-weight:500; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn-icon:hover{ background:var(--surface-2); }
+  .btn-icon svg{ width:15px; height:15px; }
 
   @media (max-width:680px){
-    .card{ padding:18px 16px; }
-    .pet-header{ padding:18px 16px; }
+    .card{ padding:var(--s-4); }
+    .pet-header{ padding:var(--s-4); gap:var(--s-4); }
+    .pet-main h1{ font-size:var(--t-xl); }
+    .pet-actions{ width:100%; }
+    .pet-actions .btn-icon{ flex:1; height:46px; }
+    .stats-row{ grid-template-columns:1fr 1fr; }
+    .stats-row > .stat-box:last-child:nth-child(odd){ grid-column:1 / -1; }
   }
 </style>
 </head>
 <body>
 
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  <aside class="sidebar" id="sidebar"></aside>
-  <script src="sidebar-inline.js?v=12" data-active="alumnos"></script>
+  <script src="shell-inline.js?v=15" data-active="alumnos"></script>
 
   <main>
-    <div class="topbar">
-      <div class="topbar-left">
-        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <div class="crumbs">Panel &nbsp;/&nbsp; <b id="crumbLabel">Alumnos</b></div>
-      </div>
-      <div class="top-right">
-        <div class="clock" id="clock">— — —</div>
-      </div>
-    </div>
-
     <button class="back-link" id="btnVolver">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       <span id="volverLabel">Volver a alumnos</span>
@@ -166,8 +162,9 @@
   </main>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=12';
-    import { supabase } from './supabaseClient.js?v=12';
+    import { initLayout } from './layout.js?v=15';
+    import { supabase } from './supabaseClient.js?v=15';
+    import { colorDeNombre, iniciales } from './ui.js?v=15';
 
     const params = new URLSearchParams(window.location.search);
     const ALUMNO_ID = params.get('id');
@@ -226,7 +223,6 @@
       }
 
       if (profile.role === 'cliente') {
-        document.getElementById('crumbLabel').textContent = 'Mis mascotas';
         document.getElementById('volverLabel').textContent = 'Volver a mis mascotas';
       }
 
@@ -266,8 +262,12 @@
       document.title = `Talento Canes · ${data.nombre}`;
       document.getElementById('pNombre').textContent = data.nombre || '—';
 
+      const foto = document.getElementById('pFoto');
       if (data.foto_url) {
-        document.getElementById('pFoto').innerHTML = `<img src="${escapar(data.foto_url)}" alt="${escapar(data.nombre)}">`;
+        foto.innerHTML = `<img src="${escapar(data.foto_url)}" alt="${escapar(data.nombre)}">`;
+      } else {
+        foto.textContent = iniciales(data.nombre);
+        foto.style.background = colorDeNombre(data.nombre);
       }
 
       const resumen = [data.raza || 'Raza sin definir'];
@@ -367,7 +367,7 @@
 
       const nombre = data.full_name || data.username || '—';
       box.innerHTML = `
-        <div class="duenio-avatar">${escapar((nombre.trim()[0] || '?').toUpperCase())}</div>
+        <div class="duenio-avatar" style="background:${colorDeNombre(nombre)}">${escapar(iniciales(nombre))}</div>
         <div class="duenio-info">
           <div class="duenio-nombre nombre-link" data-ficha="${data.id}">${escapar(nombre)}</div>
           <div class="duenio-meta">@${escapar(data.username)}${data.phone ? ' · ' + escapar(data.phone) : ''}</div>
