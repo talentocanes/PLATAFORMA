@@ -137,22 +137,35 @@
     import { initLayout } from './layout.js';
     import { supabase } from './supabaseClient.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
+    import { conCache, pintarCache, recordar, recordado } from './datos.js';
 
     let esAdmin = false;
     let conductores = [];
+
+    // Lo primero: dejar visible la vista que corresponde según el rol
+    // recordado, y pintar la lista de la última visita. Sin esto, la
+    // pantalla arranca en blanco y salta al confirmarse la sesión.
+    esAdmin = recordado('admin', false);
+    document.getElementById(esAdmin ? 'adminView' : 'conductorView').style.display = 'block';
+    if (esAdmin) {
+      pintarCache('rutas-conductores', lista => {
+        conductores = lista;
+        pintarTabla();
+      });
+    }
 
     (async () => {
       const profile = await initLayout({ activeKey: 'rutas' });
       if (!profile) return;
 
       esAdmin = profile.role === 'admin';
+      recordar('admin', esAdmin);
+      document.getElementById('adminView').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('conductorView').style.display = esAdmin ? 'none' : 'block';
 
       if (esAdmin) {
-        document.getElementById('adminView').style.display = 'block';
         await cargarConductores();
         suscribirEnVivo();
-      } else {
-        document.getElementById('conductorView').style.display = 'block';
       }
 
       window.BarklyShell?.listo?.();
@@ -168,21 +181,27 @@
     async function cargarConductores(){
       const tbody = document.getElementById('tableBody');
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, phone, trabajador_detalle!inner(cargo, modulos_habilitados)')
-        .eq('role', 'trabajador')
-        .eq('status', 'approved')
-        .contains('trabajador_detalle.modulos_habilitados', ['rutas']);
+      // Pinta lo de la última visita y revalida por detrás.
+      await conCache('rutas-conductores', async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, phone, trabajador_detalle!inner(cargo, modulos_habilitados)')
+          .eq('role', 'trabajador')
+          .eq('status', 'approved')
+          .contains('trabajador_detalle.modulos_habilitados', ['rutas']);
 
-      if (error) {
-        console.error('Error al cargar conductores:', error);
-        tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
-        return;
-      }
-
-      conductores = data || [];
-      pintarTabla();
+        if (error) {
+          console.error('Error al cargar conductores:', error);
+          if (!conductores.length) {
+            tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
+          }
+          return null;
+        }
+        return data || [];
+      }, lista => {
+        conductores = lista;
+        pintarTabla();
+      });
     }
 
     function pintarTabla(){

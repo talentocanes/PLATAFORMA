@@ -340,20 +340,29 @@
     import { supabase, usernameToEmail } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
+    import { conCache, pintarCache, recordar, recordado } from './datos.js';
 
     const ROL = 'trabajador';
     let filas = [];
     let esAdmin = false;
 
+    // Lo primero: pintar la lista de la última visita, con el permiso
+    // recordado para que los botones no aparezcan después y salte todo.
+    esAdmin = recordado('admin', false);
+    document.getElementById('btnAdd').style.display = esAdmin ? 'flex' : 'none';
+    pintarCache('trabajadores', lista => {
+      filas = lista;
+      pintarTabla(filas);
+    });
+
     (async () => {
       const profile = await initLayout({ activeKey: 'trabajadores' });
       if (!profile) return;
       esAdmin = profile.role === 'admin';
+      recordar('admin', esAdmin);
       MODULOS = obtenerModulosAsignables(obtenerConfiguracionActual());
 
-      if (!esAdmin) {
-        document.getElementById('btnAdd').style.display = 'none';
-      }
+      document.getElementById('btnAdd').style.display = esAdmin ? 'flex' : 'none';
 
       await cargarLista();
       window.BarklyShell?.listo?.();
@@ -370,32 +379,39 @@
 
     async function cargarLista(){
       const tbody = document.getElementById('tableBody');
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, phone, status, trabajador_detalle(cargo, activo, modulos_habilitados, modulos_edicion)')
-        .eq('role', ROL)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error al cargar trabajadores:', error);
-        tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
-        return;
-      }
+      // Pinta lo de la última visita y revalida por detrás.
+      await conCache('trabajadores', async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, phone, status, trabajador_detalle(cargo, activo, modulos_habilitados, modulos_edicion)')
+          .eq('role', ROL)
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
 
-      filas = (data || []).map(p => ({
-        id: p.id,
-        username: p.username,
-        full_name: p.full_name,
-        phone: p.phone,
-        status: p.status,
-        cargo: p.trabajador_detalle?.cargo || null,
-        activo: p.trabajador_detalle?.activo ?? true,
-        modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || [],
-        modulos_edicion: p.trabajador_detalle?.modulos_edicion || []
-      }));
+        if (error) {
+          console.error('Error al cargar trabajadores:', error);
+          if (!filas.length) {
+            tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
+          }
+          return null;
+        }
 
-      pintarTabla(filas);
+        return (data || []).map(p => ({
+          id: p.id,
+          username: p.username,
+          full_name: p.full_name,
+          phone: p.phone,
+          status: p.status,
+          cargo: p.trabajador_detalle?.cargo || null,
+          activo: p.trabajador_detalle?.activo ?? true,
+          modulos_habilitados: p.trabajador_detalle?.modulos_habilitados || [],
+          modulos_edicion: p.trabajador_detalle?.modulos_edicion || []
+        }));
+      }, lista => {
+        filas = lista;
+        pintarTabla(filas);
+      });
     }
 
     function pintarTabla(lista){

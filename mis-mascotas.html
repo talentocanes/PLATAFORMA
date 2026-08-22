@@ -261,6 +261,7 @@
     import { abrirRecortador } from './photocrop.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
+    import { conCache, pintarCache } from './datos.js';
 
     // Las navegaciones hechas desde código pasan por el armazón, para
     // que muestren el mismo indicador de carga que los enlaces.
@@ -279,6 +280,12 @@
     let archivoCarne = null;
     let eliminandoId = null;
 
+    // Lo primero: pintar las mascotas de la última visita.
+    pintarCache('mis-mascotas', lista => {
+      mascotas = lista;
+      pintarGrid();
+    });
+
     (async () => {
       perfil = await initLayout({ activeKey: 'mis-mascotas', rolesPermitidos: ['cliente'] });
       if (!perfil) return;
@@ -296,20 +303,27 @@
 
     async function cargarMascotas(){
       const grid = document.getElementById('petsGrid');
-      const { data, error } = await supabase
-        .from('alumnos')
-        .select('*')
-        .eq('acudiente_id', perfil.id)
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error al cargar mascotas:', error);
-        grid.innerHTML = `<div class="empty-note">No se pudo cargar tu lista de mascotas.</div>`;
-        return;
-      }
+      // Pinta lo de la última visita y revalida por detrás.
+      await conCache('mis-mascotas', async () => {
+        const { data, error } = await supabase
+          .from('alumnos')
+          .select('*')
+          .eq('acudiente_id', perfil.id)
+          .order('created_at', { ascending: false });
 
-      mascotas = data || [];
-      pintarGrid();
+        if (error) {
+          console.error('Error al cargar mascotas:', error);
+          if (!mascotas.length) {
+            grid.innerHTML = `<div class="empty-note">No se pudo cargar tu lista de mascotas.</div>`;
+          }
+          return null;
+        }
+        return data || [];
+      }, lista => {
+        mascotas = lista;
+        pintarGrid();
+      });
 
       // Igual que en Alumnos: se llega desde la ficha con "?editar=".
       const paraEditar = new URLSearchParams(window.location.search).get('editar');

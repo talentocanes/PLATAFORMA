@@ -412,15 +412,27 @@
     }
   }
 
-  /* Páginas que guardan su contenido para pintarlo al instante. Si el
-     destino ya tiene datos guardados, no hay nada que esperar y el
-     indicador no debe aparecer: sería una animación por gusto. */
-  var CACHE_POR_PAGINA = {
-    'inicio.html':   'inicio-cifras',
-    'alumnos.html':  'alumnos',
-    'clientes.html': 'clientes',
-    'tienda.html':   'tienda-items'
-  };
+  /* Páginas que guardan una foto de su contenido para restaurarlo al
+     instante. Quedan fuera a propósito Cartera y las Solicitudes de
+     Tienda: ahí se decide sobre dinero y conviene que lo que se vea sea
+     siempre lo que hay, aunque cueste medio segundo. Y Configuración,
+     porque son formularios y restaurar valores viejos sería confuso. */
+  var PAGINAS_CON_FOTO = [
+    'inicio.html', 'alumnos.html', 'alumno.html',
+    'clientes.html', 'acudiente.html', 'mis-mascotas.html',
+    'tienda.html', 'trabajadores.html', 'rutas.html'
+  ];
+
+  /* La clave incluye los parámetros de la dirección: la ficha de un
+     alumno y la de otro son pantallas distintas aunque compartan
+     archivo. */
+  function claveFoto(url){
+    var a = document.createElement('a');
+    a.href = url || window.location.href;
+    var pagina = a.pathname.split('/').pop() || 'inicio.html';
+    if (PAGINAS_CON_FOTO.indexOf(pagina) === -1) return null;
+    return 'tc_html_' + pagina + a.search;
+  }
 
   /* ---------------------------------------------------------
      Indicador de carga entre páginas.
@@ -445,11 +457,12 @@
     if (el) el.classList.remove('on');
   }
 
+  /* Si el destino ya tiene su foto guardada no hay nada que esperar, así
+     que el indicador no debe aparecer: sería una animación por gusto. */
   function destinoYaTieneDatos(url){
     try {
-      var pagina = String(url).split('?')[0].split('#')[0].split('/').pop();
-      var clave = CACHE_POR_PAGINA[pagina];
-      return !!clave && sessionStorage.getItem('tc_datos_' + clave) !== null;
+      var clave = claveFoto(url);
+      return !!clave && sessionStorage.getItem(clave) !== null;
     } catch (e) { return false; }
   }
 
@@ -486,21 +499,20 @@
      conciencia, porque ver el contenido al instante vale más que esa
      décima; es lo mismo que hacen las apps que se sienten fluidas.
      --------------------------------------------------------- */
-  function paginaActual(){
-    return window.location.pathname.split('/').pop() || 'inicio.html';
-  }
-
   function guardarPantalla(){
-    if (!CACHE_POR_PAGINA[paginaActual()]) return;
+    var clave = claveFoto();
+    if (!clave) return;
     var main = document.querySelector('main');
     if (!main) return;
-    try { sessionStorage.setItem('tc_html_' + paginaActual(), main.innerHTML); }
+    try { sessionStorage.setItem(clave, main.innerHTML); }
     catch (e) { /* sin espacio: da igual */ }
   }
 
   function restaurarPantalla(){
+    var clave = claveFoto();
+    if (!clave) return;
     var guardado = null;
-    try { guardado = sessionStorage.getItem('tc_html_' + paginaActual()); }
+    try { guardado = sessionStorage.getItem(clave); }
     catch (e) { return; }
     if (!guardado) return;
 
