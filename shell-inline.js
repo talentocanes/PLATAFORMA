@@ -345,8 +345,36 @@
     html += '</div>';
     html += '<div class="dialog-foot"><button class="btn btn-secondary btn-block" id="logoutBtnMas">Cerrar sesión</button></div>';
 
-    el.className = 'dialog action-sheet';
+    // Si la hoja está abierta cuando llegan los contadores, repintarla
+    // no debe cerrarla: se conserva el estado de apertura.
+    var abierta = el.classList.contains('open');
+    el.className = 'dialog action-sheet' + (abierta ? ' open' : '');
     el.innerHTML = html;
+  }
+
+  /* ---------------------------------------------------------
+     Contenedores.
+     El armazón se crea a sí mismo, así este script puede ir de
+     primero dentro de <body> y pintar antes de que el navegador
+     termine de leer la página. Si va al final, entre página y
+     página se ve un parpadeo sin menú.
+     Las páginas solo necesitan tener su <main>.
+     --------------------------------------------------------- */
+  function asegurarContenedores(){
+    const piezas = [
+      ['sidebar',  'aside',  'sidebar'],
+      ['appbar',   'header', 'appbar'],
+      ['tabbar',   'nav',    'tabbar'],
+      ['scrim',    'div',    'scrim'],
+      ['sheetMas', 'div',    'dialog']
+    ];
+    piezas.forEach(function(p){
+      if (document.getElementById(p[0])) return;
+      var el = document.createElement(p[1]);
+      el.id = p[0];
+      el.className = p[2];
+      document.body.appendChild(el);
+    });
   }
 
   /* ---------------------------------------------------------
@@ -357,6 +385,7 @@
   function pintarTodo(perfil, permitidos, config){
     if (!perfil) return;
     estadoActual = { perfil: perfil, permitidos: permitidos, config: config };
+    asegurarContenedores();
     pintarSidebar(perfil, permitidos, config);
     pintarAppbar(perfil, config);
     pintarTabbar(perfil, permitidos, config);

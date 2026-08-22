@@ -32,8 +32,10 @@ compatibilidad de `panel.css`, pero **no tendrá barra inferior en móvil**.
 </head>
 <body>
 
-  <aside class="sidebar" id="sidebar"></aside>   <!-- escritorio -->
-  <header class="appbar" id="appbar"></header>   <!-- móvil -->
+  <!-- De primero: el armazón se pinta antes de que termine de leerse
+       la página, y crea él mismo el sidebar, la appbar, la tabbar y
+       la hoja de "Más". La página solo aporta su <main>. -->
+  <script src="shell-inline.js?v=13" data-active="alumnos" data-title="Alumnos"></script>
 
   <main>
     <div class="page-head">
@@ -46,12 +48,6 @@ compatibilidad de `panel.css`, pero **no tendrá barra inferior en móvil**.
 
     <!-- contenido -->
   </main>
-
-  <nav class="tabbar" id="tabbar"></nav>         <!-- móvil -->
-  <div class="scrim" id="scrim"></div>
-  <div class="dialog" id="sheetMas"></div>
-
-  <script src="shell-inline.js?v=13" data-active="alumnos" data-title="Alumnos"></script>
 
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js?v=13';
@@ -71,8 +67,13 @@ compatibilidad de `panel.css`, pero **no tendrá barra inferior en móvil**.
 **`viewport-fit=cover`** en el viewport. Sin eso, `env(safe-area-inset-bottom)`
 devuelve cero y la barra inferior queda pisada por el gesto de inicio del iPhone.
 
-**`shell-inline.js` va después de `<body>`, no en el `<head>`.** Necesita que
-existan `#sidebar`, `#appbar` y `#tabbar` para pintarlos de inmediato.
+**`shell-inline.js` va de primero dentro de `<body>`.** Si se deja al final,
+el armazón se pinta cuando ya se leyó toda la página y se ve un parpadeo sin
+menú al pasar de una página a otra.
+
+**No hace falta escribir el marcado del armazón.** Nada de `<aside id="sidebar">`,
+`<nav id="tabbar">` ni `<div id="sheetMas">`: los crea el propio script. Si la
+página ya los tiene (por ser una migración parcial), los reutiliza.
 
 **`data-active` usa la clave interna del módulo**, no el nombre visible:
 `servicios` y no `tienda`, `clientes` y no `acudientes`.

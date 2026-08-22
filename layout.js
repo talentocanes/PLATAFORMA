@@ -135,33 +135,15 @@ function conectarArmazon(){
 /* ---------------------------------------------------------
    Armazón en páginas todavía sin migrar.
 
-   Las páginas migradas traen en su marcado el sidebar, la appbar,
-   la tabbar y la hoja de "Más", y cargan shell-inline.js ellas
-   mismas. Las que aún no se han migrado no tienen nada de eso, así
-   que aquí se les crea al vuelo: así siguen funcionando y de paso
-   ya tienen barra inferior en móvil sin haberlas tocado.
+   Las páginas migradas cargan shell-inline.js ellas mismas, de
+   primero, y el armazón crea sus propios contenedores. Las que
+   aún no se han migrado no lo cargan, así que aquí se inyecta:
+   siguen funcionando y de paso ya tienen barra inferior en móvil
+   sin haberlas tocado.
 
    Se borra cuando no quede ninguna página sin migrar.
    --------------------------------------------------------- */
-function crearSiFalta(id, tag, clase, dondeAntes){
-  let el = document.getElementById(id);
-  if (el) return el;
-  el = document.createElement(tag);
-  el.id = id;
-  el.className = clase;
-  if (dondeAntes && dondeAntes.parentNode) dondeAntes.parentNode.insertBefore(el, dondeAntes);
-  else document.body.appendChild(el);
-  return el;
-}
-
 async function asegurarArmazon(activeKey){
-  const main = document.querySelector('main');
-  crearSiFalta('sidebar', 'aside', 'sidebar', main);
-  crearSiFalta('appbar', 'header', 'appbar', main);
-  crearSiFalta('tabbar', 'nav', 'tabbar');
-  crearSiFalta('scrim', 'div', 'scrim');
-  crearSiFalta('sheetMas', 'div', 'dialog');
-
   if (window.BarklyShell) return;
 
   await new Promise(resolve => {

@@ -241,12 +241,19 @@
 
   /* ---------- Calendario del hotel ---------- */
   .hotel-calendar{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-4); margin-bottom:var(--s-3); }
-  .hotel-cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s-3); font-size:var(--t-base); font-weight:600; }
-  .hotel-cal-nav{ width:36px; height:36px; border:1px solid var(--border-2); background:none; border-radius:var(--r-sm); color:var(--text-2); cursor:pointer; }
-  .hotel-cal-nav:hover{ background:var(--surface-2); color:var(--text); }
+  .hotel-cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s-3); }
+  .hotel-cal-head .m{ font-size:var(--t-base); font-weight:600; text-transform:capitalize; }
+  .hotel-cal-nav{ display:flex; gap:6px; }
+  .hotel-cal-nav button{ width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:var(--surface); border-radius:var(--r-sm); color:var(--text-2); font-size:17px; line-height:1; font-family:inherit; cursor:pointer; }
+  .hotel-cal-nav button:hover:not(:disabled){ background:var(--surface-2); color:var(--text); }
+  .hotel-cal-nav button:disabled{ opacity:.4; cursor:default; }
   .hotel-cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
   .hotel-cal-dow{ text-align:center; font-size:var(--t-xs); font-weight:600; color:var(--text-3); padding-bottom:6px; }
-  .hotel-cal-day{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:var(--r-sm); font-size:var(--t-sm); color:var(--text); cursor:pointer; }
+  /* Cada día es un <button>: hay que anular el estilo por defecto del
+     navegador o se pintan como botones grises del sistema. */
+  .hotel-cal-day{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0;
+    border:none; background:none; border-radius:var(--r-sm);
+    font-family:inherit; font-size:var(--t-sm); color:var(--text); cursor:pointer; }
   .hotel-cal-day:hover{ background:var(--surface-2); }
   .hotel-cal-day.disabled{ color:var(--text-3); opacity:.45; cursor:default; }
   .hotel-cal-day.disabled:hover{ background:none; }
@@ -317,8 +324,7 @@
 </head>
 <body>
 
-  <aside class="sidebar" id="sidebar"></aside>
-  <header class="appbar" id="appbar"></header>
+  <script src="shell-inline.js?v=13" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -362,11 +368,7 @@
     </div>
   </main>
 
-  <nav class="tabbar" id="tabbar"></nav>
-  <div class="scrim" id="scrim"></div>
-  <div class="dialog" id="sheetMas"></div>
 
-  <script src="shell-inline.js?v=13" data-active="servicios" data-title="Tienda"></script>
 
   <!-- Modal: elegir tipo -->
   <div class="modal-overlay" id="tipoOverlay">
