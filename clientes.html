@@ -13,12 +13,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css?v=15">
-<script src="theme-inline.js?v=15"></script>
+<link rel="stylesheet" href="panel.css?v=27">
+<script src="theme-inline.js?v=27"></script>
 <style>
   /* ---------- Encabezado y herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
-  .page-header h1{ font-size:var(--t-2xl); }
+  .page-header h1{ font-size:26px; }
   .page-header p{ color:var(--text-2); margin-top:4px; }
 
   .btn-add{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2); height:40px; padding:0 var(--s-4); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-base); cursor:pointer; white-space:nowrap; }
@@ -127,7 +127,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=15" data-active="clientes"></script>
+  <script src="shell-inline.js?v=27" data-active="clientes"></script>
 
   <main>
     <div class="page-header">
@@ -301,10 +301,21 @@
   </script>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=15';
-    import { supabase, usernameToEmail } from './supabaseClient.js?v=15';
-    import { capitalizarPalabras } from './textutils.js?v=15';
-    import { escapar, colorDeNombre, iniciales } from './ui.js?v=15';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=27';
+    import { supabase, usernameToEmail } from './supabaseClient.js?v=27';
+    import { capitalizarPalabras } from './textutils.js?v=27';
+    import { escapar, colorDeNombre, iniciales } from './ui.js?v=27';
+
+    // Las navegaciones hechas desde código también encienden el
+    // indicador de carga del armazón, igual que los enlaces.
+    (function(){
+      const irOriginal = window.location.assign.bind(window.location);
+      window.irA = function(url){
+        window.BarklyShell?.cargando?.();
+        irOriginal(url);
+      };
+    })();
+
 
     const ROL = 'cliente';
     let filas = [];
@@ -473,7 +484,7 @@
     // Antes esto era un modal; ahora es una página propia (acudiente.html),
     // donde además se gestionan sus precios especiales.
     function abrirVista(id){
-      window.location.href = `acudiente.html?id=${id}`;
+      window.irA(`acudiente.html?id=${id}`);
     }
 
     // ---------------- Modal de edición ----------------

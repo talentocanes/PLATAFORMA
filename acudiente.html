@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css?v=15">
-<script src="theme-inline.js?v=15"></script>
+<link rel="stylesheet" href="panel.css?v=27">
+<script src="theme-inline.js?v=27"></script>
 <style>
   .back-link{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s-2) 0 0; font-size:var(--t-sm); font-weight:500; color:var(--text-2); background:none; border:none; cursor:pointer; margin-bottom:var(--s-3); }
   .back-link:hover{ color:var(--text); }
@@ -154,7 +154,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=15" data-active="clientes"></script>
+  <script src="shell-inline.js?v=27" data-active="clientes"></script>
 
   <main>
     <button class="back-link" id="btnVolver">
@@ -338,10 +338,21 @@
   </script>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=15';
-    import { supabase } from './supabaseClient.js?v=15';
-    import { capitalizarPalabras } from './textutils.js?v=15';
-    import { colorDeNombre, iniciales } from './ui.js?v=15';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=27';
+    import { supabase } from './supabaseClient.js?v=27';
+    import { capitalizarPalabras } from './textutils.js?v=27';
+    import { colorDeNombre, iniciales } from './ui.js?v=27';
+
+    // Las navegaciones hechas desde código también encienden el
+    // indicador de carga del armazón, igual que los enlaces.
+    (function(){
+      const irOriginal = window.location.assign.bind(window.location);
+      window.irA = function(url){
+        window.BarklyShell?.cargando?.();
+        irOriginal(url);
+      };
+    })();
+
 
     const params = new URLSearchParams(window.location.search);
     const CLIENTE_ID = params.get('id');
@@ -418,7 +429,7 @@
         return;
       }
       if (!esAdmin && profile.role !== 'trabajador') {
-        window.location.href = 'inicio.html';
+        window.irA('inicio.html');
         return;
       }
 
@@ -444,10 +455,10 @@
     }
 
     document.getElementById('btnVolver').addEventListener('click', () => {
-      window.location.href = 'clientes.html';
+      window.irA('clientes.html');
     });
     document.getElementById('btnIrCartera').addEventListener('click', () => {
-      window.location.href = 'cartera.html';
+      window.irA('cartera.html');
     });
 
     // ---------- datos de la persona ----------
@@ -520,7 +531,7 @@
       `).join('');
 
       grid.querySelectorAll('[data-ficha]').forEach(card => {
-        card.addEventListener('click', () => { window.location.href = `alumno.html?id=${card.dataset.ficha}`; });
+        card.addEventListener('click', () => { window.irA(`alumno.html?id=${card.dataset.ficha}`); });
       });
     }
 

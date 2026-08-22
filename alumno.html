@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css?v=15">
-<script src="theme-inline.js?v=15"></script>
+<link rel="stylesheet" href="panel.css?v=27">
+<script src="theme-inline.js?v=27"></script>
 <style>
   .back-link{ display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 var(--s-2) 0 0; font-size:var(--t-sm); font-weight:500; color:var(--text-2); background:none; border:none; cursor:pointer; margin-bottom:var(--s-3); }
   .back-link:hover{ color:var(--text); }
@@ -101,7 +101,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=15" data-active="alumnos"></script>
+  <script src="shell-inline.js?v=27" data-active="alumnos"></script>
 
   <main>
     <button class="back-link" id="btnVolver">
@@ -162,9 +162,20 @@
   </main>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=15';
-    import { supabase } from './supabaseClient.js?v=15';
-    import { colorDeNombre, iniciales } from './ui.js?v=15';
+    import { initLayout } from './layout.js?v=27';
+    import { supabase } from './supabaseClient.js?v=27';
+    import { colorDeNombre, iniciales } from './ui.js?v=27';
+
+    // Las navegaciones hechas desde código también encienden el
+    // indicador de carga del armazón, igual que los enlaces.
+    (function(){
+      const irOriginal = window.location.assign.bind(window.location);
+      window.irA = function(url){
+        window.BarklyShell?.cargando?.();
+        irOriginal(url);
+      };
+    })();
+
 
     const params = new URLSearchParams(window.location.search);
     const ALUMNO_ID = params.get('id');
@@ -237,7 +248,7 @@
     })();
 
     document.getElementById('btnVolver').addEventListener('click', () => {
-      window.location.href = perfil?.role === 'cliente' ? 'mis-mascotas.html' : 'alumnos.html';
+      window.irA(perfil?.role === 'cliente' ? 'mis-mascotas.html' : 'alumnos.html');
     });
 
     async function cargarAlumno(){
@@ -254,7 +265,7 @@
 
       // Un acudiente solo puede abrir la ficha de sus propias mascotas.
       if (perfil.role === 'cliente' && data.acudiente_id !== perfil.id) {
-        window.location.href = 'mis-mascotas.html';
+        window.irA('mis-mascotas.html');
         return;
       }
 
@@ -375,7 +386,7 @@
         <a class="btn-icon" href="acudiente.html?id=${data.id}">Ver ficha del acudiente</a>`;
 
       box.querySelectorAll('[data-ficha]').forEach(el => {
-        el.addEventListener('click', () => { window.location.href = `acudiente.html?id=${el.dataset.ficha}`; });
+        el.addEventListener('click', () => { window.irA(`acudiente.html?id=${el.dataset.ficha}`); });
       });
     }
 

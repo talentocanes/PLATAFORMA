@@ -402,7 +402,60 @@
       el.className = p[2];
       document.body.appendChild(el);
     });
+
+    if (!document.getElementById('cargando')) {
+      var carga = document.createElement('div');
+      carga.id = 'cargando';
+      carga.className = 'cargando-overlay';
+      carga.innerHTML = '<div class="spinner"></div>';
+      document.body.appendChild(carga);
+    }
   }
+
+  /* ---------------------------------------------------------
+     Indicador de carga entre páginas.
+
+     Se muestra tras un retraso corto: en una navegación rápida no
+     llega a verse, y así se evita el parpadeo que molesta más que
+     la propia espera. Cubre solo el contenido — la barra lateral,
+     la superior y las pestañas quedan por encima y nítidas, para
+     que se siga viendo dónde estás mientras carga.
+     --------------------------------------------------------- */
+  var temporizadorCarga = null;
+
+  function mostrarCarga(){
+    if (temporizadorCarga) return;
+    temporizadorCarga = setTimeout(function(){
+      var el = document.getElementById('cargando');
+      if (el) el.classList.add('on');
+    }, 140);
+  }
+
+  function ocultarCarga(){
+    clearTimeout(temporizadorCarga);
+    temporizadorCarga = null;
+    var el = document.getElementById('cargando');
+    if (el) el.classList.remove('on');
+  }
+
+  document.addEventListener('click', function(e){
+    // Solo navegaciones normales dentro del sitio: ni pestaña nueva,
+    // ni anclas, ni descargas, ni clics con Ctrl o Cmd.
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var enlace = e.target.closest('a[href]');
+    if (!enlace) return;
+    if (enlace.target && enlace.target !== '_self') return;
+    if (enlace.hasAttribute('download')) return;
+    var href = enlace.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+    if (enlace.origin && enlace.origin !== window.location.origin) return;
+    if (enlace.pathname === window.location.pathname && enlace.search === window.location.search) return;
+    mostrarCarga();
+  });
+
+  // Al volver con el botón atrás la página puede restaurarse tal cual
+  // estaba, con el indicador encendido: hay que apagarlo.
+  window.addEventListener('pageshow', ocultarCarga);
 
   /* ---------------------------------------------------------
      API pública
@@ -428,6 +481,11 @@
     iniciales: iniciales,
 
     pintar: pintarTodo,
+
+    /* Las páginas que navegan desde código (window.location.href = …)
+       llaman a esto para que el indicador también aparezca ahí. */
+    cargando: mostrarCarga,
+    finCarga: ocultarCarga,
 
     /* Perfil, permisos y configuración con los que se pintó el armazón.
        Las páginas lo reutilizan en vez de volver a consultarlos. */

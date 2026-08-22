@@ -307,6 +307,28 @@ main{
    6. COMPONENTES
    ============================================================ */
 
+/* ---- Indicador de carga entre páginas ----
+   z-index por debajo del armazón a propósito: la barra lateral (110),
+   la superior y las pestañas (100) quedan encima y nítidas, así que
+   solo se atenúa el contenido y nunca se pierde la referencia de
+   dónde estás. */
+.cargando-overlay{
+  position:fixed; inset:0; z-index:90;
+  display:none; align-items:center; justify-content:center;
+  background:color-mix(in srgb, var(--bg) 74%, transparent);
+  -webkit-backdrop-filter:blur(1px); backdrop-filter:blur(1px);
+}
+.cargando-overlay.on{ display:flex; }
+.spinner{
+  width:34px; height:34px; border-radius:50%;
+  border:3px solid var(--border-2); border-top-color:var(--acento);
+  animation:girar .7s linear infinite;
+}
+@keyframes girar{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){
+  .spinner{ animation-duration:1.8s; }
+}
+
 /* ---- Encabezado de página ---- */
 .page-head{
   display:flex; align-items:flex-end; justify-content:space-between;

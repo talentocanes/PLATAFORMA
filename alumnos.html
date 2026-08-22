@@ -15,12 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=15"></script>
-<link rel="stylesheet" href="panel.css?v=15">
+<script src="theme-inline.js?v=27"></script>
+<link rel="stylesheet" href="panel.css?v=27">
 <style>
   /* ---------- Encabezado y herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
-  .page-header h1{ font-size:var(--t-2xl); }
+  .page-header h1{ font-size:26px; }
   .page-header p{ color:var(--text-2); margin-top:4px; }
 
   .btn-add{ display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2); height:40px; padding:0 var(--s-4); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-base); cursor:pointer; white-space:nowrap; }
@@ -157,7 +157,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=15" data-active="alumnos" data-title="Alumnos"></script>
+  <script src="shell-inline.js?v=27" data-active="alumnos" data-title="Alumnos"></script>
 
   <main>
     <div class="page-header">
@@ -323,12 +323,23 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=15';
-    import { supabase } from './supabaseClient.js?v=15';
-    import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=15';
-    import { abrirRecortador } from './photocrop.js?v=15';
-    import { capitalizarPalabras } from './textutils.js?v=15';
-    import { escapar, colorDeNombre, iniciales } from './ui.js?v=15';
+    import { initLayout } from './layout.js?v=27';
+    import { supabase } from './supabaseClient.js?v=27';
+    import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=27';
+    import { abrirRecortador } from './photocrop.js?v=27';
+    import { capitalizarPalabras } from './textutils.js?v=27';
+    import { escapar, colorDeNombre, iniciales } from './ui.js?v=27';
+
+    // Las navegaciones hechas desde código también encienden el
+    // indicador de carga del armazón, igual que los enlaces.
+    (function(){
+      const irOriginal = window.location.assign.bind(window.location);
+      window.irA = function(url){
+        window.BarklyShell?.cargando?.();
+        irOriginal(url);
+      };
+    })();
+
 
     let alumnos = [];
     let acudientes = [];
@@ -548,13 +559,13 @@
       `;}).join('');
 
       tbody.querySelectorAll('[data-ficha]').forEach(el => {
-        el.addEventListener('click', () => { window.location.href = `alumno.html?id=${el.dataset.ficha}`; });
+        el.addEventListener('click', () => { window.irA(`alumno.html?id=${el.dataset.ficha}`); });
       });
       tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', () => abrirModal(btn.dataset.id));
       });
       tbody.querySelectorAll('[data-action="ver"]').forEach(btn => {
-        btn.addEventListener('click', () => { window.location.href = `alumno.html?id=${btn.dataset.id}`; });
+        btn.addEventListener('click', () => { window.irA(`alumno.html?id=${btn.dataset.id}`); });
       });
       tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
         btn.addEventListener('click', () => abrirEliminar(btn.dataset.id));
