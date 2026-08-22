@@ -56,7 +56,7 @@
   --sh-3: 0 12px 32px rgba(16,24,40,.12), 0 2px 6px rgba(16,24,40,.06);
 
   /* Medidas del armazón */
-  --sidebar-w: 248px;
+  --sidebar-w: 236px;
   --appbar-h:  54px;
   --tabbar-h:  56px;
   --safe-b:    env(safe-area-inset-bottom, 0px);
@@ -167,7 +167,7 @@ body{
 }
 
 h1,h2,h3,h4{ line-height:1.2; letter-spacing:-0.02em; font-weight:700; }
-h1{ font-size:var(--t-2xl); letter-spacing:-0.03em; }
+h1{ font-size:26px; letter-spacing:-0.03em; }
 h2{ font-size:var(--t-xl); }
 h3{ font-size:var(--t-md); letter-spacing:-0.01em; }
 h4{ font-size:var(--t-base); }
@@ -193,18 +193,23 @@ img{ max-width:100%; display:block; }
    Son dos estructuras distintas, no una encogida.
    ============================================================ */
 
-/* ---- Barra lateral (solo escritorio) ---- */
+/* ---- Barra lateral (solo escritorio) ----
+   El menú es lo único que se desplaza; la marca arriba y el pie con la
+   cuenta abajo quedan siempre visibles. Antes toda la barra se
+   desplazaba junta y en pantallas bajas "Cerrar sesión" se salía. */
 .sidebar{
   position:fixed; top:0; left:0;
   width:var(--sidebar-w); height:100dvh;
   background:var(--surface);
   border-right:1px solid var(--border);
   display:flex; flex-direction:column;
-  padding:var(--s-4) var(--s-3);
-  overflow-y:auto;
+  padding:var(--s-3) var(--s-2);
+  overflow:hidden;
   z-index:110;
 }
-.sidebar::-webkit-scrollbar{ width:0; }
+.sidebar .nav-groups{ flex:1; min-height:0; overflow-y:auto; scrollbar-width:none; }
+.sidebar .nav-groups::-webkit-scrollbar{ width:0; }
+.sidebar .brand, .sidebar .sidebar-footer{ flex-shrink:0; }
 
 /* ---- Contenido ----
    Ocupa todo el espacio a la derecha de la barra lateral. El relleno
@@ -213,10 +218,10 @@ img{ max-width:100%; display:block; }
 main{
   margin-left:var(--sidebar-w);
   min-width:0;
-  padding:var(--s-10) var(--s-8) var(--s-14);
+  padding:var(--s-8) var(--s-6) var(--s-14);
 }
 @media (min-width:1600px){
-  main{ padding-left:var(--s-14); padding-right:var(--s-14); }
+  main{ padding-left:var(--s-10); padding-right:var(--s-10); }
 }
 
 /* ---- Barra superior de móvil ---- */
@@ -617,24 +622,25 @@ select.input{ appearance:none; padding-right:36px;
 .sidebar-overlay.active{ display:block; }
 .menu-toggle{ display:none; }
 
-.brand{ display:flex; align-items:center; gap:10px; padding:var(--s-2) var(--s-3) var(--s-5); }
-.brand-logo{ width:32px; height:32px; border-radius:10px; object-fit:cover; flex-shrink:0; }
-.brand-text .name{ font-size:var(--t-base); font-weight:700; letter-spacing:-0.01em; }
-.brand-text .sub{ font-size:var(--t-xs); color:var(--text-3); margin-top:1px; }
+.brand{ display:flex; align-items:center; gap:9px; padding:var(--s-2) var(--s-3) var(--s-3); }
+.brand-logo{ width:30px; height:30px; border-radius:9px; object-fit:cover; flex-shrink:0; }
+.brand-text{ min-width:0; }
+.brand-text .name{ font-size:var(--t-sm); font-weight:700; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.brand-text .sub{ font-size:11px; color:var(--text-3); margin-top:1px; }
 
 .nav-label, .nav-groups > .nav-label{
-  font-size:var(--t-xs); font-weight:600; color:var(--text-3);
-  padding:var(--s-4) var(--s-3) 6px; text-transform:none; letter-spacing:0;
+  font-size:11px; font-weight:600; color:var(--text-3);
+  padding:var(--s-3) var(--s-3) 4px; text-transform:none; letter-spacing:0;
 }
-.nav-groups{ display:flex; flex-direction:column; gap:2px; }
+.nav-groups{ display:flex; flex-direction:column; gap:1px; }
 .nav-item{
-  display:flex; align-items:center; gap:10px;
-  padding:9px var(--s-3); border-radius:var(--r-sm);
-  color:var(--text-2); font-size:var(--t-base); font-weight:500;
+  display:flex; align-items:center; gap:9px;
+  padding:7px var(--s-3); border-radius:var(--r-sm);
+  color:var(--text-2); font-size:13.5px; font-weight:500;
   text-decoration:none; cursor:pointer;
   transition:background .12s ease, color .12s ease;
 }
-.nav-item svg{ width:19px; height:19px; flex-shrink:0; }
+.nav-item svg{ width:18px; height:18px; flex-shrink:0; }
 .nav-item:hover{ background:var(--surface-2); color:var(--text); }
 .nav-item.active{ background:var(--acento-suave); color:var(--acento-txt); font-weight:600; box-shadow:none; }
 .nav-item.disabled{ color:var(--text-3); cursor:default; }
@@ -644,24 +650,24 @@ select.input{ appearance:none; padding-right:36px;
   border:none; padding:0; text-transform:none; letter-spacing:0;
 }
 
-.sidebar-footer{ margin-top:auto; padding-top:var(--s-3); border-top:1px solid var(--border); }
-.role-card{ display:flex; align-items:center; gap:10px; padding:var(--s-3); }
-.avatar-ring{ width:34px; height:34px; border-radius:50%; background:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.avatar-ring .avatar{ width:34px; height:34px; background:var(--acento); color:#fff; font-size:var(--t-xs); }
+.sidebar-footer{ margin-top:auto; padding-top:var(--s-2); border-top:1px solid var(--border); }
+.role-card{ display:flex; align-items:center; gap:9px; padding:var(--s-2) var(--s-3); }
+.avatar-ring{ width:32px; height:32px; border-radius:50%; background:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.avatar-ring .avatar{ width:32px; height:32px; background:var(--acento); color:#fff; font-size:11px; }
 .role-card .who{ min-width:0; }
 .role-card .who .n{ font-size:var(--t-sm); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .role-card .who .r{ font-size:var(--t-xs); color:var(--text-3); }
 
 /* Apariencia: la elige cada usuario y está a mano en todas las páginas,
    no escondida en un ajuste. */
-.modo-row{ display:flex; align-items:center; justify-content:space-between; gap:var(--s-2); padding:0 var(--s-3) var(--s-2); }
+.modo-row{ display:flex; align-items:center; justify-content:space-between; gap:var(--s-2); padding:2px var(--s-3) var(--s-2); }
 .modo-label{ font-size:var(--t-sm); color:var(--text-2); }
-.segmented-iconos button{ width:34px; height:30px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
-.segmented-iconos svg{ width:16px; height:16px; }
+.segmented-iconos button{ width:32px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+.segmented-iconos svg{ width:15px; height:15px; }
 
 /* Cerrar sesión: fondo propio en vez de un borde fino que se pierde. */
 .logout-link{
-  width:100%; height:44px;
+  width:100%; height:40px;
   background:var(--surface-2); border:none; border-radius:var(--r-sm);
   color:var(--text-2); font-family:inherit; font-size:var(--t-base); font-weight:600;
   cursor:pointer; transition:background .13s ease, color .13s ease;
