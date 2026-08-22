@@ -176,6 +176,7 @@
       if (esAdmin) document.getElementById('tabDenegadas').style.display = 'flex';
 
       await cargarPendientes();
+      window.BarklyShell?.listo?.();
       suscribirEnVivo();
     })();
 

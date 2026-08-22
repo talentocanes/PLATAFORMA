@@ -283,6 +283,7 @@
       perfil = await initLayout({ activeKey: 'mis-mascotas', rolesPermitidos: ['cliente'] });
       if (!perfil) return;
       await cargarMascotas();
+      window.BarklyShell?.listo?.();
       suscribirEnVivo();
     })();
 

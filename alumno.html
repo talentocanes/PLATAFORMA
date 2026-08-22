@@ -242,6 +242,7 @@
       await cargarAlumno();
       if (!alumno) return;
       await Promise.all([cargarDuenio(), cargarCompras()]);
+      window.BarklyShell?.listo?.();
     })();
 
     document.getElementById('btnVolver').addEventListener('click', () => {

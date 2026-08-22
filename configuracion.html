@@ -401,6 +401,8 @@
       document.querySelectorAll('.subtab').forEach(tab => {
         tab.addEventListener('click', () => cambiarSubtab(tab.dataset.tab));
       });
+
+      window.BarklyShell?.listo?.();
     })();
 
     function cambiarSubtab(tabKey){

@@ -437,11 +437,36 @@
 
   function navegarCon(url){
     mostrarCarga();
+    // Se deja marcado que la navegación salió de dentro de la app: la
+    // página siguiente arranca ya con el indicador puesto y lo mantiene
+    // hasta tener sus datos, en vez de apagarlo al aparecer y dejar un
+    // hueco con "Cargando…".
+    try { sessionStorage.setItem('tc_navegando', '1'); } catch (e) { /* ignorar */ }
     // Un fotograma para que el indicador llegue a pintarse, y otro
     // margen mínimo para que la animación arranque antes de la descarga.
     requestAnimationFrame(function(){
       setTimeout(function(){ window.location.href = url; }, 40);
     });
+  }
+
+  /* La página avisa de que ya tiene su contenido. Es idempotente: se
+     puede llamar varias veces sin problema. */
+  function listo(){
+    try { sessionStorage.removeItem('tc_navegando'); } catch (e) { /* ignorar */ }
+    clearTimeout(respaldoCarga);
+    ocultarCarga();
+  }
+
+  /* Si la página venía de una navegación interna, el indicador arranca
+     encendido. El respaldo lo apaga pase lo que pase, para que un fallo
+     al cargar datos no deje la pantalla velada para siempre. */
+  var respaldoCarga = null;
+  function continuarCarga(){
+    var venia = false;
+    try { venia = sessionStorage.getItem('tc_navegando') === '1'; } catch (e) { /* ignorar */ }
+    if (!venia) return;
+    mostrarCarga();
+    respaldoCarga = setTimeout(listo, 5000);
   }
 
   document.addEventListener('click', function(e){
@@ -494,7 +519,7 @@
        indicador también aparezca ahí. */
     navegar: navegarCon,
     cargando: mostrarCarga,
-    finCarga: ocultarCarga,
+    listo: listo,
 
     /* Perfil, permisos y configuración con los que se pintó el armazón.
        Las páginas lo reutilizan en vez de volver a consultarlos. */
@@ -539,6 +564,9 @@
      Primer pintado, con lo último que se sabe.
      Se reemplaza en cuanto Supabase confirma.
      --------------------------------------------------------- */
+  asegurarContenedores();
+  continuarCarga();
+
   var cache = perfilCache();
   if (cache) {
     var permitidos = null;
