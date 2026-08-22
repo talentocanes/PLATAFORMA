@@ -479,10 +479,10 @@
     // hasta tener sus datos, en vez de apagarlo al aparecer y dejar un
     // hueco con "Cargando…".
     try { sessionStorage.setItem('tc_navegando', '1'); } catch (e) { /* ignorar */ }
-    // Un fotograma para que el indicador llegue a pintarse, y otro
-    // margen mínimo para que la animación arranque antes de la descarga.
+    // Un fotograma, lo justo para que el indicador llegue a pintarse
+    // antes de que empiece la descarga.
     requestAnimationFrame(function(){
-      setTimeout(function(){ window.location.href = url; }, 40);
+      requestAnimationFrame(function(){ window.location.href = url; });
     });
   }
 
@@ -553,6 +553,45 @@
     mostrarCarga();
     respaldoCarga = setTimeout(listo, 5000);
   }
+
+  /* Respuesta inmediata al toque.
+
+     En táctil, el navegador tarda entre el dedo y el clic. Si en ese
+     hueco no pasa nada visible, la app se siente lenta aunque tarde
+     lo mismo. Así que al apoyar el dedo se marca ya la pestaña o el
+     ítem del menú como seleccionado: la respuesta es instantánea y la
+     página llega después. Si el toque se cancela (se convirtió en un
+     desplazamiento), se deshace. */
+  var marcadoProvisional = null;
+
+  function marcarAlInstante(destino){
+    deshacerMarcado();
+    var previo = document.querySelector('.tab.active, .nav-item.active');
+    if (previo === destino) return;
+    marcadoProvisional = { nuevo: destino, previo: previo };
+    if (previo) previo.classList.remove('active');
+    destino.classList.add('active');
+  }
+
+  function deshacerMarcado(){
+    if (!marcadoProvisional) return;
+    marcadoProvisional.nuevo.classList.remove('active');
+    if (marcadoProvisional.previo) marcadoProvisional.previo.classList.add('active');
+    marcadoProvisional = null;
+  }
+
+  document.addEventListener('pointerdown', function(e){
+    var destino = e.target.closest ? e.target.closest('.tab[href], .nav-item[href]') : null;
+    if (destino) marcarAlInstante(destino);
+  }, { passive: true });
+
+  // El toque se convirtió en un desplazamiento o se soltó fuera.
+  document.addEventListener('pointercancel', deshacerMarcado, { passive: true });
+  document.addEventListener('pointerup', function(e){
+    if (!marcadoProvisional) return;
+    var sobre = e.target.closest ? e.target.closest('.tab[href], .nav-item[href]') : null;
+    if (sobre !== marcadoProvisional.nuevo) deshacerMarcado();
+  }, { passive: true });
 
   document.addEventListener('click', function(e){
     // Solo navegaciones normales dentro del sitio: ni pestaña nueva,

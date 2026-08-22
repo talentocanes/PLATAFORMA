@@ -283,6 +283,8 @@ main{
 .tab svg{ width:23px; height:23px; stroke-width:1.8; }
 .tab.active{ color:var(--acento-txt); font-weight:600; }
 .tab.active svg{ stroke-width:2.2; }
+/* Respuesta al dedo antes de que llegue la página nueva. */
+.tab:active{ opacity:.55; }
 .tab .dot-alert{
   position:absolute; top:7px; left:50%; margin-left:6px;
   width:9px; height:9px; border-radius:50%;
@@ -505,6 +507,17 @@ select.input{ appearance:none; padding-right:36px;
 .list-row:last-child{ border-bottom:none; }
 .list-row:hover{ background:var(--surface-2); }
 .list-row.clickable{ cursor:pointer; }
+.list-row.clickable:active{ background:var(--surface-3); }
+
+/* Sin destello gris del navegador: el estado pulsado lo definimos
+   nosotros, y el suyo llega tarde y con otro color. */
+a, button, .fila, .acceso, .list-row, .pet-card, .item-card, .cliente-card{
+  -webkit-tap-highlight-color:transparent;
+}
+@media (hover:none){
+  .fila:active, .acceso:active, .cliente-card:active{ background:var(--surface-2); }
+  .item-card:active, .pet-card:active{ opacity:.7; }
+}
 .list-main{ flex:1; min-width:0; }
 .list-title{ font-weight:600; font-size:var(--t-base); }
 .list-meta{ font-size:var(--t-sm); color:var(--text-2); margin-top:1px; }
@@ -680,6 +693,7 @@ body.sin-scroll{ overflow:hidden; }
 }
 .nav-item svg{ width:18px; height:18px; flex-shrink:0; }
 .nav-item:hover{ background:var(--surface-2); color:var(--text); }
+.nav-item:active{ background:var(--surface-3); }
 .nav-item.active{ background:var(--acento-suave); color:var(--acento-txt); font-weight:600; box-shadow:none; }
 .nav-item.disabled{ color:var(--text-3); cursor:default; }
 .nav-item.disabled:hover{ background:none; color:var(--text-3); }
