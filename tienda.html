@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=23"></script>
-<link rel="stylesheet" href="panel.css?v=23">
+<script src="theme-inline.js?v=24"></script>
+<link rel="stylesheet" href="panel.css?v=24">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -246,13 +246,25 @@
     .detail-thumbs{ flex-direction:row; order:2; overflow-x:auto; scrollbar-width:none; }
     .detail-thumbs::-webkit-scrollbar{ height:0; }
     .detail-thumb{ width:58px; flex-shrink:0; }
-    /* La foto tiene tope: si ocupa toda la pantalla, el nombre y el
-       precio quedan fuera de vista y se pierde la decisión de compra. */
-    .detail-main{ order:1; aspect-ratio:1; max-height:46dvh; border-radius:0; }
+    /* Altura fija en vez de proporción con tope: al limitar el alto de
+       una caja con proporción, el navegador encoge también el ancho y
+       queda una franja vacía al lado. Así llena la pantalla de lado a
+       lado y la foto recorta por donde sobra. */
+    .detail-main{ order:1; aspect-ratio:auto; width:100%; height:44dvh; border-radius:0; }
     .detail-info{ order:3; }
     .detail-title{ font-size:var(--t-xl); }
     .detail-price{ font-size:var(--t-xl); margin:var(--s-3) 0; }
   }
+
+  /* Cuando la píldora dice qué falta y se pulsa, se lleva al usuario
+     hasta ese bloque y se resalta un instante: pedir algo sin decir
+     dónde está es lo que hace que la gente abandone. */
+  @keyframes resaltar-bloque{
+    0%   { box-shadow:0 0 0 0 var(--acento-suave); }
+    35%  { box-shadow:0 0 0 6px var(--acento-suave); }
+    100% { box-shadow:0 0 0 0 var(--acento-suave); }
+  }
+  .resaltar{ border-radius:var(--r-md); animation:resaltar-bloque 1.1s ease-out; }
 
   /* El orden de lectura de una ficha: qué es, cuánto vale, y solo
      después cómo se configura. */
@@ -398,7 +410,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=23" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=24" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -773,9 +785,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=23';
-    import { supabase } from './supabaseClient.js?v=23';
-    import { capitalizarPalabras } from './textutils.js?v=23';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=24';
+    import { supabase } from './supabaseClient.js?v=24';
+    import { capitalizarPalabras } from './textutils.js?v=24';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1970,6 +1982,20 @@
       actualizarTotalCompra();
     }
 
+    // Lleva la vista hasta el bloque que falta completar y lo resalta.
+    // Es lo que convierte "Elige tus fechas" en una instrucción que se
+    // puede seguir, en vez de un aviso que hay que ir a buscar.
+    function llevarA(id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('resaltar');
+      // Reiniciar la animación si se pulsa dos veces seguidas
+      void el.offsetWidth;
+      el.classList.add('resaltar');
+      setTimeout(() => el.classList.remove('resaltar'), 1200);
+    }
+
     // Recalcula el total según cuántas mascotas están elegidas
     // (servicio) o la cantidad (producto), y lo muestra en vivo.
     function actualizarTotalCompra(){
@@ -2075,19 +2101,27 @@
       let filas = [];
 
       if (item.tipo_item === 'servicio') {
+        // El orden de las comprobaciones sigue al de la pantalla, para
+        // que el texto de la píldora y lo que pasa al pulsarla coincidan.
+        if (item.categoria === 'Hotel' &&
+            (!seleccionCompra.fecha_checkin || !seleccionCompra.fecha_checkout)) {
+          llevarA('detailHotelBlock');
+          msg.textContent = 'Elige la fecha de entrada y la de salida.';
+          msg.style.display = 'block';
+          return;
+        }
+
         if (mascotasSeleccionadas.size === 0) {
-          msg.textContent = 'Selecciona al menos una mascota.';
+          llevarA('detailMascotaWrap');
+          msg.textContent = misMascotas.length === 1
+            ? 'Marca a tu mascota para continuar.'
+            : 'Marca al menos una mascota.';
           msg.style.display = 'block';
           return;
         }
 
         let datosItem;
         if (item.categoria === 'Hotel') {
-          if (!seleccionCompra.fecha_checkin || !seleccionCompra.fecha_checkout) {
-            msg.textContent = 'Elige la fecha de entrada y de salida.';
-            msg.style.display = 'block';
-            return;
-          }
           datosItem = {
             nombre_item: item.nombre,
             precio_unitario: resolverPrecio(item.precio, item.id, null).final,
