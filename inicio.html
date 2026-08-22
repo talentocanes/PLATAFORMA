@@ -140,8 +140,18 @@
     import { initLayout, obtenerConfiguracionActual } from './layout.js';
     import { supabase } from './supabaseClient.js';
     import { escapar, pesos, htmlAvatar } from './ui.js';
+    import { pintarCache, guardarHtml } from './datos.js';
 
     let etiquetaCliente = 'Acudiente';
+
+    // Lo primero: las cifras y los accesos de la última visita, antes de
+    // validar la sesión. Es lo que hace que entrar a Inicio no espere.
+    pintarCache('inicio-cifras', html => {
+      document.getElementById('cifras').innerHTML = html;
+    });
+    pintarCache('inicio-accesos', html => {
+      document.getElementById('accesos').innerHTML = html;
+    });
 
     const profile = await initLayout({ activeKey: 'inicio' });
     if (profile) {
@@ -197,6 +207,7 @@
           ${m.badge ? `<span class="count">${m.badge}</span>` : ''}
         </a>
       `).join('');
+      guardarHtml('inicio-accesos', cont.innerHTML);
     }
 
     /* ---------------- Cifras ---------------- */
@@ -227,6 +238,7 @@
         tarjeta('Alumnos activos', activos) +
         tarjeta('Por cobrar', pesos(porCobrar), 'debe') +
         tarjeta('Compras por aprobar', pendientes);
+      guardarHtml('inicio-cifras', cont.innerHTML);
     }
 
     async function cifrasAcudiente(clienteId){
@@ -247,6 +259,7 @@
       cont.innerHTML =
         tarjeta('Por pagar', pesos(porPagar), porPagar > 0 ? 'debe' : '') +
         tarjeta('Mis mascotas', (mascotas.data || []).length);
+      guardarHtml('inicio-cifras', cont.innerHTML);
     }
 
     /* ---------------- Carné pendiente ---------------- */

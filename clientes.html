@@ -305,7 +305,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
-    import { conCache } from './datos.js';
+    import { conCache, pintarCache, recordar, recordado } from './datos.js';
 
     // Las navegaciones hechas desde código pasan por el armazón, para
     // que muestren el mismo indicador de carga que los enlaces.
@@ -336,19 +336,27 @@
       document.getElementById('searchInput').placeholder = 'Buscar por nombre o usuario…';
     }
 
+    // Lo primero: pintar la lista de la última visita, antes de validar
+    // la sesión. Los botones de fila usan el permiso recordado y se
+    // confirman en cuanto responde el servidor.
+    esAdmin = recordado('admin', false);
+    pintarCache('clientes', lista => {
+      filas = lista;
+      pintarTabla(filas);
+    });
+
     (async () => {
       const profile = await initLayout({ activeKey: 'clientes' });
       if (!profile) return;
       esAdmin = profile.role === 'admin';
+      recordar('admin', esAdmin);
 
       const config = obtenerConfiguracionActual();
       etiquetaCliente = config?.etiqueta_cliente || 'Acudiente';
       etiquetaClientePlural = config?.etiqueta_cliente_plural || 'Acudientes';
       aplicarTerminologia();
 
-      if (!esAdmin) {
-        document.getElementById('btnAdd').style.display = 'none';
-      }
+      document.getElementById('btnAdd').style.display = esAdmin ? 'flex' : 'none';
 
       await cargarLista();
       window.BarklyShell?.listo?.();

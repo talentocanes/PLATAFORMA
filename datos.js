@@ -37,6 +37,47 @@ function guardar(clave, datos){
 }
 
 /**
+ * Pinta lo guardado, ya. Sin esperar a nada.
+ *
+ * Se llama al principio del script de la página, ANTES de validar la
+ * sesión y de cargar la configuración. Esas dos cosas son consultas al
+ * servidor, y esperarlas para pintar es lo que hace que volver a una
+ * pantalla se sienta lento aunque los datos ya estuvieran guardados.
+ *
+ * También apaga el indicador de carga: si ya hay contenido en pantalla,
+ * seguir tapándola no tiene sentido.
+ *
+ * @returns {boolean} true si había algo guardado y se pintó.
+ */
+export function pintarCache(clave, pintar){
+  const guardado = leer(clave);
+  if (guardado === null) return false;
+  try {
+    pintar(guardado);
+    window.BarklyShell?.listo?.();
+    return true;
+  } catch (e) {
+    console.warn('No se pudo pintar desde el caché:', e);
+    return false;
+  }
+}
+
+/* Valores pequeños que sobreviven al cierre de la pestaña: sirven para
+   pintar bien desde el primer instante, antes de confirmar la sesión.
+   Solo para cosas no sensibles, como si esta persona puede editar. */
+export function recordar(clave, valor){
+  try { localStorage.setItem('tc_pref_' + clave, JSON.stringify(valor)); }
+  catch (e) { /* ignorar */ }
+}
+
+export function recordado(clave, porDefecto = null){
+  try {
+    const bruto = localStorage.getItem('tc_pref_' + clave);
+    return bruto ? JSON.parse(bruto) : porDefecto;
+  } catch (e) { return porDefecto; }
+}
+
+/**
  * Pinta lo guardado al instante (si lo hay) y luego consulta y repinta.
  *
  * @param {string}   clave    Identificador de esta consulta, único por pantalla.
@@ -49,8 +90,12 @@ export async function conCache(clave, consulta, pintar){
   let pintadoDeCache = false;
 
   if (guardado !== null) {
-    try { pintar(guardado); pintadoDeCache = true; }
-    catch (e) { console.warn('No se pudo pintar desde el caché:', e); }
+    try {
+      pintar(guardado);
+      pintadoDeCache = true;
+      // Hay contenido en pantalla: el indicador ya no pinta nada.
+      window.BarklyShell?.listo?.();
+    } catch (e) { console.warn('No se pudo pintar desde el caché:', e); }
   }
 
   const frescos = await consulta();
@@ -64,6 +109,15 @@ export async function conCache(clave, consulta, pintar){
   }
 
   return pintadoDeCache;
+}
+
+/**
+ * Guarda un trozo de HTML ya pintado, para volver a ponerlo tal cual en
+ * la siguiente visita. Es lo más rápido posible: no hay que recalcular
+ * nada, solo devolverlo a su sitio.
+ */
+export function guardarHtml(clave, html){
+  guardar(clave, html);
 }
 
 /** Borra lo guardado de una pantalla. Se usa tras crear, editar o borrar. */

@@ -329,7 +329,7 @@
     import { abrirRecortador } from './photocrop.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
-    import { conCache, invalidar } from './datos.js';
+    import { conCache, pintarCache, recordar, recordado } from './datos.js';
 
     // Las navegaciones hechas desde código pasan por el armazón, para
     // que muestren el mismo indicador de carga que los enlaces.
@@ -347,8 +347,20 @@
     let archivoFoto = null;
     let archivoCarne = null;
     let eliminandoId = null;
-    let puedeEditar = false;
+    // El permiso de la visita anterior, para pintar los botones correctos
+    // desde el primer instante. La consulta real lo confirma después.
+    let puedeEditar = recordado('editar-alumnos', false);
     let soloLectura = false;
+
+    // Lo primero de todo: pintar la lista de la última visita. Va antes
+    // de validar la sesión a propósito — esa validación son dos
+    // consultas al servidor, y esperarlas para mostrar algo que ya
+    // tenemos es lo que hacía que volver aquí se sintiera lento.
+    pintarCache('alumnos', lista => {
+      alumnos = lista;
+      pintarTabla(alumnos);
+    });
+    if (!puedeEditar) document.getElementById('btnAdd').style.display = 'none';
 
     (async () => {
       const profile = await initLayout({ activeKey: 'alumnos' });
@@ -364,14 +376,12 @@
           .single();
         puedeEditar = !!data?.modulos_edicion?.includes('alumnos');
       }
+      recordar('editar-alumnos', puedeEditar);
 
-      if (!puedeEditar) {
-        document.getElementById('btnAdd').style.display = 'none';
-      }
+      document.getElementById('btnAdd').style.display = puedeEditar ? 'flex' : 'none';
 
-      await cargarAcudientes();
-      await cargarAlumnos();
-      await cargarPendientes();
+      // En paralelo: ninguna espera a la otra.
+      await Promise.all([cargarAcudientes(), cargarAlumnos(), cargarPendientes()]);
       window.BarklyShell?.listo?.();
       suscribirEnVivo();
     })();

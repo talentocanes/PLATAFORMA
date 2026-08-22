@@ -804,7 +804,7 @@
     import { initLayout, obtenerConfiguracionActual } from './layout.js';
     import { supabase } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
-    import { conCache } from './datos.js';
+    import { conCache, pintarCache } from './datos.js';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -833,6 +833,13 @@
     let terminoBusqueda = '';
     let perfilActual = null;
     let misMascotas = [];
+
+    // Lo primero: pintar el catálogo de la última visita. Ir a la Tienda
+    // deja de tener espera desde la segunda vez.
+    pintarCache('tienda-items', lista => {
+      items = lista;
+      pintarGrid();
+    });
 
     (async () => {
       const profile = await initLayout({ activeKey: 'servicios' });
