@@ -1,0 +1,23 @@
+{
+  "name": "Talento Canes · Barkly",
+  "short_name": "Barkly",
+  "description": "Panel de gestión del colegio canino: alumnos, acudientes, tienda y cartera.",
+  "start_url": "/inicio.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F6F8",
+  "theme_color": "#FFFFFF",
+  "lang": "es-CO",
+  "dir": "ltr",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Alumnos", "url": "/alumnos.html" },
+    { "name": "Tienda", "url": "/tienda.html" },
+    { "name": "Cartera", "url": "/cartera.html" }
+  ]
+}
