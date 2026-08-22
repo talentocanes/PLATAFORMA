@@ -72,8 +72,8 @@
   <main>
     <div class="page-head">
       <div>
-        <div class="saludo" id="saludo">Hola.</div>
-        <div class="sub" id="subSaludo">—</div>
+        <div class="saludo" id="saludo"></div>
+        <div class="sub" id="subSaludo"></div>
       </div>
     </div>
 
@@ -102,6 +102,39 @@
   </main>
 
 
+
+  <!-- El saludo se pinta de inmediato con el nombre que quedó guardado
+       de la sesión anterior. Sin esto se ve un instante el marcador y
+       luego salta al nombre real, que es justo el parpadeo que ya
+       habíamos quitado del nombre del negocio y la terminología. -->
+  <script>
+    (function () {
+      var dias  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
+                   'septiembre','octubre','noviembre','diciembre'];
+      var hoy = new Date();
+      var fecha = dias[hoy.getDay()] + ', ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()];
+      document.getElementById('subSaludo').textContent =
+        fecha.charAt(0).toUpperCase() + fecha.slice(1);
+
+      var hora = hoy.getHours();
+      var franja = hora < 12 ? 'Buenos días' : (hora < 19 ? 'Buenas tardes' : 'Buenas noches');
+
+      var nombre = '';
+      try {
+        var cache = JSON.parse(localStorage.getItem('tc_perfil_cache') || 'null');
+        nombre = (cache && (cache.full_name || cache.username) || '').split(' ')[0];
+      } catch (e) { /* ignorar */ }
+
+      document.getElementById('saludo').textContent = nombre ? franja + ', ' : franja + '.';
+      if (nombre) {
+        var span = document.createElement('span');
+        span.textContent = nombre;
+        document.getElementById('saludo').appendChild(span);
+        document.getElementById('saludo').appendChild(document.createTextNode('.'));
+      }
+    })();
+  </script>
 
   <script type="module">
     import { initLayout, obtenerConfiguracionActual } from './layout.js';
