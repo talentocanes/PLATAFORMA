@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=20"></script>
-<link rel="stylesheet" href="panel.css?v=20">
+<script src="theme-inline.js?v=21"></script>
+<link rel="stylesheet" href="panel.css?v=21">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -184,71 +184,41 @@
   .btn-delete-confirm{ width:100%; height:46px; border:none; border-radius:var(--r-sm); background:var(--danger); color:#fff; font-weight:600; font-size:var(--t-base); cursor:pointer; }
   .btn-delete-confirm:disabled{ opacity:.5; }
 
-  /* ---------- Ficha del producto ---------- */
-  .detail-layout{ display:grid; grid-template-columns:76px minmax(0,1.1fr) minmax(0,1fr); gap:var(--s-5); align-items:start; }
-  .detail-thumbs{ display:flex; flex-direction:column; gap:var(--s-2); }
-  .detail-thumb{ width:100%; aspect-ratio:1; border-radius:var(--r-sm); overflow:hidden; background:var(--surface-2); border:1px solid var(--border); cursor:pointer; }
-  .detail-thumb.active{ border-color:var(--acento); box-shadow:0 0 0 2px var(--acento-suave); }
-  .detail-thumb img{ width:100%; height:100%; object-fit:cover; }
-  .detail-main{ aspect-ratio:4/5; border-radius:var(--r-lg); overflow:hidden; background:var(--surface-2); display:flex; align-items:center; justify-content:center; }
-  .detail-main img{ width:100%; height:100%; object-fit:cover; }
-  .detail-main svg{ width:52px; height:52px; color:var(--text-3); opacity:.6; }
-  .detail-info{ min-width:0; }
-  .detail-eyebrow{ font-size:var(--t-sm); font-weight:600; color:var(--acento-txt); margin-bottom:6px; }
-  .detail-title{ font-size:var(--t-xl); font-weight:700; letter-spacing:-0.02em; }
-  .detail-cat{ font-size:var(--t-sm); color:var(--text-2); margin-top:4px; padding-bottom:var(--s-4); border-bottom:1px solid var(--border); }
-  .detail-price{ font-size:var(--t-2xl); font-weight:700; letter-spacing:-0.03em; margin:var(--s-4) 0; font-variant-numeric:tabular-nums; }
-  .detail-stock{ font-size:var(--t-sm); color:var(--text-2); margin-bottom:var(--s-4); }
-  .detail-desc-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin-bottom:6px; }
-  .detail-desc{ font-size:var(--t-base); color:var(--text-2); line-height:1.6; white-space:pre-wrap; }
-  .detail-plans-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin-bottom:var(--s-2); }
-  .detail-plans-row{ display:flex; gap:var(--s-2); flex-wrap:wrap; margin-bottom:var(--s-4); }
-  .detail-plan-pill{ min-height:40px; padding:0 var(--s-4); display:inline-flex; align-items:center; border-radius:var(--r-full); border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); font-size:var(--t-sm); font-weight:500; cursor:pointer; }
-  .detail-plan-pill:hover{ border-color:var(--text-3); color:var(--text); }
-  .detail-plan-pill.active{ border-color:transparent; background:var(--acento); color:#fff; font-weight:600; }
-  @media (max-width:900px){
-    .detail-layout{ grid-template-columns:1fr; gap:var(--s-4); }
-    .detail-thumbs{ flex-direction:row; order:2; overflow-x:auto; scrollbar-width:none; }
-    .detail-thumbs::-webkit-scrollbar{ height:0; }
-    .detail-thumb{ width:58px; flex-shrink:0; }
-    /* Proporción de tienda, pero con tope: si ocupa toda la pantalla,
-       el precio y el nombre quedan fuera de vista y se pierde la venta. */
-    .detail-main{ order:1; aspect-ratio:4/5; max-height:42dvh; }
-    .detail-info{ order:3; }
-    .detail-title{ font-size:var(--t-xl); }
-    .detail-price{ font-size:var(--t-xl); margin:var(--s-3) 0; }
-  }
-
   /* ---------- Ficha del producto ----------
-     En móvil la hoja se divide en tres zonas fijas: cabecera, contenido
-     que se desplaza, y barra de compra. Con posiciones pegajosas dentro
-     del propio contenido siempre acababa recortándose algo. */
-  .detail-sheet-head{ display:none; }
-  .detail-back{ width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    border:none; background:none; border-radius:var(--r-full); color:var(--text-2); cursor:pointer; }
+     En móvil no es una hoja: es una pantalla completa. La foto llega a
+     los bordes, el botón de volver flota encima, y la acción de compra
+     vive en una píldora abajo. Es el patrón de las apps de pedidos y es
+     el que mejor funciona para decidir una compra. */
+  .detail-back{
+    display:none; position:absolute; top:var(--s-3); left:var(--s-3); z-index:8;
+    width:40px; height:40px; align-items:center; justify-content:center;
+    border:none; border-radius:var(--r-full);
+    background:var(--surface); color:var(--text);
+    box-shadow:var(--sh-2); cursor:pointer;
+  }
   .detail-back:active{ background:var(--surface-2); }
-  .detail-back svg{ width:22px; height:22px; }
+  .detail-back svg{ width:21px; height:21px; }
 
   @media (max-width:1023px){
+    #detailOverlay{ padding:0; align-items:stretch; }
     #detailOverlay .modal{
       display:flex; flex-direction:column;
-      padding:0; overflow:hidden;
-      height:92dvh; max-height:92dvh;
+      width:100%; max-width:none; height:100dvh; max-height:100dvh;
+      margin:0; padding:0; overflow:hidden;
+      border:none; border-radius:0; box-shadow:none;
+      position:relative;
     }
-    .detail-sheet-head{
-      display:flex; align-items:center; gap:var(--s-1);
-      flex-shrink:0; padding:6px var(--s-3) 6px var(--s-1);
-      border-bottom:1px solid var(--border);
-    }
-    .detail-sheet-head span{ font-size:var(--t-base); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .detail-scroll{ flex:1; min-height:0; overflow-y:auto; padding:var(--s-4); }
-    /* Con la barra abajo, el botón "Cerrar" del final sobra. */
+    .detail-back{ display:flex; }
+    .detail-scroll{ flex:1; min-height:0; overflow-y:auto; padding:0 0 var(--s-6); }
+    /* La foto llega a los bordes; el resto sí lleva margen. */
+    .detail-scroll .detail-layout{ gap:0; }
+    .detail-scroll .detail-info{ padding:var(--s-5) var(--s-4) 0; }
+    .detail-scroll .detail-thumbs{ padding:var(--s-3) var(--s-4) 0; }
     #detailOverlay .modal-close{ display:none; }
   }
 
   /* El orden de lectura de una ficha: qué es, cuánto vale, y solo
-     después cómo se configura. El precio no puede quedar debajo de un
-     calendario que ocupa toda la pantalla. */
+     después cómo se configura. */
   .detail-info{ display:flex; flex-direction:column; }
   .detail-eyebrow{ order:1; }
   .detail-title{ order:2; }
@@ -276,38 +246,32 @@
   .cantidad-btn{ width:40px; height:40px; border:1px solid var(--border-2); background:var(--surface); border-radius:var(--r-sm); color:var(--text); font-size:18px; cursor:pointer; }
   .cantidad-btn:hover{ background:var(--surface-2); }
   .cantidad-stepper input{ width:64px; height:40px; text-align:center; border:1px solid var(--border-2); border-radius:var(--r-sm); background:var(--surface); color:var(--text); font-size:var(--t-base); font-family:inherit; }
-  /* Barra de compra: precio a la izquierda, acción a la derecha. Es el
-     patrón de cualquier tienda seria — el número y el botón juntos, sin
-     que haya que buscarlos en dos sitios distintos. */
-  .compra-sticky{
-    display:flex; align-items:center; gap:var(--s-4);
-    flex-shrink:0; margin-top:var(--s-5);
-    padding:var(--s-4) 0 0; border-top:1px solid var(--border);
-  }
-  .compra-resumen{ flex:1; min-width:0; }
-  .compra-resumen .m{ font-size:var(--t-xl); font-weight:700; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1.15; }
-  .compra-resumen .t{ font-size:var(--t-sm); color:var(--text-2); margin-top:1px; }
+  /* Píldora de compra: el texto dice qué pasa y el precio va dentro del
+     mismo botón. Un solo objetivo táctil, imposible de no ver. */
+  .compra-sticky{ flex-shrink:0; padding:var(--s-4) 0 0; border-top:1px solid var(--border); margin-top:var(--s-5); }
   .compra-actions{ display:flex; }
-  .btn-comprar{
-    flex-shrink:0; min-width:170px; height:50px; padding:0 var(--s-6);
-    display:inline-flex; align-items:center; justify-content:center;
-    border:none; border-radius:var(--r-sm);
-    background:var(--acento); color:#fff; font-weight:700; font-size:var(--t-md);
-    letter-spacing:-0.01em; cursor:pointer; transition:background .13s ease;
+
+  .compra-pill{
+    display:flex; align-items:center; justify-content:space-between; gap:var(--s-4);
+    width:100%; min-height:56px; padding:0 var(--s-5);
+    border:none; border-radius:var(--r-full);
+    background:var(--acento); color:#fff;
+    font-family:inherit; font-size:var(--t-md); font-weight:700; letter-spacing:-0.01em;
+    cursor:pointer; transition:background .13s ease, transform .1s ease;
   }
-  .btn-comprar:hover{ background:var(--acento-hover); }
-  .btn-comprar:disabled{ opacity:.5; cursor:default; }
-  /* Sin nada elegido todavía, el botón manda solo. */
-  .compra-sticky:has(.compra-resumen[style*="display:none"]) .btn-comprar,
-  .compra-sticky:has(.compra-resumen[style*="display: none"]) .btn-comprar{ flex:1; }
+  .compra-pill:hover{ background:var(--acento-hover); }
+  .compra-pill:active{ transform:scale(.985); }
+  .compra-pill:disabled{ opacity:.55; cursor:default; }
+  .pill-label{ text-align:left; }
+  .pill-precio{ font-variant-numeric:tabular-nums; white-space:nowrap; }
 
   @media (max-width:1023px){
     .compra-sticky{
-      margin:0; padding:var(--s-3) var(--s-4) calc(var(--s-3) + var(--safe-b));
-      background:var(--surface); border-top:1px solid var(--border);
+      margin:0; border-top:none;
+      padding:var(--s-2) var(--s-4) calc(var(--s-3) + var(--safe-b));
+      background:linear-gradient(to top, var(--surface) 62%, transparent);
     }
-    .compra-resumen .m{ font-size:var(--t-lg); }
-    .btn-comprar{ min-width:140px; height:52px; padding:0 var(--s-5); }
+    .compra-pill{ min-height:60px; font-size:17px; }
   }
 
   .compra-ok{ display:none; margin-top:var(--s-3); padding:var(--s-3) var(--s-4); border-radius:var(--r-sm); background:var(--ok-bg); border:1px solid var(--ok-br); color:var(--ok); font-size:var(--t-sm); line-height:1.5; }
@@ -397,7 +361,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=20" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=21" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -615,12 +579,9 @@
   <!-- Modal: detalle (vista tipo producto) -->
   <div class="modal-overlay" id="detailOverlay">
     <div class="modal modal-lg">
-      <div class="detail-sheet-head">
-        <button type="button" class="detail-back" id="detailBackBtn" aria-label="Volver">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <span id="detailHeadTitle"></span>
-      </div>
+      <button type="button" class="detail-back" id="detailBackBtn" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
       <div class="detail-scroll">
       <div class="detail-layout">
         <div class="detail-thumbs" id="detailThumbs"></div>
@@ -665,12 +626,17 @@
       </div>
       <!-- Fuera del contenido que se desplaza: así en el celular el total
            y el botón se quedan abajo mientras se eligen mascotas o fechas. -->
+      <!-- Una sola píldora: el texto de la izquierda dice qué falta o qué
+           se va a comprar, y el precio va dentro del mismo botón. Es el
+           patrón de las apps de pedidos y evita tener el número en un
+           sitio y la acción en otro. -->
       <div class="compra-sticky" id="compraBarra" style="display:none;">
-        <div class="compra-resumen" id="compraTotalBox" style="display:none;">
-          <div class="m" id="compraTotalValor">$ 0</div>
-          <div class="t" id="compraTotalLabel">Total a pagar</div>
-        </div>
-        <button type="button" class="btn-comprar" id="detailComprarBtn">Comprar</button>
+        <button type="button" class="compra-pill" id="detailComprarBtn">
+          <span class="pill-label" id="compraPillLabel">Comprar</span>
+          <span class="pill-precio" id="compraTotalBox" style="display:none;">
+            <span id="compraTotalValor">$ 0</span>
+          </span>
+        </button>
       </div>
       <button class="modal-close" id="detailCloseBtn" style="margin-top:var(--s-4);">Cerrar</button>
     </div>
@@ -770,9 +736,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=20';
-    import { supabase } from './supabaseClient.js?v=20';
-    import { capitalizarPalabras } from './textutils.js?v=20';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=21';
+    import { supabase } from './supabaseClient.js?v=21';
+    import { capitalizarPalabras } from './textutils.js?v=21';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1939,7 +1905,7 @@
       ok.style.display = 'none';
       document.getElementById('detailComprarBtn').style.display = 'flex';
       document.getElementById('detailComprarBtn').disabled = false;
-      document.getElementById('detailComprarBtn').lastChild.textContent = 'Comprar';
+      document.getElementById('compraPillLabel').textContent = 'Comprar';
       document.getElementById('detailCantidad').value = 1;
       mascotasSeleccionadas = new Set();
 
@@ -1974,6 +1940,7 @@
       const item = itemDetalleActual;
       const box = document.getElementById('compraTotalBox');
       const valorEl = document.getElementById('compraTotalValor');
+      const label = document.getElementById('compraPillLabel');
       if (!item || !perfilActual || perfilActual.role !== 'cliente') {
         box.style.display = 'none';
         return;
@@ -1981,11 +1948,22 @@
 
       let total = 0;
       let mostrar = false;
+      // El texto de la píldora dice qué falta para poder comprar, en vez
+      // de un "Comprar" que no funciona y obliga a adivinar el motivo.
+      let texto = 'Comprar';
 
       if (item.tipo_item === 'servicio') {
-        const precioUnitario = item.categoria === 'Hotel'
+        const esHotel = item.categoria === 'Hotel';
+        const precioUnitario = esHotel
           ? (seleccionCompra.precio_total || 0)
           : (seleccionCompra.precio_unitario || 0);
+
+        if (esHotel && !precioUnitario) {
+          texto = 'Elige tus fechas';
+        } else if (mascotasSeleccionadas.size === 0) {
+          texto = misMascotas.length === 1 ? 'Elige tu mascota' : 'Elige las mascotas';
+        }
+
         total = precioUnitario * mascotasSeleccionadas.size;
         mostrar = mascotasSeleccionadas.size > 0 && precioUnitario > 0;
       } else {
@@ -1994,7 +1972,8 @@
         mostrar = true;
       }
 
-      box.style.display = mostrar ? 'block' : 'none';
+      label.textContent = texto;
+      box.style.display = mostrar ? 'inline' : 'none';
       valorEl.textContent = '$ ' + total.toLocaleString('es-CO');
     }
 
@@ -2115,7 +2094,7 @@
       }
 
       btn.disabled = true;
-      btn.lastChild.textContent = 'Enviando…';
+      document.getElementById('compraPillLabel').textContent = 'Enviando…';
 
       const { error } = await supabase.from('compras').insert(filas);
 
@@ -2123,7 +2102,7 @@
         msg.textContent = 'No se pudo enviar la solicitud: ' + error.message;
         msg.style.display = 'block';
         btn.disabled = false;
-        btn.lastChild.textContent = 'Comprar';
+        document.getElementById('compraPillLabel').textContent = 'Comprar';
         return;
       }
 
