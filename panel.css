@@ -206,12 +206,14 @@ img{ max-width:100%; display:block; }
 }
 .sidebar::-webkit-scrollbar{ width:0; }
 
-/* ---- Contenido ---- */
+/* ---- Contenido ----
+   El relleno lateral crece con la pantalla, así el contenido queda
+   centrado en monitores anchos en vez de pegado a la barra lateral,
+   pero nunca se estira más allá de un ancho cómodo de lectura. */
 main{
   margin-left:var(--sidebar-w);
   min-width:0;
-  padding:var(--s-10) var(--s-8) var(--s-14);
-  max-width:1240px;
+  padding:var(--s-10) max(var(--s-8), (100% - 1240px) / 2) var(--s-14);
 }
 
 /* ---- Barra superior de móvil ---- */
