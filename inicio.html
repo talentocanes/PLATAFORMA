@@ -215,9 +215,17 @@
       return `<div class="stat"><div class="lbl">${lbl}</div><div class="val ${clase}">${val}</div></div>`;
     }
 
+    // El esqueleto solo se pinta si no hay nada: si ya se restauraron las
+    // cifras de la visita anterior, machacarlas con placeholders grises
+    // es justo el parpadeo que queríamos quitar.
+    function esqueletoCifras(cont, cuantas){
+      if (cont.children.length > 0) return;
+      cont.innerHTML = `<div class="stat"><div class="skeleton" style="height:14px;width:70%"></div><div class="skeleton" style="height:24px;margin-top:8px"></div></div>`.repeat(cuantas);
+    }
+
     async function cifrasColegio(profile){
       const cont = document.getElementById('cifras');
-      cont.innerHTML = `<div class="stat"><div class="skeleton" style="height:14px;width:70%"></div><div class="skeleton" style="height:24px;margin-top:8px"></div></div>`.repeat(3);
+      esqueletoCifras(cont, 3);
 
       const [alumnos, compras] = await Promise.all([
         supabase.from('alumnos').select('activo, status'),
@@ -243,7 +251,7 @@
 
     async function cifrasAcudiente(clienteId){
       const cont = document.getElementById('cifras');
-      cont.innerHTML = `<div class="stat"><div class="skeleton" style="height:14px;width:70%"></div><div class="skeleton" style="height:24px;margin-top:8px"></div></div>`.repeat(2);
+      esqueletoCifras(cont, 2);
 
       const [mascotas, compras] = await Promise.all([
         supabase.from('alumnos').select('id').eq('acudiente_id', clienteId).eq('status', 'approved'),
