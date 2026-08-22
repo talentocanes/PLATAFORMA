@@ -207,10 +207,40 @@
                       : (ETIQUETAS_ROL[perfil.role] || perfil.role)) + '</div>' +
                 '</div>' +
               '</div>' +
+              modoSelector(true) +
               '<button id="logoutBtn" class="logout-link">Cerrar sesión</button>' +
             '</div>';
 
     el.innerHTML = html;
+  }
+
+  /* Selector de apariencia. En la barra lateral no cabe el texto, así
+     que van solo los tres iconos; en la hoja de "Más" sí caben. */
+  function modoSelector(soloIconos){
+    var modo = leerCache('tc_modo', 'auto');
+    var opciones = [
+      ['light', 'Claro',  '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
+      ['dark',  'Oscuro', '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>'],
+      ['auto',  'Auto',   '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/>']
+    ];
+
+    var botones = opciones.map(function(o){
+      var activo = modo === o[0];
+      return '<button type="button" data-modo="' + o[0] + '" aria-pressed="' + activo + '"' +
+             ' title="' + o[1] + '" aria-label="Apariencia: ' + o[1] + '">' +
+             (soloIconos
+               ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + o[2] + '</svg>'
+               : o[1]) +
+             '</button>';
+    }).join('');
+
+    if (soloIconos) {
+      return '<div class="modo-row">' +
+               '<span class="modo-label">Apariencia</span>' +
+               '<div class="segmented segmented-iconos">' + botones + '</div>' +
+             '</div>';
+    }
+    return '<div class="segmented">' + botones + '</div>';
   }
 
   /* ---------------------------------------------------------
@@ -304,7 +334,6 @@
       return v.item.enabled && enBarra.indexOf(v.item.key) === -1;
     });
 
-    var modo = leerCache('tc_modo', 'auto');
     var html = '';
 
     html += '<div class="dialog-grip"></div>';
@@ -334,17 +363,13 @@
               '</a>';
     });
 
-    html += '<div class="action-item" style="border-top:1px solid var(--border);margin-top:var(--s-3)">' +
+    html += '<div class="action-item" style="border-top:1px solid var(--border); margin-top:var(--s-3)">' +
               svg('apariencia') + '<span style="flex:1">Apariencia</span>' +
-              '<div class="segmented" id="segModo">' +
-                '<button type="button" data-modo="light" aria-pressed="' + (modo === 'light') + '">Claro</button>' +
-                '<button type="button" data-modo="dark" aria-pressed="' + (modo === 'dark') + '">Oscuro</button>' +
-                '<button type="button" data-modo="auto" aria-pressed="' + (modo === 'auto') + '">Auto</button>' +
-              '</div>' +
+              modoSelector(false) +
             '</div>';
 
     html += '</div>';
-    html += '<div class="dialog-foot"><button class="btn btn-secondary btn-block" id="logoutBtnMas">Cerrar sesión</button></div>';
+    html += '<div class="dialog-foot"><button class="logout-link" id="logoutBtnMas">Cerrar sesión</button></div>';
 
     // Si la hoja está abierta cuando llegan los contadores, repintarla
     // no debe cerrarla: se conserva el estado de apertura.

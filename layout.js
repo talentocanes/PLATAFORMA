@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=15';
-import { supabase } from './supabaseClient.js?v=15';
-import { cargarConfiguracionNegocio, aplicarModo } from './theme.js?v=15';
+import { protegerPagina, cerrarSesion } from './auth.js?v=16';
+import { supabase } from './supabaseClient.js?v=16';
+import { cargarConfiguracionNegocio, aplicarModo } from './theme.js?v=16';
 
 /* ============================================================================
    BARKLY · layout.js
@@ -110,15 +110,22 @@ function conectarArmazon(){
   document.getElementById('logoutBtn')?.addEventListener('click', cerrarSesion);
   document.getElementById('logoutBtnMas')?.addEventListener('click', cerrarSesion);
 
-  // Apariencia: la elige cada usuario, no el colegio.
-  document.getElementById('segModo')?.addEventListener('click', e => {
-    const btn = e.target.closest('button[data-modo]');
-    if (!btn) return;
-    aplicarModo(btn.dataset.modo);
-    btn.parentElement.querySelectorAll('button').forEach(b => {
-      b.setAttribute('aria-pressed', String(b === btn));
+  // Apariencia: la elige cada usuario, no el colegio. Hay dos
+  // selectores (barra lateral y hoja de "Más") y el armazón se repinta
+  // al llegar los contadores, así que se escucha una sola vez en el
+  // documento en vez de enganchar cada botón.
+  if (!window.__barklyModoConectado) {
+    window.__barklyModoConectado = true;
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-modo]');
+      if (!btn) return;
+      const elegido = btn.dataset.modo;
+      aplicarModo(elegido);
+      document.querySelectorAll('button[data-modo]').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.modo === elegido));
+      });
     });
-  });
+  }
 
   const clockEl = document.getElementById('clock');
   if (clockEl) {
@@ -148,7 +155,7 @@ async function asegurarArmazon(activeKey){
 
   await new Promise(resolve => {
     const s = document.createElement('script');
-    s.src = 'shell-inline.js?v=15';
+    s.src = 'shell-inline.js?v=16';
     s.setAttribute('data-active', activeKey || '');
     // Sin data-title, el armazón usa el nombre del módulo activo.
     s.onload = resolve;
