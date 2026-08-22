@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=22"></script>
-<link rel="stylesheet" href="panel.css?v=22">
+<script src="theme-inline.js?v=23"></script>
+<link rel="stylesheet" href="panel.css?v=23">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -217,6 +217,43 @@
     #detailOverlay .modal-close{ display:none; }
   }
 
+  /* Estructura de la ficha en escritorio: miniaturas, foto grande e
+     información en tres columnas. */
+  .detail-layout{ display:grid; grid-template-columns:76px minmax(0,1.1fr) minmax(0,1fr); gap:var(--s-5); align-items:start; }
+  .detail-thumbs{ display:flex; flex-direction:column; gap:var(--s-2); }
+  .detail-thumb{ width:100%; aspect-ratio:1; border-radius:var(--r-sm); overflow:hidden; background:var(--surface-2); border:1px solid var(--border); cursor:pointer; padding:0; }
+  .detail-thumb.active{ border-color:var(--acento); box-shadow:0 0 0 2px var(--acento-suave); }
+  .detail-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .detail-main{ aspect-ratio:4/5; border-radius:var(--r-lg); overflow:hidden; background:var(--surface-2); display:flex; align-items:center; justify-content:center; }
+  .detail-main img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .detail-main svg{ width:52px; height:52px; color:var(--text-3); opacity:.6; }
+  .detail-info{ min-width:0; }
+  .detail-eyebrow{ font-size:var(--t-sm); font-weight:600; color:var(--acento-txt); margin-bottom:6px; }
+  .detail-title{ font-size:var(--t-xl); font-weight:700; letter-spacing:-0.02em; line-height:1.2; }
+  .detail-cat{ font-size:var(--t-sm); color:var(--text-2); margin-top:4px; padding-bottom:var(--s-4); border-bottom:1px solid var(--border); }
+  .detail-price{ font-size:var(--t-2xl); font-weight:700; letter-spacing:-0.03em; margin:var(--s-4) 0; font-variant-numeric:tabular-nums; }
+  .detail-stock{ font-size:var(--t-sm); color:var(--text-2); margin-bottom:var(--s-4); }
+  .detail-desc-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin:var(--s-5) 0 6px; }
+  .detail-desc{ font-size:var(--t-base); color:var(--text-2); line-height:1.6; white-space:pre-wrap; }
+  .detail-plans-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin-bottom:var(--s-2); }
+  .detail-plans-row{ display:flex; gap:var(--s-2); flex-wrap:wrap; margin-bottom:var(--s-4); }
+  .detail-plan-pill{ min-height:40px; padding:0 var(--s-4); display:inline-flex; align-items:center; border-radius:var(--r-full); border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); font-family:inherit; font-size:var(--t-sm); font-weight:500; cursor:pointer; }
+  .detail-plan-pill:hover{ border-color:var(--text-3); color:var(--text); }
+  .detail-plan-pill.active{ border-color:transparent; background:var(--acento); color:#fff; font-weight:600; }
+
+  @media (max-width:900px){
+    .detail-layout{ grid-template-columns:1fr; gap:var(--s-4); }
+    .detail-thumbs{ flex-direction:row; order:2; overflow-x:auto; scrollbar-width:none; }
+    .detail-thumbs::-webkit-scrollbar{ height:0; }
+    .detail-thumb{ width:58px; flex-shrink:0; }
+    /* La foto tiene tope: si ocupa toda la pantalla, el nombre y el
+       precio quedan fuera de vista y se pierde la decisión de compra. */
+    .detail-main{ order:1; aspect-ratio:1; max-height:46dvh; border-radius:0; }
+    .detail-info{ order:3; }
+    .detail-title{ font-size:var(--t-xl); }
+    .detail-price{ font-size:var(--t-xl); margin:var(--s-3) 0; }
+  }
+
   /* El orden de lectura de una ficha: qué es, cuánto vale, y solo
      después cómo se configura. */
   .detail-info{ display:flex; flex-direction:column; }
@@ -361,7 +398,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=22" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=23" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -736,9 +773,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=22';
-    import { supabase } from './supabaseClient.js?v=22';
-    import { capitalizarPalabras } from './textutils.js?v=22';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=23';
+    import { supabase } from './supabaseClient.js?v=23';
+    import { capitalizarPalabras } from './textutils.js?v=23';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
