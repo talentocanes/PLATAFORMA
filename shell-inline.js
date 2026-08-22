@@ -412,6 +412,16 @@
     }
   }
 
+  /* Páginas que guardan su contenido para pintarlo al instante. Si el
+     destino ya tiene datos guardados, no hay nada que esperar y el
+     indicador no debe aparecer: sería una animación por gusto. */
+  var CACHE_POR_PAGINA = {
+    'inicio.html':   'inicio-cifras',
+    'alumnos.html':  'alumnos',
+    'clientes.html': 'clientes',
+    'tienda.html':   'tienda-items'
+  };
+
   /* ---------------------------------------------------------
      Indicador de carga entre páginas.
 
@@ -435,7 +445,21 @@
     if (el) el.classList.remove('on');
   }
 
+  function destinoYaTieneDatos(url){
+    try {
+      var pagina = String(url).split('?')[0].split('#')[0].split('/').pop();
+      var clave = CACHE_POR_PAGINA[pagina];
+      return !!clave && sessionStorage.getItem('tc_datos_' + clave) !== null;
+    } catch (e) { return false; }
+  }
+
   function navegarCon(url){
+    // Destino con datos guardados: se va directo, sin velar la pantalla.
+    if (destinoYaTieneDatos(url)) {
+      window.location.href = url;
+      return;
+    }
+
     mostrarCarga();
     // Se deja marcado que la navegación salió de dentro de la app: la
     // página siguiente arranca ya con el indicador puesto y lo mantiene
@@ -449,12 +473,61 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     Restaurar la pantalla anterior al instante.
+
+     Cuando una página termina de pintarse, se guarda su contenido tal
+     cual. Al volver a ella, se devuelve a su sitio en cuanto el
+     navegador lee la etiqueta <main> — antes de descargar y ejecutar
+     los módulos. Por eso se ve de inmediato en vez de esperar.
+
+     Es una foto: los botones aún no responden durante la fracción de
+     segundo que tardan los módulos en engancharse. Se acepta a
+     conciencia, porque ver el contenido al instante vale más que esa
+     décima; es lo mismo que hacen las apps que se sienten fluidas.
+     --------------------------------------------------------- */
+  function paginaActual(){
+    return window.location.pathname.split('/').pop() || 'inicio.html';
+  }
+
+  function guardarPantalla(){
+    if (!CACHE_POR_PAGINA[paginaActual()]) return;
+    var main = document.querySelector('main');
+    if (!main) return;
+    try { sessionStorage.setItem('tc_html_' + paginaActual(), main.innerHTML); }
+    catch (e) { /* sin espacio: da igual */ }
+  }
+
+  function restaurarPantalla(){
+    var guardado = null;
+    try { guardado = sessionStorage.getItem('tc_html_' + paginaActual()); }
+    catch (e) { return; }
+    if (!guardado) return;
+
+    var main = document.querySelector('main');
+    if (main) { main.innerHTML = guardado; return; }
+
+    // Todavía no se ha leído <main>: se espera a que aparezca.
+    if (!window.MutationObserver) return;
+    var vigia = new MutationObserver(function(){
+      var m = document.querySelector('main');
+      if (!m) return;
+      m.innerHTML = guardado;
+      vigia.disconnect();
+    });
+    vigia.observe(document.documentElement, { childList: true, subtree: true });
+    // Seguro: si por lo que sea no llega, se deja de vigilar.
+    setTimeout(function(){ vigia.disconnect(); }, 3000);
+  }
+
   /* La página avisa de que ya tiene su contenido. Es idempotente: se
      puede llamar varias veces sin problema. */
   function listo(){
     try { sessionStorage.removeItem('tc_navegando'); } catch (e) { /* ignorar */ }
     clearTimeout(respaldoCarga);
     ocultarCarga();
+    // Se guarda al final del ciclo, cuando ya está todo pintado.
+    setTimeout(guardarPantalla, 0);
   }
 
   /* Si la página venía de una navegación interna, el indicador arranca
@@ -593,6 +666,7 @@
      Se reemplaza en cuanto Supabase confirma.
      --------------------------------------------------------- */
   asegurarContenedores();
+  restaurarPantalla();
   continuarCarga();
 
   var cache = perfilCache();

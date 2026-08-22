@@ -125,11 +125,15 @@ export function invalidar(clave){
   try { sessionStorage.removeItem(PREFIJO + clave); } catch (e) { /* ignorar */ }
 }
 
-/** Borra todo lo guardado. Se usa al cerrar sesión. */
+/**
+ * Borra todo lo guardado: los datos y las fotos de pantalla que el
+ * armazón guarda para restaurarlas al instante. Se usa al iniciar y al
+ * cerrar sesión, para que nadie vea un destello de datos de otra cuenta.
+ */
 export function limpiarCache(){
   try {
     Object.keys(sessionStorage)
-      .filter(k => k.startsWith(PREFIJO))
+      .filter(k => k.startsWith(PREFIJO) || k.startsWith('tc_html_'))
       .forEach(k => sessionStorage.removeItem(k));
   } catch (e) { /* ignorar */ }
 }
