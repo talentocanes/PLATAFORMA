@@ -487,8 +487,13 @@
   });
 
   // Al volver con el botón atrás la página puede restaurarse tal cual
-  // estaba, con el indicador encendido: hay que apagarlo.
-  window.addEventListener('pageshow', ocultarCarga);
+  // estaba, con el indicador encendido: ahí sí hay que apagarlo.
+  // Ojo: este evento también se dispara en una carga normal, así que
+  // se comprueba 'persisted' — sin eso, apagaba el indicador justo al
+  // aparecer la página y volvía a verse el hueco con "Cargando…".
+  window.addEventListener('pageshow', function(e){
+    if (e.persisted) listo();
+  });
 
   /* ---------------------------------------------------------
      API pública
