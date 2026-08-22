@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=24"></script>
-<link rel="stylesheet" href="panel.css?v=24">
+<script src="theme-inline.js?v=25"></script>
+<link rel="stylesheet" href="panel.css?v=25">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -410,7 +410,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=24" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=25" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -785,9 +785,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=24';
-    import { supabase } from './supabaseClient.js?v=24';
-    import { capitalizarPalabras } from './textutils.js?v=24';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=25';
+    import { supabase } from './supabaseClient.js?v=25';
+    import { capitalizarPalabras } from './textutils.js?v=25';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -2037,6 +2037,12 @@
       label.textContent = texto;
       box.style.display = mostrar ? 'inline' : 'none';
       valorEl.textContent = '$ ' + total.toLocaleString('es-CO');
+
+      // Si ya no falta nada, el aviso sobra: dejarlo en rojo mientras la
+      // persona ya corrigió es contarle un problema que no existe.
+      if (texto === 'Comprar') {
+        document.getElementById('detailCompraMsg').style.display = 'none';
+      }
     }
 
     function pintarMascotaPills(){
@@ -2114,8 +2120,8 @@
         if (mascotasSeleccionadas.size === 0) {
           llevarA('detailMascotaWrap');
           msg.textContent = misMascotas.length === 1
-            ? 'Marca a tu mascota para continuar.'
-            : 'Marca al menos una mascota.';
+            ? 'Elige a tu mascota para continuar.'
+            : 'Elige para cuál de tus mascotas es este servicio.';
           msg.style.display = 'block';
           return;
         }
