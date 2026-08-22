@@ -210,7 +210,7 @@ img{ max-width:100%; display:block; }
 main{
   margin-left:var(--sidebar-w);
   min-width:0;
-  padding:var(--s-6) var(--s-8) var(--s-14);
+  padding:var(--s-10) var(--s-8) var(--s-14);
   max-width:1240px;
 }
 
@@ -453,6 +453,9 @@ select.input{ appearance:none; padding-right:36px;
   .stat{ padding:var(--s-3) var(--s-4); }
   .stat .val{ font-size:var(--t-lg); }
   .stats-row{ grid-template-columns:1fr 1fr; }
+  /* Un número impar de cifras deja la última sola: que ocupe el ancho
+     en vez de quedar media tarjeta vacía al lado. */
+  .stats-row > .stat:last-child:nth-child(odd){ grid-column:1 / -1; }
 }
 
 /* ---- Listas ---- */

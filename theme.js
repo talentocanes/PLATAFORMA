@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js?v=13';
+import { aplicarIdentidadPWA } from './pwa.js?v=13';
 
 // ---------------------------------------------------------
 // Las 8 paletas del colegio.
@@ -110,6 +111,10 @@ export async function cargarConfiguracionNegocio(){
   }
 
   aplicarPaleta(data.paleta);
+
+  // El icono de la app instalada sale del logo que el colegio subió
+  // en Configuración, no de un archivo fijo.
+  aplicarIdentidadPWA(data);
 
   // Textos que se pintan antes de que responda Supabase: se cachean
   // para que el script bloqueante los aplique al instante y no haya
