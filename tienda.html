@@ -15,12 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=15"></script>
-<link rel="stylesheet" href="panel.css?v=15">
+<script src="theme-inline.js?v=19"></script>
+<link rel="stylesheet" href="panel.css?v=19">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
-  .page-header h1{ font-size:var(--t-2xl); }
+  .page-header h1{ font-size:26px; }
   .page-header p{ color:var(--text-2); margin-top:4px; }
   .page-header .acciones{ display:flex; gap:var(--s-2); flex-wrap:wrap; }
 
@@ -214,6 +214,40 @@
     .detail-info{ order:3; }
   }
 
+  /* Cabecera de la ficha: en móvil la hoja necesita una salida visible
+     arriba, no solo el botón "Cerrar" al final de todo el contenido. */
+  .detail-sheet-head{ display:none; }
+  .detail-back{ width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    border:none; background:none; border-radius:var(--r-full); color:var(--text-2); cursor:pointer; }
+  .detail-back:active{ background:var(--surface-2); }
+  .detail-back svg{ width:21px; height:21px; }
+
+  @media (max-width:1023px){
+    .detail-sheet-head{
+      display:flex; align-items:center; gap:var(--s-2);
+      position:sticky; top:0; z-index:6;
+      margin:calc(var(--s-5) * -1) calc(var(--s-4) * -1) var(--s-3);
+      padding:6px var(--s-2);
+      background:var(--surface); border-bottom:1px solid var(--border);
+    }
+    .detail-sheet-head span{ font-size:var(--t-base); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  }
+
+  /* El orden de lectura de una ficha de producto: qué es, cuánto vale,
+     y luego cómo se configura. El precio no puede quedar debajo de un
+     calendario que ocupa toda la pantalla. */
+  .detail-info{ display:flex; flex-direction:column; }
+  .detail-eyebrow{ order:1; }
+  .detail-title{ order:2; }
+  .detail-cat{ order:3; }
+  .detail-price{ order:4; }
+  .detail-stock{ order:5; }
+  #detailPlansBlock{ order:6; }
+  #detailHotelBlock{ order:7; }
+  #detailCompraBlock{ order:8; }
+  .detail-desc-label{ order:9; }
+  .detail-desc{ order:10; }
+
   /* ---------- Bloque de compra ---------- */
   .compra-block{ margin-top:var(--s-5); }
   .compra-card{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-4); }
@@ -233,6 +267,21 @@
   .compra-total-box .t{ font-size:var(--t-sm); color:var(--text-2); }
   .compra-total-box .m{ font-size:var(--t-lg); font-weight:700; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
   .compra-actions{ display:flex; }
+  .compra-sticky{ margin-top:var(--s-5); }
+  @media (max-width:1023px){
+    /* Pegada al fondo de la hoja mientras se eligen mascotas o fechas:
+       comprar tiene que estar siempre a un toque, no al final de un
+       calendario que ocupa toda la pantalla. */
+    .compra-sticky{
+      position:sticky; bottom:calc(var(--s-6) * -1); z-index:5;
+      margin:var(--s-4) calc(var(--s-4) * -1) 0;
+      padding:var(--s-3) var(--s-4) calc(var(--s-3) + var(--safe-b));
+      background:var(--surface); border-top:1px solid var(--border);
+    }
+    .compra-sticky .compra-total-box{ margin-bottom:var(--s-2); }
+    /* Con la barra abajo, el botón de cerrar del final sobra en móvil. */
+    #detailOverlay .modal-close{ display:none; }
+  }
   .btn-comprar{ width:100%; height:48px; display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-md); cursor:pointer; }
   .btn-comprar:hover{ background:var(--acento-hover); }
   .btn-comprar:disabled{ opacity:.5; cursor:default; }
@@ -324,7 +373,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=15" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=19" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -542,6 +591,12 @@
   <!-- Modal: detalle (vista tipo producto) -->
   <div class="modal-overlay" id="detailOverlay">
     <div class="modal modal-lg">
+      <div class="detail-sheet-head">
+        <button type="button" class="detail-back" id="detailBackBtn" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span id="detailHeadTitle"></span>
+      </div>
       <div class="detail-layout">
         <div class="detail-thumbs" id="detailThumbs"></div>
         <div class="detail-main" id="detailMain"></div>
@@ -574,14 +629,6 @@
                 <button type="button" class="cantidad-btn" data-paso="1">+</button>
               </div>
             </div>
-            <div class="compra-total-box" id="compraTotalBox" style="display:none;">
-              <span>Total a pagar</span>
-              <b id="compraTotalValor">$ 0</b>
-            </div>
-            <button type="button" class="btn-comprar" id="detailComprarBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              Comprar
-            </button>
             <div class="modal-msg" id="detailCompraMsg"></div>
             <div class="compra-ok" id="detailCompraOk" style="display:none;"></div>
           </div>
@@ -590,7 +637,19 @@
           <div class="detail-desc" id="detailDesc"></div>
         </div>
       </div>
-      <button class="modal-close" id="detailCloseBtn" style="margin-top:20px;">Cerrar</button>
+      <!-- Fuera del contenido que se desplaza: así en el celular el total
+           y el botón se quedan abajo mientras se eligen mascotas o fechas. -->
+      <div class="compra-sticky" id="compraBarra" style="display:none;">
+        <div class="compra-total-box" id="compraTotalBox" style="display:none;">
+          <span class="t">Total a pagar</span>
+          <b class="m" id="compraTotalValor">$ 0</b>
+        </div>
+        <button type="button" class="btn-comprar" id="detailComprarBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          Comprar
+        </button>
+      </div>
+      <button class="modal-close" id="detailCloseBtn" style="margin-top:var(--s-4);">Cerrar</button>
     </div>
   </div>
 
@@ -688,9 +747,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=15';
-    import { supabase } from './supabaseClient.js?v=15';
-    import { capitalizarPalabras } from './textutils.js?v=15';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=19';
+    import { supabase } from './supabaseClient.js?v=19';
+    import { capitalizarPalabras } from './textutils.js?v=19';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1745,6 +1804,7 @@
       document.getElementById('detailEyebrow').className = `detail-eyebrow ${item.tipo_item}`;
       document.getElementById('detailEyebrow').textContent = item.tipo_item === 'producto' ? 'Producto' : 'Servicio';
       document.getElementById('detailTitle').textContent = item.nombre;
+      document.getElementById('detailHeadTitle').textContent = item.nombre;
       document.getElementById('detailCat').textContent = item.categoria || '';
       document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
       document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
@@ -1861,11 +1921,17 @@
       mascotasSeleccionadas = new Set();
 
       // Solo los Acudientes pueden comprar
+      const barra = document.getElementById('compraBarra');
+
+      // Solo los Acudientes compran: al staff no se le muestra ni el
+      // bloque de configuración ni la barra de compra.
       if (!perfilActual || perfilActual.role !== 'cliente') {
         bloque.style.display = 'none';
+        barra.style.display = 'none';
         return;
       }
       bloque.style.display = 'block';
+      barra.style.display = 'block';
 
       if (item.tipo_item === 'servicio') {
         mascotaWrap.style.display = 'block';
@@ -2046,6 +2112,7 @@
     });
 
     document.getElementById('detailCloseBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
+    document.getElementById('detailBackBtn').addEventListener('click', () => detailOverlay.classList.remove('active'));
 
     // ================================================================
     //  Añadir descuentos: un ítem → muchos acudientes
