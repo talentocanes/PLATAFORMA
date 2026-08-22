@@ -1,6 +1,6 @@
-import { protegerPagina, cerrarSesion } from './auth.js?v=16';
-import { supabase } from './supabaseClient.js?v=16';
-import { cargarConfiguracionNegocio, aplicarModo } from './theme.js?v=16';
+import { protegerPagina, cerrarSesion } from './auth.js?v=17';
+import { supabase } from './supabaseClient.js?v=17';
+import { cargarConfiguracionNegocio, aplicarModo } from './theme.js?v=17';
 
 /* ============================================================================
    BARKLY · layout.js
@@ -155,7 +155,7 @@ async function asegurarArmazon(activeKey){
 
   await new Promise(resolve => {
     const s = document.createElement('script');
-    s.src = 'shell-inline.js?v=16';
+    s.src = 'shell-inline.js?v=17';
     s.setAttribute('data-active', activeKey || '');
     // Sin data-title, el armazón usa el nombre del módulo activo.
     s.onload = resolve;

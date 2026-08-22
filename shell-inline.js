@@ -217,11 +217,12 @@
   /* Selector de apariencia. En la barra lateral no cabe el texto, así
      que van solo los tres iconos; en la hoja de "Más" sí caben. */
   function modoSelector(soloIconos){
-    var modo = leerCache('tc_modo', 'auto');
+    // Solo dos modos, y el predeterminado es claro.
+    var guardado = leerCache('tc_modo', 'light');
+    var modo = (guardado === 'dark') ? 'dark' : 'light';
     var opciones = [
       ['light', 'Claro',  '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
-      ['dark',  'Oscuro', '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>'],
-      ['auto',  'Auto',   '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/>']
+      ['dark',  'Oscuro', '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>']
     ];
 
     var botones = opciones.map(function(o){

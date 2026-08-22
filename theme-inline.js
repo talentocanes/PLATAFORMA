@@ -9,27 +9,24 @@
    defecto, y luego salta — es el parpadeo que ya arreglamos una vez y
    que volvería con el modo oscuro.
 
-   No importa nada ni depende de nada: si falla, la app arranca en
-   claro con la paleta azul, que es un estado válido.
+   Solo hay dos modos, claro y oscuro, y el predeterminado es claro.
+   Las cuentas que quedaron guardadas en el antiguo 'auto' pasan a claro.
+
+   No importa nada ni depende de nada: si falla, la app arranca en claro
+   con la paleta azul, que es un estado válido.
    ========================================================================== */
 (function () {
   var html = document.documentElement;
 
   var paleta = 'azul-original';
-  var modo = 'auto';
+  var modo = 'light';
 
   try {
     paleta = localStorage.getItem('tc_paleta') || paleta;
-    modo   = localStorage.getItem('tc_modo')   || modo;
+    var guardado = localStorage.getItem('tc_modo');
+    if (guardado === 'light' || guardado === 'dark') modo = guardado;
   } catch (e) { /* navegación privada o almacenamiento bloqueado */ }
 
-  var efectivo = modo;
-  if (modo !== 'light' && modo !== 'dark') {
-    efectivo = window.matchMedia &&
-               window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark' : 'light';
-  }
-
   html.setAttribute('data-paleta', paleta);
-  html.setAttribute('data-theme', efectivo);
+  html.setAttribute('data-theme', modo);
 })();

@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js?v=16';
+import { supabase } from './supabaseClient.js?v=17';
 
 // ---------------------------------------------------------
 // Las 8 paletas del colegio.
@@ -24,7 +24,7 @@ export const PALETAS = [
 ];
 
 const CLAVES = PALETAS.map(p => p.key);
-export const MODOS = ['light', 'dark', 'auto'];
+export const MODOS = ['light', 'dark'];
 
 
 // ---------------------------------------------------------
@@ -45,34 +45,28 @@ export function aplicarPaleta(key){
 
 // ---------------------------------------------------------
 // MODO — lo elige cada usuario, no el colegio.
-// 'auto' sigue la preferencia del sistema operativo.
+//
+// Solo hay dos: claro y oscuro, y el predeterminado es claro.
+// Antes existía un tercero, 'auto', que seguía al sistema
+// operativo; se quitó porque obligaba a explicar un estado más y
+// hacía que la plataforma arrancara en oscuro sin que nadie lo
+// hubiera elegido. Quien quiera oscuro lo pone una vez y queda.
 // ---------------------------------------------------------
 export function modoGuardado(){
-  try { return localStorage.getItem('tc_modo') || 'auto'; }
-  catch (e) { return 'auto'; }
-}
-
-export function modoEfectivo(modo = modoGuardado()){
-  if (modo === 'light' || modo === 'dark') return modo;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  try {
+    const guardado = localStorage.getItem('tc_modo');
+    // Las cuentas que quedaron en 'auto' pasan a claro.
+    return MODOS.includes(guardado) ? guardado : 'light';
+  } catch (e) { return 'light'; }
 }
 
 export function aplicarModo(modo){
-  const elegido = MODOS.includes(modo) ? modo : 'auto';
+  const elegido = MODOS.includes(modo) ? modo : 'light';
   try { localStorage.setItem('tc_modo', elegido); } catch (e) { /* ignorar */ }
-  document.documentElement.setAttribute('data-theme', modoEfectivo(elegido));
+  document.documentElement.setAttribute('data-theme', elegido);
   actualizarColorBarraNavegador();
   return elegido;
 }
-
-// Si está en 'auto' y el sistema cambia de claro a oscuro (o al
-// anochecer, en los teléfonos que lo hacen solos), la app sigue.
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (modoGuardado() === 'auto') {
-    document.documentElement.setAttribute('data-theme', modoEfectivo('auto'));
-    actualizarColorBarraNavegador();
-  }
-});
 
 // La barra del navegador (y la de estado, con la app instalada)
 // toma el color del fondo. Sin esto, en móvil queda una franja
@@ -115,7 +109,7 @@ export async function cargarConfiguracionNegocio(){
   // Configuración. Se carga aparte y sin esperar: si pwa.js falta o
   // falla, la app tiene que seguir funcionando igual — es un extra,
   // no una pieza de la que dependa el panel.
-  import('./pwa.js?v=16')
+  import('./pwa.js?v=17')
     .then(m => m.aplicarIdentidadPWA(data))
     .catch(e => console.warn('No se pudo aplicar la identidad de la app instalable:', e));
 
