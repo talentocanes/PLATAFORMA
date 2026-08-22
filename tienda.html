@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=19"></script>
-<link rel="stylesheet" href="panel.css?v=19">
+<script src="theme-inline.js?v=20"></script>
+<link rel="stylesheet" href="panel.css?v=20">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -207,34 +207,47 @@
   .detail-plan-pill:hover{ border-color:var(--text-3); color:var(--text); }
   .detail-plan-pill.active{ border-color:transparent; background:var(--acento); color:#fff; font-weight:600; }
   @media (max-width:900px){
-    .detail-layout{ grid-template-columns:1fr; }
-    .detail-thumbs{ flex-direction:row; order:2; }
-    .detail-thumb{ width:64px; }
-    .detail-main{ order:1; aspect-ratio:1; }
+    .detail-layout{ grid-template-columns:1fr; gap:var(--s-4); }
+    .detail-thumbs{ flex-direction:row; order:2; overflow-x:auto; scrollbar-width:none; }
+    .detail-thumbs::-webkit-scrollbar{ height:0; }
+    .detail-thumb{ width:58px; flex-shrink:0; }
+    /* Proporción de tienda, pero con tope: si ocupa toda la pantalla,
+       el precio y el nombre quedan fuera de vista y se pierde la venta. */
+    .detail-main{ order:1; aspect-ratio:4/5; max-height:42dvh; }
     .detail-info{ order:3; }
+    .detail-title{ font-size:var(--t-xl); }
+    .detail-price{ font-size:var(--t-xl); margin:var(--s-3) 0; }
   }
 
-  /* Cabecera de la ficha: en móvil la hoja necesita una salida visible
-     arriba, no solo el botón "Cerrar" al final de todo el contenido. */
+  /* ---------- Ficha del producto ----------
+     En móvil la hoja se divide en tres zonas fijas: cabecera, contenido
+     que se desplaza, y barra de compra. Con posiciones pegajosas dentro
+     del propio contenido siempre acababa recortándose algo. */
   .detail-sheet-head{ display:none; }
   .detail-back{ width:40px; height:40px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
     border:none; background:none; border-radius:var(--r-full); color:var(--text-2); cursor:pointer; }
   .detail-back:active{ background:var(--surface-2); }
-  .detail-back svg{ width:21px; height:21px; }
+  .detail-back svg{ width:22px; height:22px; }
 
   @media (max-width:1023px){
+    #detailOverlay .modal{
+      display:flex; flex-direction:column;
+      padding:0; overflow:hidden;
+      height:92dvh; max-height:92dvh;
+    }
     .detail-sheet-head{
-      display:flex; align-items:center; gap:var(--s-2);
-      position:sticky; top:0; z-index:6;
-      margin:calc(var(--s-5) * -1) calc(var(--s-4) * -1) var(--s-3);
-      padding:6px var(--s-2);
-      background:var(--surface); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:var(--s-1);
+      flex-shrink:0; padding:6px var(--s-3) 6px var(--s-1);
+      border-bottom:1px solid var(--border);
     }
     .detail-sheet-head span{ font-size:var(--t-base); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .detail-scroll{ flex:1; min-height:0; overflow-y:auto; padding:var(--s-4); }
+    /* Con la barra abajo, el botón "Cerrar" del final sobra. */
+    #detailOverlay .modal-close{ display:none; }
   }
 
-  /* El orden de lectura de una ficha de producto: qué es, cuánto vale,
-     y luego cómo se configura. El precio no puede quedar debajo de un
+  /* El orden de lectura de una ficha: qué es, cuánto vale, y solo
+     después cómo se configura. El precio no puede quedar debajo de un
      calendario que ocupa toda la pantalla. */
   .detail-info{ display:flex; flex-direction:column; }
   .detail-eyebrow{ order:1; }
@@ -263,29 +276,40 @@
   .cantidad-btn{ width:40px; height:40px; border:1px solid var(--border-2); background:var(--surface); border-radius:var(--r-sm); color:var(--text); font-size:18px; cursor:pointer; }
   .cantidad-btn:hover{ background:var(--surface-2); }
   .cantidad-stepper input{ width:64px; height:40px; text-align:center; border:1px solid var(--border-2); border-radius:var(--r-sm); background:var(--surface); color:var(--text); font-size:var(--t-base); font-family:inherit; }
-  .compra-total-box{ display:flex; align-items:center; justify-content:space-between; gap:var(--s-3); padding:var(--s-3) var(--s-4); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); margin-bottom:var(--s-3); }
-  .compra-total-box .t{ font-size:var(--t-sm); color:var(--text-2); }
-  .compra-total-box .m{ font-size:var(--t-lg); font-weight:700; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
-  .compra-actions{ display:flex; }
-  .compra-sticky{ margin-top:var(--s-5); }
-  @media (max-width:1023px){
-    /* Pegada al fondo de la hoja mientras se eligen mascotas o fechas:
-       comprar tiene que estar siempre a un toque, no al final de un
-       calendario que ocupa toda la pantalla. */
-    .compra-sticky{
-      position:sticky; bottom:calc(var(--s-6) * -1); z-index:5;
-      margin:var(--s-4) calc(var(--s-4) * -1) 0;
-      padding:var(--s-3) var(--s-4) calc(var(--s-3) + var(--safe-b));
-      background:var(--surface); border-top:1px solid var(--border);
-    }
-    .compra-sticky .compra-total-box{ margin-bottom:var(--s-2); }
-    /* Con la barra abajo, el botón de cerrar del final sobra en móvil. */
-    #detailOverlay .modal-close{ display:none; }
+  /* Barra de compra: precio a la izquierda, acción a la derecha. Es el
+     patrón de cualquier tienda seria — el número y el botón juntos, sin
+     que haya que buscarlos en dos sitios distintos. */
+  .compra-sticky{
+    display:flex; align-items:center; gap:var(--s-4);
+    flex-shrink:0; margin-top:var(--s-5);
+    padding:var(--s-4) 0 0; border-top:1px solid var(--border);
   }
-  .btn-comprar{ width:100%; height:48px; display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2); border:none; border-radius:var(--r-sm); background:var(--acento); color:#fff; font-weight:600; font-size:var(--t-md); cursor:pointer; }
+  .compra-resumen{ flex:1; min-width:0; }
+  .compra-resumen .m{ font-size:var(--t-xl); font-weight:700; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1.15; }
+  .compra-resumen .t{ font-size:var(--t-sm); color:var(--text-2); margin-top:1px; }
+  .compra-actions{ display:flex; }
+  .btn-comprar{
+    flex-shrink:0; min-width:170px; height:50px; padding:0 var(--s-6);
+    display:inline-flex; align-items:center; justify-content:center;
+    border:none; border-radius:var(--r-sm);
+    background:var(--acento); color:#fff; font-weight:700; font-size:var(--t-md);
+    letter-spacing:-0.01em; cursor:pointer; transition:background .13s ease;
+  }
   .btn-comprar:hover{ background:var(--acento-hover); }
   .btn-comprar:disabled{ opacity:.5; cursor:default; }
-  .btn-comprar svg{ width:18px; height:18px; }
+  /* Sin nada elegido todavía, el botón manda solo. */
+  .compra-sticky:has(.compra-resumen[style*="display:none"]) .btn-comprar,
+  .compra-sticky:has(.compra-resumen[style*="display: none"]) .btn-comprar{ flex:1; }
+
+  @media (max-width:1023px){
+    .compra-sticky{
+      margin:0; padding:var(--s-3) var(--s-4) calc(var(--s-3) + var(--safe-b));
+      background:var(--surface); border-top:1px solid var(--border);
+    }
+    .compra-resumen .m{ font-size:var(--t-lg); }
+    .btn-comprar{ min-width:140px; height:52px; padding:0 var(--s-5); }
+  }
+
   .compra-ok{ display:none; margin-top:var(--s-3); padding:var(--s-3) var(--s-4); border-radius:var(--r-sm); background:var(--ok-bg); border:1px solid var(--ok-br); color:var(--ok); font-size:var(--t-sm); line-height:1.5; }
 
   /* ---------- Calendario del hotel ---------- */
@@ -373,7 +397,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=19" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=20" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -597,6 +621,7 @@
         </button>
         <span id="detailHeadTitle"></span>
       </div>
+      <div class="detail-scroll">
       <div class="detail-layout">
         <div class="detail-thumbs" id="detailThumbs"></div>
         <div class="detail-main" id="detailMain"></div>
@@ -637,17 +662,15 @@
           <div class="detail-desc" id="detailDesc"></div>
         </div>
       </div>
+      </div>
       <!-- Fuera del contenido que se desplaza: así en el celular el total
            y el botón se quedan abajo mientras se eligen mascotas o fechas. -->
       <div class="compra-sticky" id="compraBarra" style="display:none;">
-        <div class="compra-total-box" id="compraTotalBox" style="display:none;">
-          <span class="t">Total a pagar</span>
-          <b class="m" id="compraTotalValor">$ 0</b>
+        <div class="compra-resumen" id="compraTotalBox" style="display:none;">
+          <div class="m" id="compraTotalValor">$ 0</div>
+          <div class="t" id="compraTotalLabel">Total a pagar</div>
         </div>
-        <button type="button" class="btn-comprar" id="detailComprarBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          Comprar
-        </button>
+        <button type="button" class="btn-comprar" id="detailComprarBtn">Comprar</button>
       </div>
       <button class="modal-close" id="detailCloseBtn" style="margin-top:var(--s-4);">Cerrar</button>
     </div>
@@ -747,9 +770,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=19';
-    import { supabase } from './supabaseClient.js?v=19';
-    import { capitalizarPalabras } from './textutils.js?v=19';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=20';
+    import { supabase } from './supabaseClient.js?v=20';
+    import { capitalizarPalabras } from './textutils.js?v=20';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1971,7 +1994,7 @@
         mostrar = true;
       }
 
-      box.style.display = mostrar ? 'flex' : 'none';
+      box.style.display = mostrar ? 'block' : 'none';
       valorEl.textContent = '$ ' + total.toLocaleString('es-CO');
     }
 
