@@ -329,6 +329,7 @@
     import { abrirRecortador } from './photocrop.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
+    import { conCache, invalidar } from './datos.js';
 
     // Las navegaciones hechas desde código pasan por el armazón, para
     // que muestren el mismo indicador de carga que los enlaces.
@@ -468,19 +469,27 @@
 
     async function cargarAlumnos(){
       const tbody = document.getElementById('tableBody');
-      const { data, error } = await supabase
-        .from('alumnos')
-        .select('*, profiles!alumnos_acudiente_id_fkey(full_name, username)')
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error al cargar alumnos:', error);
-        tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
-        return;
-      }
+      // Se pinta al instante lo de la última visita y se comprueba por
+      // detrás si cambió. Volver a esta pantalla deja de tener espera.
+      await conCache('alumnos', async () => {
+        const { data, error } = await supabase
+          .from('alumnos')
+          .select('*, profiles!alumnos_acudiente_id_fkey(full_name, username)')
+          .order('created_at', { ascending: false });
 
-      alumnos = data || [];
-      pintarTabla(alumnos);
+        if (error) {
+          console.error('Error al cargar alumnos:', error);
+          if (!alumnos.length) {
+            tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
+          }
+          return null;
+        }
+        return data || [];
+      }, lista => {
+        alumnos = lista;
+        pintarTabla(alumnos);
+      });
 
       // Si se llega desde la ficha con "?editar=", se abre el formulario
       // de ese alumno directamente y se limpia el parámetro de la URL.

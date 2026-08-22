@@ -1,4 +1,5 @@
 import { supabase, usernameToEmail } from './supabaseClient.js';
+import { limpiarCache } from './datos.js';
 
 // ---------------------------------------------------------
 // Iniciar sesión con usuario y contraseña
@@ -10,6 +11,9 @@ export async function iniciarSesion(identificador, password) {
   const email = identificador.includes('@')
     ? identificador.trim().toLowerCase()
     : usernameToEmail(identificador);
+
+  // Por si en esta pestaña quedaba algo guardado de otra cuenta.
+  limpiarCache();
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
@@ -50,6 +54,10 @@ export async function iniciarSesion(identificador, password) {
 // Cerrar sesión
 // ---------------------------------------------------------
 export async function cerrarSesion() {
+  // Lo guardado para pintar al instante es de esta cuenta: si no se
+  // borra, quien entre después vería un destello de datos ajenos antes
+  // de que llegue la consulta real.
+  limpiarCache();
   await supabase.auth.signOut();
   window.location.href = 'index.html';
 }

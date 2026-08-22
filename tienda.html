@@ -804,6 +804,7 @@
     import { initLayout, obtenerConfiguracionActual } from './layout.js';
     import { supabase } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
+    import { conCache } from './datos.js';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -995,21 +996,29 @@
 
     async function cargarItems(){
       const grid = document.getElementById('itemsGrid');
-      const { data, error } = await supabase
-        .from('tienda_items')
-        .select('*')
-        .order('orden', { ascending: true, nullsFirst: false })
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error al cargar la tienda:', error);
-        grid.innerHTML = `<div class="empty-note">No se pudo cargar la tienda.</div>`;
-        return;
-      }
+      // Pinta al instante el catálogo de la última visita y revalida por
+      // detrás. Es la pantalla a la que más se vuelve, así que es donde
+      // más se nota no tener que esperar.
+      await conCache('tienda-items', async () => {
+        const { data, error } = await supabase
+          .from('tienda_items')
+          .select('*')
+          .order('orden', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: false });
 
-      items = data || [];
-      await marcarItemsConPlanesEnDescuento();
-      pintarGrid();
+        if (error) {
+          console.error('Error al cargar la tienda:', error);
+          if (!items.length) {
+            grid.innerHTML = `<div class="empty-note">No se pudo cargar la tienda.</div>`;
+          }
+          return null;
+        }
+        return data || [];
+      }, lista => {
+        items = lista;
+        marcarItemsConPlanesEnDescuento().then(pintarGrid);
+      });
     }
 
     // ---------------- Arrastrar y soltar (orden manual) ----------------

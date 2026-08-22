@@ -305,6 +305,7 @@
     import { supabase, usernameToEmail } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
     import { escapar, colorDeNombre, iniciales } from './ui.js';
+    import { conCache } from './datos.js';
 
     // Las navegaciones hechas desde código pasan por el armazón, para
     // que muestren el mismo indicador de carga que los enlaces.
@@ -364,28 +365,35 @@
 
     async function cargarLista(){
       const tbody = document.getElementById('tableBody');
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, phone, status, cliente_detalle(activo)')
-        .eq('role', ROL)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error al cargar acudientes:', error);
-        tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
-        return;
-      }
+      // Pinta al instante lo de la última visita y revalida por detrás.
+      await conCache('clientes', async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, phone, status, cliente_detalle(activo)')
+          .eq('role', ROL)
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
 
-      filas = (data || []).map(p => ({
-        id: p.id,
-        username: p.username,
-        full_name: p.full_name,
-        phone: p.phone,
-        activo: p.cliente_detalle?.activo ?? true
-      }));
+        if (error) {
+          console.error('Error al cargar acudientes:', error);
+          if (!filas.length) {
+            tbody.innerHTML = `<div class="empty-note">No se pudo cargar el listado.</div>`;
+          }
+          return null;
+        }
 
-      pintarTabla(filas);
+        return (data || []).map(p => ({
+          id: p.id,
+          username: p.username,
+          full_name: p.full_name,
+          phone: p.phone,
+          activo: p.cliente_detalle?.activo ?? true
+        }));
+      }, lista => {
+        filas = lista;
+        pintarTabla(filas);
+      });
     }
 
     function pintarTabla(lista){
