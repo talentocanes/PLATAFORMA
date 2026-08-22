@@ -352,8 +352,11 @@
   /* ---------------------------------------------------------
      API pública
      --------------------------------------------------------- */
+  var estadoActual = null;
+
   function pintarTodo(perfil, permitidos, config){
     if (!perfil) return;
+    estadoActual = { perfil: perfil, permitidos: permitidos, config: config };
     pintarSidebar(perfil, permitidos, config);
     pintarAppbar(perfil, config);
     pintarTabbar(perfil, permitidos, config);
@@ -369,6 +372,21 @@
     iniciales: iniciales,
 
     pintar: pintarTodo,
+
+    /* Perfil, permisos y configuración con los que se pintó el armazón.
+       Las páginas lo reutilizan en vez de volver a consultarlos. */
+    estado: function(){ return estadoActual; },
+
+    /* Módulos que esta persona puede abrir de verdad (con página propia). */
+    disponibles: function(){
+      if (!estadoActual) return [];
+      return modulosVisibles(estadoActual.perfil, estadoActual.permitidos, estadoActual.config)
+        .filter(function(v){ return v.item.enabled; })
+        .map(function(v){
+          return { key:v.item.key, label:v.label, href:v.item.href, grupo:v.grupo,
+                   icono:svg(v.item.key), badge:badges[v.item.key] || 0 };
+        });
+    },
 
     /* layout.js llama a esto cuando ya sabe cuántos pendientes hay.
        Repintar es barato y evita que el número aparezca de golpe. */

@@ -2,302 +2,245 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Talento Canes · Panel de Inicio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Talento Canes · Inicio</title>
+
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Barkly">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css">
-<script src="theme-inline.js?v=12"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="theme-inline.js?v=13"></script>
+<link rel="stylesheet" href="panel.css?v=13">
 <style>
-  /* ---------- HERO (propio de Inicio) ---------- */
-  .hero{
+  /* Accesos: cuadrícula de módulos disponibles. Deliberadamente sobria
+     — no compite con lo que necesita atención, que va antes. */
+  .accesos{ display:grid; grid-template-columns:repeat(auto-fill, minmax(168px, 1fr)); gap:var(--s-3); }
+  .acceso{
     position:relative;
-    border-radius:24px;
-    overflow:hidden;
-    padding:46px 48px;
-    background:
-      radial-gradient(650px 380px at 88% 15%, color-mix(in srgb, var(--blue-bright) 35%, transparent), transparent 65%),
-      linear-gradient(120deg, var(--navy-panel) 0%, var(--navy-panel-2) 55%, var(--blue-deep) 100%);
-    border:1px solid var(--line-strong);
-    isolation:isolate;
-    transition: background-color .3s ease;
+    display:flex; align-items:center; gap:var(--s-3);
+    min-height:64px; padding:var(--s-3) var(--s-4);
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+    color:var(--text); font-weight:600; font-size:var(--t-base);
+    transition:border-color .13s ease, background .13s ease;
   }
-  .hero-gear{ position:absolute; right:-40px; top:-60px; width:340px; height:340px; opacity:0.09; animation:spin 90s linear infinite; z-index:0; }
-  .hero-gear.two{ right:120px; top:140px; width:170px; height:170px; opacity:0.11; animation:spin 60s linear infinite reverse; }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce){ .hero-gear{ animation:none; } }
-  .hero-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:2px; text-transform:uppercase; color:var(--blue-glow); position:relative; z-index:1; }
-  .hero h1{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:40px; line-height:1.15; margin:14px 0 10px; position:relative; z-index:1; max-width:640px; }
-  .hero h1 span{ background:linear-gradient(90deg, var(--blue-glow), var(--white) 85%); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .hero p{ color:var(--mist); font-size:15px; max-width:520px; line-height:1.6; position:relative; z-index:1; }
-  .hero-meta{ display:flex; gap:28px; margin-top:28px; position:relative; z-index:1; flex-wrap:wrap; }
-  .hero-meta .item{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mist-dim); letter-spacing:0.3px; }
-  .hero-meta .item b{ display:block; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; color:var(--white); margin-top:3px; }
-
-  /* ---------- GRID DE MÓDULOS ---------- */
-  .grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; }
-  .module{ background:var(--navy-panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:relative; overflow:hidden; transition:border-color 0.25s ease, transform 0.25s ease; text-decoration:none; color:inherit; display:block; }
-  .module:hover{ border-color:var(--line-strong); transform:translateY(-2px); }
-  .module::before{ content:""; position:absolute; inset:0; background:linear-gradient(140deg, color-mix(in srgb, var(--blue-bright) 6%, transparent), transparent 55%); pointer-events:none; }
-  .module .icon-badge{ width:42px; height:42px; border-radius:11px; background:var(--navy-panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-  .module .icon-badge svg{ width:20px; height:20px; color:var(--blue-glow); }
-  .module h3{ font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600; margin-bottom:6px; }
-  .module p{ font-size:12.5px; color:var(--mist-dim); line-height:1.5; }
-  .status-pill{ display:inline-flex; align-items:center; gap:6px; margin-top:16px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.8px; text-transform:uppercase; color:var(--blue-glow); border:1px dashed var(--line-strong); padding:5px 10px; border-radius:20px; }
-  .status-pill.live{ color:#7bd88f; border-color:rgba(123,216,143,0.4); border-style:solid; }
-  .status-pill .dot{ width:5px; height:5px; border-radius:50%; background:var(--blue-glow); box-shadow:0 0 6px var(--blue-glow); }
-  .status-pill.live .dot{ background:#7bd88f; box-shadow:0 0 6px #7bd88f; }
-
-  /* ---------- SOLICITUDES PENDIENTES (solo admin) ---------- */
-  .requests{ display:flex; flex-direction:column; gap:10px; }
-  .request-card{ display:flex; align-items:center; gap:14px; background:var(--navy-panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; flex-wrap:wrap; }
-  .request-card .info{ flex:1; min-width:180px; }
-  .request-card .info .name{ font-weight:600; font-size:14px; }
-  .request-card .info .meta{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mist-dim); margin-top:2px; }
-  .request-actions{ display:flex; gap:8px; }
-  .btn-approve, .btn-deny{ border:none; border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer; }
-  .btn-approve{ background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright)); color:var(--white); }
-  .btn-deny{ background:transparent; border:1px solid rgba(255,107,107,0.35); color:var(--danger); }
-  .empty-note{ color:var(--mist-dim); font-size:13px; background:var(--navy-panel); border:1px dashed var(--line); border-radius:14px; padding:18px; text-align:center; }
-
-  @media (max-width: 1180px){ .grid{ grid-template-columns:repeat(2, 1fr); } }
-  @media (max-width: 780px){
-    .hero{ padding:32px 26px; }
-    .hero h1{ font-size:26px; }
-    .hero-gear{ width:220px; height:220px; top:-40px; right:-60px; }
-    .hero-gear.two{ display:none; }
-    .grid{ grid-template-columns:1fr; }
+  .acceso:hover{ border-color:var(--border-2); background:var(--surface-2); }
+  .acceso .ico{
+    width:36px; height:36px; border-radius:var(--r-sm); flex-shrink:0;
+    background:var(--acento-suave); color:var(--acento-txt);
+    display:flex; align-items:center; justify-content:center;
   }
-  @media (max-width: 460px){ .hero-meta{ flex-direction:column; gap:12px; } }
+  .acceso .ico svg{ width:19px; height:19px; }
+  .acceso .count{ margin-left:auto; }
+
+  /* Aviso: una sola franja, sin tarjeta dentro de tarjeta */
+  .aviso{
+    display:flex; align-items:flex-start; gap:var(--s-3);
+    padding:var(--s-4); border-radius:var(--r-md);
+    background:var(--warn-bg); border:1px solid var(--warn-br); color:var(--warn);
+    margin-bottom:var(--s-5);
+  }
+  .aviso svg{ width:20px; height:20px; flex-shrink:0; margin-top:1px; }
+  .aviso .t{ font-weight:600; font-size:var(--t-base); margin-bottom:2px; }
+  .aviso .d{ font-size:var(--t-sm); line-height:1.5; color:var(--text-2); }
+
+  .sec-title{
+    display:flex; align-items:center; gap:var(--s-2);
+    font-size:var(--t-md); font-weight:700; letter-spacing:-0.01em;
+    margin:var(--s-8) 0 var(--s-4);
+  }
+  .sec-title .vivo{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:var(--t-xs); font-weight:500; color:var(--ok);
+  }
+  .sec-title .vivo i{ width:6px; height:6px; border-radius:50%; background:var(--ok); }
+
+  .saludo{ font-size:var(--t-2xl); font-weight:700; letter-spacing:-0.03em; }
+  .saludo span{ color:var(--acento-txt); }
+  @media (max-width:1023px){ .saludo{ font-size:var(--t-xl); } }
 </style>
 </head>
 <body>
 
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar"></aside>
-  <script src="sidebar-inline.js?v=12" data-active="inicio"></script>
+  <header class="appbar" id="appbar"></header>
 
   <main>
-    <div class="topbar">
-      <div class="topbar-left">
-        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <div class="crumbs">Panel &nbsp;/&nbsp; <b>Inicio</b></div>
-      </div>
-      <div class="top-right">
-        <div class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          Buscar en el panel…
-        </div>
-        <div class="clock" id="clock">— — —</div>
+    <div class="page-head">
+      <div>
+        <div class="saludo" id="saludo">Hola.</div>
+        <div class="sub" id="subSaludo">—</div>
       </div>
     </div>
 
-    <section class="hero">
-      <svg class="hero-gear" viewBox="0 0 100 100" fill="none" stroke="#ffffff" stroke-width="2.4">
-        <circle cx="50" cy="50" r="16"/>
-        <path d="M50 30V20M50 80v-10M30 50H20M80 50H70M36 36l-7-7M71 71l-7-7M36 64l-7 7M71 29l-7 7" stroke-linecap="round"/>
-      </svg>
-      <svg class="hero-gear two" viewBox="0 0 100 100" fill="none" stroke="#ffffff" stroke-width="3">
-        <circle cx="50" cy="50" r="14"/>
-        <path d="M50 32V22M50 78v-10M32 50H22M78 50H68" stroke-linecap="round"/>
-      </svg>
-
-      <div class="hero-eyebrow">Sistema de Gestión Integral · Talento Canes</div>
-      <h1 id="heroTitle">Buenos días.<br>Tu colegio, bajo control.</h1>
-      <p>Este es el punto de partida del panel: aquí irán apareciendo los indicadores y accesos que simplifican la operación diaria del colegio canino, para que la supervisión tome minutos, no horas.</p>
-
-      <div class="hero-meta">
-        <div class="item">Fecha<b id="today">—</b></div>
-        <div class="item">Rol activo<b id="roleActivo">—</b></div>
-        <div class="item">Estado del panel<b>En construcción</b></div>
-      </div>
-    </section>
-
-    <!-- Visible solo para el administrador -->
-    <div id="adminSection" style="display:none;">
-      <div class="section-label" style="display:flex; align-items:center; gap:8px;">
-        Solicitudes pendientes
-        <span style="display:inline-flex; align-items:center; gap:5px; font-size:9.5px; color:#7bd88f; text-transform:none; letter-spacing:0.3px;">
-          <span style="width:6px; height:6px; border-radius:50%; background:#7bd88f; box-shadow:0 0 6px #7bd88f;"></span>
-          En vivo
-        </span>
-      </div>
-      <div class="requests" id="requestsList">
-        <div class="empty-note">Cargando solicitudes…</div>
+    <!-- Acudiente con mascotas sin carné -->
+    <div class="aviso" id="avisoCarne" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <div>
+        <div class="t">Falta el carné de vacunación</div>
+        <div class="d" id="avisoCarneTexto"></div>
       </div>
     </div>
 
-    <!-- Visible solo para Acudientes con mascotas sin carné de vacunación -->
-    <div id="vacunacionAlertSection" style="display:none; margin-bottom:8px;">
-      <div style="display:flex; align-items:flex-start; gap:12px; background:rgba(255,194,102,0.08); border:1px solid rgba(255,194,102,0.3); border-radius:16px; padding:16px 18px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#ffc266" stroke-width="2" style="width:22px; height:22px; flex-shrink:0; margin-top:1px;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-        <div>
-          <div style="font-weight:600; font-size:13.5px; margin-bottom:3px;">Falta el carné de vacunación</div>
-          <div style="font-size:12.5px; color:var(--mist-dim); line-height:1.5;" id="vacunacionAlertTexto">Sube el carné de vacunación desde Mis mascotas para completar el registro.</div>
-        </div>
+    <div class="stats-row" id="cifras"></div>
+
+    <!-- Solicitudes de acceso, solo administrador -->
+    <div id="seccionSolicitudes" style="display:none;">
+      <div class="sec-title">
+        Solicitudes de acceso
+        <span class="vivo"><i></i>En vivo</span>
       </div>
+      <div id="listaSolicitudes"></div>
     </div>
 
-    <div class="section-label">Módulos previstos</div>
-    <div class="grid">
-      <a href="trabajadores.html" class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/></svg></div>
-        <h3>Trabajadores</h3>
-        <p>Perfiles, roles y funciones del equipo del colegio canino.</p>
-        <div class="status-pill live"><span class="dot"></span>Disponible</div>
-      </a>
-      <a href="clientes.html" class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.1"/><path d="M3.2 20c1-4 3.4-6 5.8-6s4.8 2 5.8 6"/><path d="M15.6 11.8l1.6 1.6 3.2-3.4"/></svg></div>
-        <h3 id="moduloAcudientesTitulo">Acudientes</h3>
-        <p>Datos de contacto y seguimiento de los dueños.</p>
-        <div class="status-pill live"><span class="dot"></span>Disponible</div>
-      </a>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="16.2" rx="4.1" ry="3.3"/><ellipse cx="6.4" cy="9" rx="1.5" ry="1.9"/><ellipse cx="10.6" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="14.4" cy="6.3" rx="1.5" ry="1.9"/><ellipse cx="18.6" cy="9" rx="1.5" ry="1.9"/></svg></div>
-        <h3>Alumnos</h3>
-        <p>Fichas caninas y avance de entrenamiento de cada alumno.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6.2" r="2"/><circle cx="18" cy="17.8" r="2"/><path d="M6 8.2c0 4.6 4 3.6 6 6.4s2 3.4 6 3.4" stroke-dasharray="2.4 2.4"/></svg></div>
-        <h3>Rutas</h3>
-        <p>Recorridos y logística de recogida y entrega.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.2 8h11.6l-1 12H7.2L6.2 8Z"/><path d="M9.2 8V6.2a2.8 2.8 0 0 1 5.6 0V8"/></svg></div>
-        <h3>Servicios</h3>
-        <p>Ventas de productos y servicios del colegio.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.3"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1"/></svg></div>
-        <h3>Entrenamiento</h3>
-        <p>Planes, sesiones y progreso según el método METC.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
-        <h3>Cartera</h3>
-        <p>Análisis financiero: ingresos, costos y balance general.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/></svg></div>
-        <h3>Inventario</h3>
-        <p>Productos y suministros con su nivel de stock.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 11l2.5 2.5L16 8"/></svg></div>
-        <h3>Tareas</h3>
-        <p>Tablero de tareas generales asignadas al equipo.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2-2Z"/></svg></div>
-        <h3>Mantenimiento</h3>
-        <p>Mantenimiento de instalaciones y equipos.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-      <div class="module">
-        <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14 3h-4l-.6 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1c.6.5 1.3.9 2 1.2L10 21h4l.6-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></svg></div>
-        <h3>Configuración</h3>
-        <p>Preferencias generales del sistema y cuentas.</p>
-        <div class="status-pill"><span class="dot"></span>Próximamente</div>
-      </div>
-    </div>
+    <div class="sec-title">Accesos</div>
+    <div class="accesos" id="accesos"></div>
   </main>
 
-  <!-- Evita el "flash" del valor por defecto en la tarjeta del módulo -->
-  <script>
-    (function () {
-      try {
-        var plural = localStorage.getItem('tc_etiqueta_cliente_plural') || 'Acudientes';
-        document.getElementById('moduloAcudientesTitulo').textContent = plural;
-      } catch (e) { /* el script de módulo lo corrige igual */ }
-    })();
-  </script>
+  <nav class="tabbar" id="tabbar"></nav>
+  <div class="scrim" id="scrim"></div>
+  <div class="dialog" id="sheetMas"></div>
+
+  <script src="shell-inline.js?v=13" data-active="inicio" data-title="Inicio"></script>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=12';
-    import { supabase } from './supabaseClient.js?v=12';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=13';
+    import { supabase } from './supabaseClient.js?v=13';
+    import { escapar, pesos, htmlAvatar } from './ui.js?v=13';
 
-    let etiquetaClienteGlobal = 'Acudiente';
+    let etiquetaCliente = 'Acudiente';
 
-    (async () => {
-      const profile = await initLayout({ activeKey: 'inicio' });
-      if (!profile) return;
-
+    const profile = await initLayout({ activeKey: 'inicio' });
+    if (profile) {
       const config = obtenerConfiguracionActual();
-      etiquetaClienteGlobal = config?.etiqueta_cliente || 'Acudiente';
-      const etiquetaClientePlural = config?.etiqueta_cliente_plural || 'Acudientes';
-      const ROLE_LABELS = { admin: 'Administrador', trabajador: 'Trabajador', cliente: etiquetaClienteGlobal };
+      etiquetaCliente = config?.etiqueta_cliente || 'Acudiente';
 
-      document.getElementById('moduloAcudientesTitulo').textContent = etiquetaClientePlural;
+      pintarSaludo(profile);
+      pintarAccesos();
 
-      const primerNombre = (profile.full_name || profile.username).split(' ')[0];
-      document.getElementById('heroTitle').innerHTML =
-        `Buenos días, <span>${primerNombre}</span>.<br>Tu colegio, bajo control.`;
-      document.getElementById('roleActivo').textContent = ROLE_LABELS[profile.role] || profile.role;
+      if (profile.role === 'cliente') {
+        await Promise.all([cifrasAcudiente(profile.id), revisarCarne(profile.id)]);
+      } else {
+        await cifrasColegio(profile);
+        if (profile.role === 'admin') {
+          document.getElementById('seccionSolicitudes').style.display = 'block';
+          await cargarSolicitudes();
+          suscribirEnVivo();
+        }
+      }
+    }
+
+    /* ---------------- Saludo ---------------- */
+    function pintarSaludo(profile){
+      const hora = new Date().getHours();
+      const franja = hora < 12 ? 'Buenos días' : (hora < 19 ? 'Buenas tardes' : 'Buenas noches');
+      const nombre = (profile.full_name || profile.username).split(' ')[0];
+      document.getElementById('saludo').innerHTML =
+        `${franja}, <span>${escapar(nombre)}</span>.`;
 
       const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
       const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-      const now = new Date();
-      document.getElementById('today').textContent =
-        dias[now.getDay()].charAt(0).toUpperCase() + dias[now.getDay()].slice(1) + ', ' + now.getDate() + ' de ' + meses[now.getMonth()];
+      const hoy = new Date();
+      const fecha = dias[hoy.getDay()] + ', ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()];
+      document.getElementById('subSaludo').textContent =
+        fecha.charAt(0).toUpperCase() + fecha.slice(1);
+    }
 
-      if (profile.role === 'admin') {
-        document.getElementById('adminSection').style.display = 'block';
-        await cargarSolicitudes();
-        suscribirSolicitudesEnVivo();
-      }
+    /* ---------------- Accesos ----------------
+       Se arman con los módulos que el armazón ya resolvió, así que
+       cada quien ve solo lo que puede abrir — nada de tarjetas
+       "Próximamente" que no llevan a ningún lado. */
+    function pintarAccesos(){
+      const cont = document.getElementById('accesos');
+      const modulos = window.BarklyShell.disponibles()
+        .filter(m => m.key !== 'inicio');
 
-      if (profile.role === 'cliente') {
-        await revisarCarneVacunacion(profile.id);
-      }
-    })();
+      cont.innerHTML = modulos.map(m => `
+        <a class="acceso" href="${m.href}">
+          <span class="ico">${m.icono}</span>
+          <span>${escapar(m.label)}</span>
+          ${m.badge ? `<span class="count">${m.badge}</span>` : ''}
+        </a>
+      `).join('');
+    }
 
-    async function revisarCarneVacunacion(acudienteId){
+    /* ---------------- Cifras ---------------- */
+    function tarjeta(lbl, val, clase = ''){
+      return `<div class="stat"><div class="lbl">${lbl}</div><div class="val ${clase}">${val}</div></div>`;
+    }
+
+    async function cifrasColegio(profile){
+      const cont = document.getElementById('cifras');
+      cont.innerHTML = `<div class="stat"><div class="skeleton" style="height:14px;width:70%"></div><div class="skeleton" style="height:24px;margin-top:8px"></div></div>`.repeat(3);
+
+      const [alumnos, compras] = await Promise.all([
+        supabase.from('alumnos').select('activo, status'),
+        supabase.from('compras').select('precio_total, monto_pagado, estado_aprobacion, estado_pago')
+      ]);
+
+      const lista = alumnos.data || [];
+      const activos = lista.filter(a => a.activo && a.status === 'approved').length;
+
+      let porCobrar = 0, pendientes = 0;
+      (compras.data || []).forEach(c => {
+        if (c.estado_aprobacion === 'pendiente') { pendientes++; return; }
+        if (c.estado_aprobacion !== 'aprobado') return;
+        porCobrar += Math.max(0, (Number(c.precio_total) || 0) - (Number(c.monto_pagado) || 0));
+      });
+
+      cont.innerHTML =
+        tarjeta('Alumnos activos', activos) +
+        tarjeta('Por cobrar', pesos(porCobrar), 'debe') +
+        tarjeta('Compras por aprobar', pendientes);
+    }
+
+    async function cifrasAcudiente(clienteId){
+      const cont = document.getElementById('cifras');
+      cont.innerHTML = `<div class="stat"><div class="skeleton" style="height:14px;width:70%"></div><div class="skeleton" style="height:24px;margin-top:8px"></div></div>`.repeat(2);
+
+      const [mascotas, compras] = await Promise.all([
+        supabase.from('alumnos').select('id').eq('acudiente_id', clienteId).eq('status', 'approved'),
+        supabase.from('compras').select('precio_total, monto_pagado, estado_aprobacion, estado_pago').eq('cliente_id', clienteId)
+      ]);
+
+      let porPagar = 0;
+      (compras.data || []).forEach(c => {
+        if (c.estado_aprobacion !== 'aprobado' || c.estado_pago === 'pagado') return;
+        porPagar += Math.max(0, (Number(c.precio_total) || 0) - (Number(c.monto_pagado) || 0));
+      });
+
+      cont.innerHTML =
+        tarjeta('Por pagar', pesos(porPagar), porPagar > 0 ? 'debe' : '') +
+        tarjeta('Mis mascotas', (mascotas.data || []).length);
+    }
+
+    /* ---------------- Carné pendiente ---------------- */
+    async function revisarCarne(clienteId){
       const { data, error } = await supabase
         .from('alumnos')
-        .select('nombre, carne_vacunacion_url')
-        .eq('acudiente_id', acudienteId)
+        .select('nombre')
+        .eq('acudiente_id', clienteId)
         .is('carne_vacunacion_url', null);
 
       if (error || !data || data.length === 0) return;
 
-      const seccion = document.getElementById('vacunacionAlertSection');
-      const texto = document.getElementById('vacunacionAlertTexto');
       const nombres = data.map(m => m.nombre).join(', ');
-      texto.textContent = data.length === 1
-        ? `A ${nombres} le falta el carné de vacunación. Súbelo desde "Mis mascotas" para completar su registro.`
-        : `A estas mascotas les falta el carné de vacunación: ${nombres}. Súbelo desde "Mis mascotas" para completar su registro.`;
-      seccion.style.display = 'block';
+      document.getElementById('avisoCarneTexto').textContent = data.length === 1
+        ? `A ${nombres} le falta el carné. Súbelo desde Mis mascotas para completar su registro.`
+        : `Les falta el carné a ${nombres}. Súbelos desde Mis mascotas para completar su registro.`;
+      document.getElementById('avisoCarne').style.display = 'flex';
     }
 
-    // ---------------------------------------------------------
-    // Tiempo real: cualquier cambio en profiles (nuevo registro,
-    // aprobación, rechazo) vuelve a pintar la lista automáticamente,
-    // sin que el administrador tenga que recargar la página.
-    // Requiere tener Realtime activado sobre la tabla "profiles"
-    // (Database > Replication en el Dashboard de Supabase).
-    // ---------------------------------------------------------
-    function suscribirSolicitudesEnVivo(){
-      supabase
-        .channel('profiles-solicitudes')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'profiles' },
-          () => { cargarSolicitudes(); }
-        )
-        .subscribe();
-    }
+    /* ---------------- Solicitudes de acceso ---------------- */
+    const ROL_TEXTO = () => ({ trabajador: 'Trabajador', cliente: etiquetaCliente });
 
     async function cargarSolicitudes(){
-      const ROLE_TAG = { trabajador: 'Trabajador', cliente: etiquetaClienteGlobal };
-      const listEl = document.getElementById('requestsList');
+      const cont = document.getElementById('listaSolicitudes');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, full_name, role, created_at')
@@ -305,52 +248,64 @@
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error al cargar solicitudes pendientes:', error);
-        listEl.innerHTML = `<div class="empty-note">No se pudieron cargar las solicitudes.</div>`;
+        cont.innerHTML = `<div class="card"><div class="empty"><p>No se pudieron cargar las solicitudes.</p></div></div>`;
         return;
       }
       if (!data || data.length === 0) {
-        listEl.innerHTML = `<div class="empty-note">No hay solicitudes pendientes por ahora.</div>`;
+        cont.innerHTML = `
+          <div class="card">
+            <div class="empty" style="padding:var(--s-8) var(--s-6)">
+              <div class="ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <h3>Todo al día</h3>
+              <p>No hay solicitudes de acceso esperando respuesta.</p>
+            </div>
+          </div>`;
         return;
       }
 
-      listEl.innerHTML = data.map(p => `
-        <div class="request-card" data-id="${p.id}">
-          <div class="info">
-            <div class="name">${p.full_name || p.username}</div>
-            <div class="meta">@${p.username} · ${ROLE_TAG[p.role] || p.role}</div>
-          </div>
-          <div class="request-actions">
-            <button class="btn-approve" data-action="approve" data-id="${p.id}">Aceptar</button>
-            <button class="btn-deny" data-action="deny" data-id="${p.id}">Denegar</button>
-          </div>
-        </div>
-      `).join('');
+      const roles = ROL_TEXTO();
+      cont.innerHTML = `<div class="list">${data.map(p => {
+        const nombre = p.full_name || p.username;
+        return `
+          <div class="list-row">
+            ${htmlAvatar(nombre, null)}
+            <div class="list-main">
+              <div class="list-title">${escapar(nombre)}</div>
+              <div class="list-meta">@${escapar(p.username)} · ${escapar(roles[p.role] || p.role)}</div>
+            </div>
+            <div class="row-gap">
+              <button class="btn btn-secondary btn-sm" data-accion="deny" data-id="${p.id}">Denegar</button>
+              <button class="btn btn-primary btn-sm" data-accion="approve" data-id="${p.id}">Aceptar</button>
+            </div>
+          </div>`;
+      }).join('')}</div>`;
 
-      listEl.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', () => resolverSolicitud(btn.dataset.id, btn.dataset.action));
+      cont.querySelectorAll('button[data-accion]').forEach(btn => {
+        btn.addEventListener('click', () => resolver(btn.dataset.id, btn.dataset.accion));
       });
     }
 
-    async function resolverSolicitud(id, action){
-      if (action === 'approve') {
+    async function resolver(id, accion){
+      if (accion === 'approve') {
         const { error } = await supabase.from('profiles').update({ status: 'approved' }).eq('id', id);
-        if (error) {
-          alert('No se pudo aprobar la solicitud: ' + error.message);
-          return;
-        }
+        if (error) { alert('No se pudo aprobar la solicitud: ' + error.message); return; }
       } else {
-        if (!confirm('¿Denegar esta solicitud? Se eliminará por completo y no quedará registro de ella.')) return;
-
-        // Denegar = eliminar por completo la solicitud pendiente.
-        // Se asume que no se acepta, así que no debe quedar registro.
+        if (!confirm('¿Denegar esta solicitud? Se elimina por completo y no queda registro.')) return;
         const { error } = await supabase.from('profiles').delete().eq('id', id);
-        if (error) {
-          alert('No se pudo denegar la solicitud: ' + error.message);
-          return;
-        }
+        if (error) { alert('No se pudo denegar la solicitud: ' + error.message); return; }
       }
       await cargarSolicitudes();
+    }
+
+    // Requiere Realtime activo sobre la tabla profiles.
+    function suscribirEnVivo(){
+      supabase
+        .channel('profiles-solicitudes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' },
+            () => { cargarSolicitudes(); })
+        .subscribe();
     }
   </script>
 </body>
