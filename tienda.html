@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=25"></script>
-<link rel="stylesheet" href="panel.css?v=25">
+<script src="theme-inline.js?v=26"></script>
+<link rel="stylesheet" href="panel.css?v=26">
 <style>
   /* ---------- Encabezado y barra de herramientas ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -233,8 +233,20 @@
   .detail-cat{ font-size:var(--t-sm); color:var(--text-2); margin-top:4px; padding-bottom:var(--s-4); border-bottom:1px solid var(--border); }
   .detail-price{ font-size:var(--t-2xl); font-weight:700; letter-spacing:-0.03em; margin:var(--s-4) 0; font-variant-numeric:tabular-nums; }
   .detail-stock{ font-size:var(--t-sm); color:var(--text-2); margin-bottom:var(--s-4); }
-  .detail-desc-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin:var(--s-5) 0 6px; }
-  .detail-desc{ font-size:var(--t-base); color:var(--text-2); line-height:1.6; white-space:pre-wrap; }
+  /* La descripción va plegada al final: la mayoría decide con la foto y
+     el precio, y quien quiera el detalle lo abre. Se usa <details> para
+     que funcione sin depender de JavaScript. */
+  .detail-desc-box{ margin-top:var(--s-5); border-top:1px solid var(--border); }
+  .detail-desc-box summary{
+    display:flex; align-items:center; justify-content:space-between; gap:var(--s-3);
+    min-height:52px; padding:var(--s-3) 0;
+    font-size:var(--t-base); font-weight:600; color:var(--text);
+    cursor:pointer; list-style:none;
+  }
+  .detail-desc-box summary::-webkit-details-marker{ display:none; }
+  .detail-desc-box summary svg{ width:18px; height:18px; color:var(--text-3); flex-shrink:0; transition:transform .18s ease; }
+  .detail-desc-box[open] summary svg{ transform:rotate(180deg); }
+  .detail-desc{ font-size:var(--t-base); color:var(--text-2); line-height:1.6; white-space:pre-wrap; padding-bottom:var(--s-4); }
   .detail-plans-label{ font-size:var(--t-sm); font-weight:600; color:var(--text-2); margin-bottom:var(--s-2); }
   .detail-plans-row{ display:flex; gap:var(--s-2); flex-wrap:wrap; margin-bottom:var(--s-4); }
   .detail-plan-pill{ min-height:40px; padding:0 var(--s-4); display:inline-flex; align-items:center; border-radius:var(--r-full); border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); font-family:inherit; font-size:var(--t-sm); font-weight:500; cursor:pointer; }
@@ -277,8 +289,7 @@
   #detailPlansBlock{ order:6; }
   #detailHotelBlock{ order:7; }
   #detailCompraBlock{ order:8; }
-  .detail-desc-label{ order:9; }
-  .detail-desc{ order:10; }
+  .detail-desc-box{ order:9; }
 
   /* ---------- Bloque de compra ---------- */
   .compra-block{ margin-top:var(--s-5); }
@@ -410,7 +421,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=25" data-active="servicios" data-title="Tienda"></script>
+  <script src="shell-inline.js?v=26" data-active="servicios" data-title="Tienda"></script>
 
   <main>
     <div class="page-header">
@@ -668,8 +679,13 @@
             <div class="compra-ok" id="detailCompraOk" style="display:none;"></div>
           </div>
 
-          <div class="detail-desc-label">Descripción</div>
-          <div class="detail-desc" id="detailDesc"></div>
+          <details class="detail-desc-box" id="detailDescBox">
+            <summary>
+              Descripción
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="detail-desc" id="detailDesc"></div>
+          </details>
         </div>
       </div>
       </div>
@@ -785,9 +801,9 @@
   </div>
 
   <script type="module">
-    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=25';
-    import { supabase } from './supabaseClient.js?v=25';
-    import { capitalizarPalabras } from './textutils.js?v=25';
+    import { initLayout, obtenerConfiguracionActual } from './layout.js?v=26';
+    import { supabase } from './supabaseClient.js?v=26';
+    import { capitalizarPalabras } from './textutils.js?v=26';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -1844,7 +1860,16 @@
       document.getElementById('detailTitle').textContent = item.nombre;
       document.getElementById('detailCat').textContent = item.categoria || '';
       document.getElementById('detailStock').textContent = (item.tipo_item === 'producto' && item.stock !== null) ? `Stock disponible: ${item.stock}` : '';
-      document.getElementById('detailDesc').textContent = item.descripcion || 'Sin descripción disponible.';
+      // Sin descripción no se muestra el desplegable: un acordeón que se
+      // abre para decir "sin descripción" es peor que no tenerlo.
+      const cajaDesc = document.getElementById('detailDescBox');
+      cajaDesc.open = false;
+      if (item.descripcion && item.descripcion.trim()) {
+        cajaDesc.style.display = '';
+        document.getElementById('detailDesc').textContent = item.descripcion;
+      } else {
+        cajaDesc.style.display = 'none';
+      }
 
       const esPlanAgrupado = item.tipo_item === 'servicio' && ['Planes de colegio', 'Plan por Tickets'].includes(item.categoria);
       const esHotel = item.tipo_item === 'servicio' && item.categoria === 'Hotel';
