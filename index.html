@@ -2,116 +2,97 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Talento Canes · Iniciar sesión</title>
+
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Barkly">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="theme-inline.js?v=12"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="theme-inline.js?v=15"></script>
+<link rel="stylesheet" href="panel.css?v=15">
 <style>
-  :root{
-    --navy-deep:#050d1a; --navy-panel:#0b1a30; --blue-deep:#0d47a1;
-    --blue-bright:#29b6f6; --blue-glow:#4fc3f7; --ink:#05070b;
-    --white:#ffffff; --mist:#b7c6dc; --mist-dim:#6f83a0;
-    --line:rgba(255,255,255,0.08); --line-strong:color-mix(in srgb, var(--blue-glow) 25%, transparent);
-    --danger:#ff6b6b;
-  }
-  *{ box-sizing:border-box; margin:0; padding:0; touch-action:manipulation; }
-  html{ font-family:'Inter',sans-serif; }
-  body{
-    min-height:100vh; color:var(--white);
-    background:
-      radial-gradient(1200px 700px at 85% -10%, color-mix(in srgb, var(--blue-bright) 16%, transparent), transparent 60%),
-      radial-gradient(900px 600px at -10% 100%, color-mix(in srgb, var(--blue-deep) 22%, transparent), transparent 60%),
-      var(--navy-deep);
-    padding:0 20px;
-  }
-  .card{
-    width:100%; max-width:380px;
-    margin-top:2rem; margin-bottom:3rem; margin-left:auto; margin-right:auto;
-    background:var(--navy-panel);
-    border:1px solid var(--line-strong);
-    border-radius:20px;
-    padding:36px 32px;
-  }
-  .brand{ display:flex; align-items:center; gap:12px; margin-bottom:26px; }
-  .brand img{ width:44px; height:44px; }
-  .brand .name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; }
-  .brand .sub{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.3px; color:var(--blue-glow); text-transform:uppercase; margin-top:2px; }
+  /* Las páginas de acceso no tienen armazón: solo una tarjeta
+     centrada. Todo lo demás sale de los tokens de panel.css, así
+     que también responden a la paleta y al modo claro/oscuro. */
+  body{ padding:0 var(--s-4); }
 
-  h1{ font-family:'Space Grotesk',sans-serif; font-size:21px; margin-bottom:6px; }
-  .lead{ color:var(--mist-dim); font-size:13px; margin-bottom:26px; }
-
-  label{ display:block; font-size:12px; color:var(--mist); margin-bottom:6px; }
-  .field{ margin-bottom:16px; }
-  input{
-    width:100%; padding:11px 13px; border-radius:10px;
-    border:1px solid var(--line); background:var(--ink);
-    color:var(--white); font-size:14px; outline:none;
-    transition:border-color .2s ease;
+  .card-auth{
+    width:100%; max-width:400px;
+    margin:var(--s-14) auto var(--s-18);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-lg);
+    box-shadow:var(--sh-2);
+    padding:var(--s-8) var(--s-6);
   }
-  input:focus{ border-color:var(--blue-bright); }
+  @media (max-width:520px){
+    .card-auth{ margin-top:var(--s-8); padding:var(--s-6) var(--s-5); }
+  }
+
+  .brand{ display:flex; align-items:center; gap:var(--s-3); margin-bottom:var(--s-8); }
+  .brand img{ width:44px; height:44px; border-radius:var(--r-md); object-fit:cover; }
+  .brand .name{ font-weight:700; font-size:var(--t-md); letter-spacing:-0.01em; }
+  .brand .sub{ font-size:var(--t-xs); color:var(--text-3); margin-top:1px; }
+
+  h1{ font-size:var(--t-xl); margin-bottom:6px; }
+  .lead{ color:var(--text-2); font-size:var(--t-sm); line-height:1.5; margin-bottom:var(--s-6); }
+
+  .field{ margin-bottom:var(--s-4); }
+  .field label{ display:block; font-size:var(--t-sm); font-weight:500; color:var(--text); margin-bottom:6px; }
 
   .password-wrap{ position:relative; }
-  .password-wrap input{ padding-right:42px; }
+  .password-wrap .input{ padding-right:48px; }
   .toggle-password{
-    position:absolute; top:50%; right:6px; transform:translateY(-50%);
-    width:32px; height:32px; display:flex; align-items:center; justify-content:center;
-    background:none; border:none; padding:0; margin:0; cursor:pointer;
-    color:var(--mist-dim);
+    position:absolute; top:50%; right:4px; transform:translateY(-50%);
+    width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; padding:0; cursor:pointer; color:var(--text-3);
+    border-radius:var(--r-full);
   }
-  .toggle-password:hover{ color:var(--mist); }
+  .toggle-password:hover{ color:var(--text-2); background:var(--surface-2); }
   .toggle-password svg{ width:19px; height:19px; }
   .toggle-password .eye-off{ display:none; }
   .toggle-password.showing .eye{ display:none; }
   .toggle-password.showing .eye-off{ display:block; }
 
-  .remember-row{ display:flex; align-items:center; gap:9px; margin-bottom:20px; }
-  .remember-row input[type="checkbox"]{
-    width:17px; height:17px; accent-color:var(--blue-bright); cursor:pointer; flex-shrink:0;
-  }
-  .remember-row label{ margin-bottom:0; font-size:12.5px; color:var(--mist); cursor:pointer; }
+  .remember-row{ display:flex; align-items:center; gap:10px; min-height:44px; margin-bottom:var(--s-4); }
+  .remember-row input[type="checkbox"]{ width:18px; height:18px; accent-color:var(--acento); cursor:pointer; flex-shrink:0; }
+  .remember-row label{ font-size:var(--t-sm); color:var(--text-2); cursor:pointer; }
 
-  button{
-    width:100%; margin-top:6px; padding:12px; border:none; border-radius:10px;
-    background:linear-gradient(90deg, var(--blue-deep), var(--blue-bright));
-    color:var(--white); font-weight:600; font-size:14px; cursor:pointer;
-  }
-  button:disabled{ opacity:.6; cursor:default; }
-
-  .msg{
-    margin-top:16px; padding:10px 12px; border-radius:10px;
-    font-size:12.5px; line-height:1.5; display:none;
-  }
-  .msg.error{ display:block; background:rgba(255,107,107,0.12); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
-  .msg.info{ display:block; background:color-mix(in srgb, var(--blue-bright) 10%, transparent); color:var(--blue-glow); border:1px solid var(--line-strong); }
-
-  @media (max-width: 780px){
-    input, select, textarea{ font-size:16px !important; }
-  }
+  .msg{ margin-top:var(--s-4); padding:var(--s-3) var(--s-4); border-radius:var(--r-sm); font-size:var(--t-sm); line-height:1.5; display:none; }
+  .msg.error{ display:block; background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-br); }
+  .msg.info{ display:block; background:var(--acento-suave); color:var(--acento-txt); border:1px solid transparent; }
 </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card-auth">
     <div class="brand">
-      <img src="logo.png" alt="Talento Canes" id="brandLogo">
+      <img src="logo.png" alt="" id="brandLogo">
       <div>
         <div class="name" id="brandName">Talento Canes</div>
-        <div class="sub">Barkly · Panel</div>
+        <div class="sub">Barkly</div>
       </div>
     </div>
 
     <h1>Iniciar sesión</h1>
-    <p class="lead">Ingresa con tu usuario y contraseña para acceder al panel.</p>
+    <p class="lead">Entra con tu usuario y contraseña para acceder al panel.</p>
 
     <form id="loginForm" autocomplete="off">
       <div class="field">
         <label for="username">Usuario o correo</label>
-        <input id="username" type="text" autocomplete="username" required>
+        <input class="input" id="username" type="text" autocomplete="username" required>
       </div>
+
       <div class="field">
         <label for="password">Contraseña</label>
         <div class="password-wrap">
-          <input id="password" type="password" autocomplete="current-password" required>
+          <input class="input" id="password" type="password" autocomplete="current-password" required>
           <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar contraseña">
             <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C3.4 8.7 1.5 12 1.5 12S5 19 12 19a10.7 10.7 0 0 0 5.4-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
@@ -121,22 +102,25 @@
 
       <div class="remember-row">
         <input type="checkbox" id="rememberCheckbox" checked>
-        <label for="rememberCheckbox">Mantener sesión iniciada</label>
+        <label for="rememberCheckbox">Mantener la sesión iniciada</label>
       </div>
 
-      <button type="submit" id="submitBtn">Entrar</button>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">Entrar</button>
       <div class="msg" id="msg"></div>
     </form>
   </div>
 
   <script type="module">
-    import { iniciarSesion } from './auth.js?v=12';
-    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=12';
-    import { cargarConfiguracionNegocio } from './theme.js?v=12';
+    // IMPORTANTE: todos los imports del proyecto deben usar la MISMA
+    // versión. Si esta página pide supabaseClient.js?v=12 y theme.js
+    // pide ?v=15, el navegador los trata como dos archivos distintos y
+    // acaba habiendo dos clientes de Supabase compitiendo por el mismo
+    // candado de sesión — el login se queda colgado sin dar error.
+    import { iniciarSesion } from './auth.js?v=15';
+    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=15';
+    import { cargarConfiguracionNegocio } from './theme.js?v=15';
 
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
-    }
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
 
     cargarConfiguracionNegocio().then(config => {
@@ -145,13 +129,10 @@
       if (config.logo_url) document.getElementById('brandLogo').src = config.logo_url;
     });
 
-    // Si ya hay una sesión activa, no muestres el formulario: entra
-    // directo al panel.
+    // Si ya hay sesión activa, no se muestra el formulario: entra directo.
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.href = 'inicio.html';
-      }
+      if (session) window.location.href = 'inicio.html';
     })();
 
     const form = document.getElementById('loginForm');
@@ -182,8 +163,8 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      // Se define ANTES de iniciar sesión, para que ese mismo login
-      // ya use el almacén correcto (localStorage o sessionStorage).
+      // Se define ANTES de iniciar sesión, para que ese mismo login ya
+      // use el almacén correcto (localStorage o sessionStorage).
       definirRecordarSesion(rememberCheckbox.checked);
 
       try {
