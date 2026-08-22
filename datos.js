@@ -136,4 +136,13 @@ export function limpiarCache(){
       .filter(k => k.startsWith(PREFIJO) || k.startsWith('tc_html_'))
       .forEach(k => sessionStorage.removeItem(k));
   } catch (e) { /* ignorar */ }
+
+  // Los permisos recordados sobreviven al cierre de la pestaña, así que
+  // hay que borrarlos aquí: si no, quien entre después vería un instante
+  // los botones de administración de la cuenta anterior.
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('tc_pref_'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* ignorar */ }
 }

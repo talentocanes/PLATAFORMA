@@ -804,7 +804,7 @@
     import { initLayout, obtenerConfiguracionActual } from './layout.js';
     import { supabase } from './supabaseClient.js';
     import { capitalizarPalabras } from './textutils.js';
-    import { conCache, pintarCache } from './datos.js';
+    import { conCache, pintarCache, recordar, recordado } from './datos.js';
 
     const CATEGORIAS_PRODUCTO = ['Alimentación', 'Accesorios', 'Juguetes', 'Higiene / Cuidado', 'Otros'];
 
@@ -822,8 +822,11 @@
     const TIPOS_SERVICIO = ['Planes de colegio', 'Plan por Tickets', 'Hotel', 'Otros'];
 
     let items = [];
-    let puedeEditar = false;
-    let puedeAsignarDescuentos = false;
+    // Los permisos de la visita anterior, para que el primer pintado ya
+    // salga bien. Sin esto, al restaurar el catálogo aparece sin botones
+    // ni aviso de arrastre, y al confirmarse el rol todo se desplaza.
+    let puedeEditar = recordado('editar-servicios', false);
+    let puedeAsignarDescuentos = recordado('descuentos-clientes', false);
     let tipoActual = 'producto'; // el que se está creando/editando en el formulario
     let editandoId = null;
     let fotosCombinadas = []; // { fid, tipo:'url'|'file', valor } en el orden final; [0] = portada
@@ -834,8 +837,19 @@
     let perfilActual = null;
     let misMascotas = [];
 
-    // Lo primero: pintar el catálogo de la última visita. Ir a la Tienda
-    // deja de tener espera desde la segunda vez.
+    // Lo primero: dejar la cabecera como quedará y pintar el catálogo de
+    // la última visita. Ir a la Tienda deja de tener espera desde la
+    // segunda vez, y sin saltos de contenido.
+    function aplicarPermisos(){
+      document.getElementById('tiendaSub').textContent = puedeEditar
+        ? 'Catálogo del colegio: crea, edita y ordena lo que ven los acudientes.'
+        : 'Todo lo que el colegio ofrece para tu mascota.';
+      document.getElementById('btnDescuentos').style.display = puedeAsignarDescuentos ? 'flex' : 'none';
+      document.getElementById('btnAdd').style.display = puedeEditar ? 'flex' : 'none';
+      document.getElementById('btnNotifTienda').style.display = puedeEditar ? 'flex' : 'none';
+    }
+
+    aplicarPermisos();
     pintarCache('tienda-items', lista => {
       items = lista;
       pintarGrid();
@@ -873,17 +887,11 @@
         await cargarMisDescuentos(profile.id);
       }
 
-      document.getElementById('tiendaSub').textContent = puedeEditar
-        ? 'Catálogo del colegio: crea, edita y ordena lo que ven los acudientes.'
-        : 'Todo lo que el colegio ofrece para tu mascota.';
-
-      if (puedeAsignarDescuentos) {
-        document.getElementById('btnDescuentos').style.display = 'flex';
-      }
+      recordar('editar-servicios', puedeEditar);
+      recordar('descuentos-clientes', puedeAsignarDescuentos);
+      aplicarPermisos();
 
       if (puedeEditar) {
-        document.getElementById('btnAdd').style.display = 'flex';
-        document.getElementById('btnNotifTienda').style.display = 'flex';
         await actualizarContadorSolicitudes();
         suscribirComprasEnVivo();
       }
