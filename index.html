@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=27"></script>
-<link rel="stylesheet" href="panel.css?v=27">
+<script src="theme-inline.js"></script>
+<link rel="stylesheet" href="panel.css">
 <style>
   /* Las páginas de acceso no tienen armazón: solo una tarjeta
      centrada. Todo lo demás sale de los tokens de panel.css, así
@@ -111,14 +111,15 @@
   </div>
 
   <script type="module">
-    // IMPORTANTE: todos los imports del proyecto deben usar la MISMA
-    // versión. Si esta página pide supabaseClient.js?v=12 y theme.js
-    // pide ?v=27, el navegador los trata como dos archivos distintos y
-    // acaba habiendo dos clientes de Supabase compitiendo por el mismo
-    // candado de sesión — el login se queda colgado sin dar error.
-    import { iniciarSesion } from './auth.js?v=27';
-    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=27';
-    import { cargarConfiguracionNegocio } from './theme.js?v=27';
+    // Los imports internos ya no llevan número de versión: del caché se
+    // encarga el servidor con el archivo _headers. Cuando cada página
+    // pedía una versión distinta del mismo archivo, el navegador los
+    // trataba como dos módulos y acababa habiendo dos clientes de
+    // Supabase peleando por el candado de sesión — el login se colgaba
+    // sin dar ningún error.
+    import { iniciarSesion } from './auth.js';
+    import { supabase, definirRecordarSesion } from './supabaseClient.js';
+    import { cargarConfiguracionNegocio } from './theme.js';
 
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);

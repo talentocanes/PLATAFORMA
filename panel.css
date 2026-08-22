@@ -315,8 +315,8 @@ main{
 .cargando-overlay{
   position:fixed; inset:0; z-index:90;
   display:none; align-items:center; justify-content:center;
-  background:color-mix(in srgb, var(--bg) 74%, transparent);
-  -webkit-backdrop-filter:blur(1px); backdrop-filter:blur(1px);
+  background:color-mix(in srgb, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
 }
 .cargando-overlay.on{ display:flex; }
 .spinner{

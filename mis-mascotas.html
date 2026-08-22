@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="panel.css?v=27">
-<script src="theme-inline.js?v=27"></script>
+<link rel="stylesheet" href="panel.css">
+<script src="theme-inline.js"></script>
 <style>
   /* ---------- Encabezado ---------- */
   .page-header{ display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); flex-wrap:wrap; }
@@ -123,7 +123,7 @@
 </head>
 <body>
 
-  <script src="shell-inline.js?v=27" data-active="mis-mascotas" data-title="Mis mascotas"></script>
+  <script src="shell-inline.js" data-active="mis-mascotas" data-title="Mis mascotas"></script>
 
   <main>
     <div class="page-header">
@@ -255,22 +255,19 @@
   </div>
 
   <script type="module">
-    import { initLayout } from './layout.js?v=27';
-    import { supabase } from './supabaseClient.js?v=27';
-    import { initDatePicker, calcularEdadTexto } from './datepicker.js?v=27';
-    import { abrirRecortador } from './photocrop.js?v=27';
-    import { capitalizarPalabras } from './textutils.js?v=27';
-    import { escapar, colorDeNombre, iniciales } from './ui.js?v=27';
+    import { initLayout } from './layout.js';
+    import { supabase } from './supabaseClient.js';
+    import { initDatePicker, calcularEdadTexto } from './datepicker.js';
+    import { abrirRecortador } from './photocrop.js';
+    import { capitalizarPalabras } from './textutils.js';
+    import { escapar, colorDeNombre, iniciales } from './ui.js';
 
-    // Las navegaciones hechas desde código también encienden el
-    // indicador de carga del armazón, igual que los enlaces.
-    (function(){
-      const irOriginal = window.location.assign.bind(window.location);
-      window.irA = function(url){
-        window.BarklyShell?.cargando?.();
-        irOriginal(url);
-      };
-    })();
+    // Las navegaciones hechas desde código pasan por el armazón, para
+    // que muestren el mismo indicador de carga que los enlaces.
+    window.irA = function(url){
+      if (window.BarklyShell?.navegar) window.BarklyShell.navegar(url);
+      else window.location.href = url;
+    };
 
 
     let perfil = null;

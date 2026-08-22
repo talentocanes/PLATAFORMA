@@ -415,34 +415,40 @@
   /* ---------------------------------------------------------
      Indicador de carga entre páginas.
 
-     Se muestra tras un retraso corto: en una navegación rápida no
-     llega a verse, y así se evita el parpadeo que molesta más que
-     la propia espera. Cubre solo el contenido — la barra lateral,
-     la superior y las pestañas quedan por encima y nítidas, para
-     que se siga viendo dónde estás mientras carga.
-     --------------------------------------------------------- */
-  var temporizadorCarga = null;
+     Cubre solo el contenido: la barra lateral, la superior y las
+     pestañas quedan por encima y nítidas, para que se siga viendo
+     dónde estás mientras carga.
 
+     Detalle importante: aquí cada navegación es una página nueva, y
+     el navegador empieza a descargarla de inmediato. Si se muestra el
+     indicador y se deja seguir el clic, no da tiempo a pintarse y no
+     se ve nada. Por eso se detiene el clic, se pinta, y se navega en
+     el siguiente fotograma.
+     --------------------------------------------------------- */
   function mostrarCarga(){
-    if (temporizadorCarga) return;
-    temporizadorCarga = setTimeout(function(){
-      var el = document.getElementById('cargando');
-      if (el) el.classList.add('on');
-    }, 140);
+    var el = document.getElementById('cargando');
+    if (el) el.classList.add('on');
   }
 
   function ocultarCarga(){
-    clearTimeout(temporizadorCarga);
-    temporizadorCarga = null;
     var el = document.getElementById('cargando');
     if (el) el.classList.remove('on');
+  }
+
+  function navegarCon(url){
+    mostrarCarga();
+    // Un fotograma para que el indicador llegue a pintarse, y otro
+    // margen mínimo para que la animación arranque antes de la descarga.
+    requestAnimationFrame(function(){
+      setTimeout(function(){ window.location.href = url; }, 40);
+    });
   }
 
   document.addEventListener('click', function(e){
     // Solo navegaciones normales dentro del sitio: ni pestaña nueva,
     // ni anclas, ni descargas, ni clics con Ctrl o Cmd.
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var enlace = e.target.closest('a[href]');
+    var enlace = e.target.closest ? e.target.closest('a[href]') : null;
     if (!enlace) return;
     if (enlace.target && enlace.target !== '_self') return;
     if (enlace.hasAttribute('download')) return;
@@ -450,7 +456,9 @@
     if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
     if (enlace.origin && enlace.origin !== window.location.origin) return;
     if (enlace.pathname === window.location.pathname && enlace.search === window.location.search) return;
-    mostrarCarga();
+
+    e.preventDefault();
+    navegarCon(enlace.href);
   });
 
   // Al volver con el botón atrás la página puede restaurarse tal cual
@@ -482,8 +490,9 @@
 
     pintar: pintarTodo,
 
-    /* Las páginas que navegan desde código (window.location.href = …)
-       llaman a esto para que el indicador también aparezca ahí. */
+    /* Las páginas que navegan desde código llaman a esto para que el
+       indicador también aparezca ahí. */
+    navegar: navegarCon,
     cargando: mostrarCarga,
     finCarga: ocultarCarga,
 
