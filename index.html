@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="theme-inline.js?v=15"></script>
-<link rel="stylesheet" href="panel.css?v=15">
+<script src="theme-inline.js?v=27"></script>
+<link rel="stylesheet" href="panel.css?v=27">
 <style>
   /* Las páginas de acceso no tienen armazón: solo una tarjeta
      centrada. Todo lo demás sale de los tokens de panel.css, así
@@ -113,12 +113,12 @@
   <script type="module">
     // IMPORTANTE: todos los imports del proyecto deben usar la MISMA
     // versión. Si esta página pide supabaseClient.js?v=12 y theme.js
-    // pide ?v=15, el navegador los trata como dos archivos distintos y
+    // pide ?v=27, el navegador los trata como dos archivos distintos y
     // acaba habiendo dos clientes de Supabase compitiendo por el mismo
     // candado de sesión — el login se queda colgado sin dar error.
-    import { iniciarSesion } from './auth.js?v=15';
-    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=15';
-    import { cargarConfiguracionNegocio } from './theme.js?v=15';
+    import { iniciarSesion } from './auth.js?v=27';
+    import { supabase, definirRecordarSesion } from './supabaseClient.js?v=27';
+    import { cargarConfiguracionNegocio } from './theme.js?v=27';
 
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
